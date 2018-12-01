@@ -1,0 +1,264 @@
+class induction
+{    
+  byte PIN_WHITE = D5;       // RELAIS
+  byte PIN_YELLOW = D7;      // AUSGABE AN PLATTE
+  byte PIN_INTERRUPT = D6;   // EINGABE VON PLATTE  
+  unsigned long timeTurnedoff;
+  long delayAfteroff = 120000; 
+  long timeOutCommand = 5000;      // TimeOut für Seriellen Befehl
+  long timeOutReaction = 2000;    // TimeOut für Induktionskochfeld
+  unsigned long lastInterrupt;
+  unsigned long lastCommand;
+  bool inputStarted = false; 
+  byte inputCurrent = 0;   
+  byte inputBuffer[33];
+  bool isError = false;
+  byte error = 0;
+
+  //int storePower = 0;
+  long powerSampletime = 20000;
+  unsigned long powerLast;
+  long powerHigh = powerSampletime; // Dauer des "HIGH"-Anteils im Schaltzyklus
+  long powerLow = 0;   
+     
+  public:    
+    int power = 0;    
+    int newPower = 0;     
+    byte CMD_CUR = 0;                 // Aktueller Befehl
+    boolean isRelayon = false;        // Systemstatus: ist das Relais in der Platte an?
+    boolean isInduon = false;         // Systemstatus: ist Power > 0?
+    boolean isPower = false;
+    String mqtttopic = "mqtt_indu";
+    boolean isEnabled = true;
+    
+  induction(byte pin_white, byte pin_yellow, byte pin_interrupt, long delay_turnoff) { 
+    PIN_WHITE = pin_white;
+    PIN_YELLOW = pin_yellow;
+    PIN_INTERRUPT = pin_interrupt;
+    delayAfteroff = delay_turnoff;
+    
+    pinMode(PIN_WHITE, OUTPUT);
+    digitalWrite(PIN_WHITE, LOW);
+    pins_used[PIN_WHITE] = true;
+
+    pinMode(PIN_INTERRUPT, INPUT_PULLUP);
+    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
+    pins_used[PIN_INTERRUPT] = true;
+
+    pinMode(PIN_YELLOW, OUTPUT);     
+    digitalWrite(PIN_YELLOW, HIGH);
+    pins_used[PIN_YELLOW] = true;
+
+    
+    
+    setupCommands();
+  }
+
+  void mqtt_subscribe() {
+    char subscribemsg[50];
+    mqtttopic.toCharArray(subscribemsg,50);
+    Serial.print("Subscribing to ");
+    Serial.println(subscribemsg);
+    client.subscribe(subscribemsg);
+  }
+    
+
+  void handlemqtt(char* payload) {
+    StaticJsonBuffer<128> jsonBuffer;
+    JsonObject& json = jsonBuffer.parseObject(payload);
+
+    if (!json.success()) {
+      return;
+    } 
+
+    String state = json["state"];
+      
+    if (state == "off") {  
+      newPower = 0;
+      return;          
+    } else { 
+      newPower = atoi(json["power"]); 
+    }      
+  }
+  
+  void setupCommands() {
+    for (int i = 0; i < 33; i++) {
+      for (int j = 0; j < 6; j++) {
+        if    ( CMD[j][i] == 1)  { CMD[j][i] = SIGNAL_HIGH; }
+        else                     { CMD[j][i] = SIGNAL_LOW;  }
+      }   
+    }
+  }
+
+  bool updateRelay() {
+    if (isInduon == true && isRelayon == false) {         /* Relais einschalten */
+      Serial.println("Turning Relay on");
+      digitalWrite(PIN_WHITE, HIGH);      
+      return true;
+    } 
+
+    if (isInduon == false && isRelayon == true) {         /* Relais ausschalten */
+      if (millis() > timeTurnedoff + delayAfteroff) {
+        Serial.println("Turning Relay off");
+        digitalWrite(PIN_WHITE, LOW);      
+        return false;
+      } 
+    }  
+
+  if (isInduon == false && isRelayon == false) {        /* Ist aus, bleibt aus. */
+  return false;
+  }
+
+  return true;                                          /* Ist an, bleibt an. */
+  }
+
+  void Update() {
+    updatePower();
+    
+    isRelayon = updateRelay();
+
+    if (isInduon && power > 0) {
+      if (millis() > powerLast + powerSampletime) { powerLast = millis(); }
+      if (millis() > powerLast + powerHigh) { sendCommand(CMD[CMD_CUR-1]); isPower = false; }
+      else                                  { sendCommand(CMD[CMD_CUR]);   isPower = true;  }         
+    } 
+  }
+  
+  void updatePower() {
+    lastCommand = millis();
+    if (power != newPower) {                              /* Neuer Befehl empfangen */
+  
+      if (newPower > 100) { newPower = 100; }             /* Nicht > 100 */
+      if (newPower < 0)   { newPower = 0;   }             /* Nicht < 0 */
+      Serial.print("Setting Power to ");
+      Serial.println(newPower);
+          
+      power = newPower;
+      
+      timeTurnedoff = 0;
+      isInduon = true;        
+      long difference = 0;    
+      
+      if (power == 0) {
+        CMD_CUR = 0;
+        timeTurnedoff = millis();
+        isInduon = false;
+        difference = 0;
+        goto setPowerLevel;
+      }
+  
+      for (int i = 1; i < 7; i++) {
+        if (power <= PWR_STEPS[i]) {
+          CMD_CUR = i;
+          difference = PWR_STEPS[i] - power;        
+          goto setPowerLevel;
+        }      
+      }
+  
+      setPowerLevel:                                      /* Wie lange "HIGH" oder "LOW" */
+        if (difference != 0) {
+          powerLow = powerSampletime * difference / 20L;
+          powerHigh = powerSampletime - powerLow;
+        } else { 
+          powerHigh = powerSampletime; 
+          powerLow = 0;
+        };          
+    }
+  }  
+
+  void sendCommand(int command[33]) {
+    digitalWrite(PIN_YELLOW, HIGH);
+    delay(SIGNAL_START);
+    digitalWrite(PIN_YELLOW, LOW);
+    delay(SIGNAL_WAIT);
+  
+  
+    for (int i = 0; i < 33; i++) {
+      digitalWrite(PIN_YELLOW, HIGH);
+      delayMicroseconds(command[i]);
+      digitalWrite(PIN_YELLOW, LOW);
+      delayMicroseconds(SIGNAL_LOW);
+    }
+  }  
+
+  void readInput() {
+//  // Variablen sichern
+  bool ishigh = digitalRead(PIN_INTERRUPT);
+  unsigned long newInterrupt = micros();
+  long signalTime = newInterrupt - lastInterrupt;
+
+  // Glitch rausfiltern
+  if (signalTime > 10) {
+
+    if (ishigh) {
+      lastInterrupt = newInterrupt;         // PIN ist auf Rising, Bit senden hat gestartet :)
+    }  else {                               // Bit ist auf Falling, Bit Übertragung fertig. Auswerten.
+
+      if (!inputStarted) {                  // suche noch nach StartBit.
+        if (signalTime < 35000L && signalTime > 15000L) {
+          inputStarted = true;
+          inputCurrent = 0;
+        }
+      } else {                              // Hat Begonnen. Nehme auf.
+        if (inputCurrent < 34) {            // nur bis 33 aufnehmen.
+          if (signalTime < (SIGNAL_HIGH + SIGNAL_HIGH_TOL) && signalTime > (SIGNAL_HIGH - SIGNAL_HIGH_TOL) ) {
+            // HIGH BIT erkannt
+            inputBuffer[inputCurrent] = 1;
+            inputCurrent += 1;
+          }
+          if (signalTime < (SIGNAL_LOW + SIGNAL_LOW_TOL) && signalTime > (SIGNAL_LOW - SIGNAL_LOW_TOL) ) {
+            // LOW BIT erkannt
+            inputBuffer[inputCurrent] = 0;
+            inputCurrent += 1;
+          }
+        } else {                            // Aufnahme vorbei.
+  
+        /* Auswerten */
+        //newError = BtoI(13,4);          // Fehlercode auslesen.
+          
+        /* von Vorne */    
+        //timeLastReaction = millis();
+        inputCurrent = 0;
+        inputStarted = false;
+        }
+      }
+    }
+  }
+  }
+
+  unsigned long BtoI(int start, int numofbits){    //binary array to integer conversion
+   unsigned long integer=0;
+//   unsigned long mask=1;
+//   for (int i = numofbits+start-1; i >= start; i--) {
+//     if (inputBuffer[i]) integer |= mask;
+//     mask = mask << 1;
+//   }
+   return integer;
+  }   
+}
+
+inductionCooker = induction(D5,D7,D6,120000);
+
+void readInputWrap() {
+  inductionCooker.readInput();
+}   
+
+/* Funktion für Loop */
+void handleInduction() {
+  inductionCooker.Update();
+}
+
+void handleRequestInduction() {
+  String message;
+    message += F("<li class=\"list-group-item d-flex justify-content-between align-items-center\"> Relais status <span class=\"badge ");
+    if (inductionCooker.isRelayon) { message += "badge-success\"> ON"; } else { message += "badge-danger\"> OFF"; }
+    message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\"> Power requested <span class=\"badge badge-success\">");
+    message += inductionCooker.power;
+    message += F("%</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\"> Current Power Level <span class=\"badge badge-success\">P");
+    if (inductionCooker.isPower) { message+= inductionCooker.CMD_CUR; } else { message += max(0,inductionCooker.CMD_CUR-1); }
+    message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\">");
+  //  message += induction.errorMessage;
+    message += F("</li>");  
+  
+    server.send(200,"text/html", message);
+}

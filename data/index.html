@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" type="text/css">
+  <link rel="stylesheet" href="theme.css" type="text/css">
+</head>
+
+<body onload="setInterval(refresh, 1000)">
+  <div class="py-2">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1 class="">Overview</h1>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="py-2">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header"> Sensors <a href="" class="badge badge-warning" data-target="#sensor_modal" data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
+            <div class="card-body">
+              <ul class="list-group" id="listSensors">
+                <!-- <li class="list-group-item justify-content-between align-items-center d-flex"> Fermenter 1 <span class="badge badge-primary">6.32°C</span> <span class="badge badge-light">mqtt_sens1</span> <a href="" class="badge badge-warning">Edit</a> </li>
+                <li class="list-group-item justify-content-between align-items-center d-flex"> Fermenter 2 <span class="badge badge-primary">6.32°C</span> <span class="badge badge-light">mqtt_sens2</span> <a href="" class="badge badge-warning">Edit</a> </li>-->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="py-2">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header"> Actors <a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
+            <div class="card-body">
+              <ul class="list-group" id="listActors">
+                <!--  <li class="list-group-item d-flex justify-content-between align-items-center"> Fermenter 1 Chill <span class="badge badge-success">ON</span> <span class="badge badge-light">mqtt_act1</span> <a href="" class="badge badge-warning" data-toggle="modal" data-target="#actor_modal" data-value="0">Edit</a></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center" style=""> Fermenter 1 Heat <span class="badge badge-dark">OFF</span> <span class="badge badge-light">mqtt_act2</span><a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="1">Edit</a> </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center" style=""> Fermenter 2 Chill <span class="badge badge-success">ON</span> <span class="badge badge-light">mqtt_act3</span><a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="2">Edit</a> </li>-->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="py-2">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header"> Induction Cooker <a href="" class="badge badge-warning" data-target="#induction_modal" data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
+            <div class="card-body">
+              <ul class="list-group" id="inductionCooker">
+                <!-- <li class="list-group-item d-flex justify-content-between align-items-center"> Relais status <span class="badge badge-success">ON</span> </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center"> Power requestes<span class="badge badge-success">80%</span> </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center"> Current Power level<span class="badge badge-success">P4</span> </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center"> Status <span class="badge badge-success">OK</span> </li>-->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" actor_id="" draggable="true" id="actor_modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify Actor</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span> </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="modal_actor_name">Name </label>
+            <input type="text" class="form-control" placeholder="" id="modal_actor_name">
+          </div>
+          <div class="form-group">
+            <label for="modal_actor_script">MQTT Topic</label>
+            <input type="text" class="form-control" placeholder="" id="modal_actor_script">
+          </div>
+        <!--  <div class="form-group">
+            <label for="modal_actor_pin">PIN</label>
+            <input type="text" class="form-control" placeholder="" id="modal_actor_pin">
+          </div>-->
+          <div class="form-group">
+            <label for="modal_actor_pin">PIN</label>
+            <select class="form-control" id="modal_actor_pin">
+          <!--    <option>1</option>
+              <option>2</option>
+              <option>3</option>
+              <option>4</option>
+              <option>5</option>-->
+            </select>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_actor_inverted">
+            <label class="form-check-label" for="modal_actor_inverted"> Inverted GPIO </label>
+          </div>
+        </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_actor_btn_save">Save changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> <button type="button" class="btn btn-danger" id="modal_actor_btn_delete">Delete Actor</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="sensor_modal" sensor_id="">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify Sensor</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span> </button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <label for="modal_sensor_address">Address</label>
+              <select class="form-control" id="modal_sensor_address">
+            <!--    <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>-->
+              </select>
+              <button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i> </button>
+            </div>
+            <div class="form-group">
+              <label for="modal_sensor_name">Name </label>
+              <input type="text" class="form-control" placeholder="" id="modal_sensor_name">
+            </div>
+            <div class="form-group">
+              <label for="modal_sensor_script">MQTT Topic</label>
+              <input type="text" class="form-control" placeholder="" id="modal_sensor_script">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_sensor_btn_save">Save changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> <button type="button" class="btn btn-danger" id="modal_sensor_btn_delete">Delete Sensor</button> </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="induction_modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify Induction</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span> </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_induction_enabled">
+            <label class="form-check-label" for="modal_induction_enabled"> Enable Induction </label>
+          </div>
+          <div class="form-group">
+            <label for="modal_induction_script">MQTT Topic</label>
+            <input type="text" class="form-control" placeholder="" id="modal_induction_script">
+          </div>
+          <div class="form-group">
+            <label for="modal_induction_pinwhite">PIN White (Relais)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_induction_pinwhite">
+          </div>
+          <div class="form-group">
+            <label for="modal_induction_pinyellow">PIN Yellow (Command Channel)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_induction_pinyellow">
+          </div>
+          <div class="form-group">
+            <label for="modal_induction_pinblue">PIN Blue (Backchannel)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_induction_pinblue">
+          </div>
+          <div class="form-group">
+            <label for="modal_induction_delay">Delay after Power off</label>
+            <input type="text" class="form-control" placeholder="" id="modal_induction_delay">
+          </div>
+        </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_sensor_btn_save">Save changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> <button type="button" class="btn btn-danger" id="modal_sensor_btn_delete">Delete Sensor</button> </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.2.1.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.js" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.js" crossorigin="anonymous"></script>
+  <script style="" type="text/javascript">
+    function refresh() {
+      $('#listSensors').load('/reqSensors');
+      $('#listActors').load('/reqActors');
+      $('#inductionCooker').load('/reqInduction');
+    }
+  </script>
+  <script>
+    $('#actor_modal').on('show.bs.modal', function(event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      var actorid = button.data('value') // Extract info from data-* attributes
+      var actorname;
+      var actorscript;
+      var actorpin;
+      var actorinverted;
+      $.ajax({
+        url: '/reqActor?id=' + actorid + '&req=name',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          actorname = data;
+        }
+      });
+      $.ajax({
+        url: '/reqActor?id=' + actorid + '&req=script',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          actorscript = data;
+        }
+      });
+      //$.ajax({
+      //  url: '/reqActor?id=' + actorid + '&req=pin',
+      //  type: 'get',
+      //  dataType: 'html',
+      //  async: false,
+      //  cache: false,
+      //  success: function(data) {
+      //    actorpin = data;
+      //  }
+      //});
+      $.ajax({
+        url: '/reqActor?id=' + actorid + '&req=inverted',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          actorinverted = data;
+        }
+      });
+      var modal = $(this)
+      modal.attr('actor_id', actorid)
+      modal.find('#modal_actor_name').val(actorname)
+      modal.find('#modal_actor_script').val(actorscript)
+      $('#modal_actor_pin').load('/reqPins?id=' + actorid)
+    //  modal.find('#modal_actor_pin').val(actorpin)
+      if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked",true) }
+      else {modal.find('#modal_actor_inverted').prop("checked",false)}
+    })
+    $("#modal_actor_btn_save").click(function() {
+      var modal = $('#actor_modal')
+      var actorname = modal.find('#modal_actor_name').val()
+      var actorscript = modal.find('#modal_actor_script').val()
+      var actorpin = modal.find('#modal_actor_pin').val()
+      if (modal.find('#modal_actor_inverted').prop("checked") == true) {
+        var actorinverted = "1"
+      } else {
+        var actorinverted = "0"
+      }
+      var actorid = modal.attr('actor_id')
+      $.ajax({
+        url: '/setActor?id=' + actorid + '&name=' + actorname + '&script=' + actorscript + '&pin=' + actorpin + '&inverted=' + actorinverted,
+        type: 'POST',
+        dataType: 'html',
+        async: false,
+        cache: false
+      });
+      modal.modal('hide')
+    });
+    $("#modal_actor_btn_delete").click(function() {
+      var modal = $('#actor_modal')
+      var actorid = modal.attr('actor_id')
+      $.ajax({
+        url: '/delActor?id=' + actorid,
+        type: 'POST',
+        dataType: 'html',
+        async: false,
+        cache: false
+      });
+      modal.modal('hide')
+    });
+  </script>
+  <script>
+    $('#sensor_modal').on('show.bs.modal', function(event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      var sensorid = button.data('value') // Extract info from data-* attributes
+      var sensorname;
+      var sensorscript;
+      $.ajax({
+        url: '/reqSensor?id=' + sensorid + '&req=name',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          sensorname = data;
+        }
+      });
+      $.ajax({
+        url: '/reqSensor?id=' + sensorid + '&req=script',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          sensorscript = data;
+        }
+      });
+      $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorid);
+      var modal = $(this)
+      modal.find('#modal_sensor_name').val(sensorname)
+      modal.find('#modal_sensor_script').val(sensorscript)
+      modal.attr('sensor_id', sensorid)
+    })
+    $("#modal_sensor_btn_save").click(function() {
+      var modal = $('#sensor_modal')
+      var sensorname = modal.find('#modal_sensor_name').val()
+      var sensorscript = modal.find('#modal_sensor_script').val()
+      var sensorid = modal.attr('sensor_id')
+      var sensoraddress = modal.find('#modal_sensor_address').val()
+      $.ajax({
+        url: '/setSensor?id=' + sensorid + '&name=' + sensorname + '&topic=' + sensorscript + '&address=' + sensoraddress,
+        type: 'POST',
+        dataType: 'html',
+        async: false,
+        cache: false
+      });
+      modal.modal('hide')
+    });
+    $("#modal_sensor_btn_delete").click(function() {
+      var modal = $('#sensor_modal')
+      var sensorid = modal.attr('sensor_id')
+      $.ajax({
+        url: '/delSensor?id=' + sensorid,
+        type: 'POST',
+        dataType: 'html',
+        async: false,
+        cache: false
+      });
+      modal.modal('hide')
+    });
+    $("#modal_sensor_address_refresh").click(function() {
+          var sensorid = modal.attr('sensor_id')
+          $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensor)
+        });
+  </script>
+</html>
