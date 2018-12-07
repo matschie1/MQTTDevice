@@ -2,7 +2,7 @@ class Actor
 {
     unsigned long powerLast;          // Zeitmessung für High oder Low
     bool isInverted = false;
-    int dutycycle_actor = 1000;
+    int dutycycle_actor = 5000;
     
   public:
     byte pin_actor = 99;      // the number of the LED pin
@@ -28,8 +28,8 @@ class Actor
         else { digitalWrite(pin_actor, LOW); }
       }         
     } else {
-      if (isInverted) { digitalWrite(pin_actor, HIGH); }
-      else { digitalWrite(pin_actor, LOW); }
+      if (isInverted) { digitalWrite(pin_actor, LOW); }
+      else { digitalWrite(pin_actor, HIGH); }
     }
   }
   

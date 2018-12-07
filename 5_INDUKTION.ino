@@ -28,7 +28,7 @@ class induction
     boolean isRelayon = false;        // Systemstatus: ist das Relais in der Platte an?
     boolean isInduon = false;         // Systemstatus: ist Power > 0?
     boolean isPower = false;
-    String mqtttopic = "mqtt_indu";
+    String mqtttopic = "mqtt_indu2";
     boolean isEnabled = true;
     
   induction(byte pin_white, byte pin_yellow, byte pin_interrupt, long delay_turnoff) { 
