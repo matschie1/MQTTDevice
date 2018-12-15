@@ -51,8 +51,9 @@ class induction
       }
 
       if (isPin(PIN_INTERRUPT)) {
-        detachInterrupt(PIN_INTERRUPT);
-        pinMode(PIN_INTERRUPT, OUTPUT);
+        //detachInterrupt(PIN_INTERRUPT);
+        //pinMode(PIN_INTERRUPT, OUTPUT);
+       digitalWrite(PIN_INTERRUPT, HIGH);
         pins_used[PIN_INTERRUPT] = false;        
       }
 
@@ -87,8 +88,8 @@ class induction
       }
 
       if (isPin(PIN_INTERRUPT)) {
-        pinMode(PIN_INTERRUPT, INPUT_PULLUP);
-        attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
+        //pinMode(PIN_INTERRUPT, INPUT_PULLUP);
+        //attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
         pins_used[PIN_INTERRUPT] = true;  
       }          
 

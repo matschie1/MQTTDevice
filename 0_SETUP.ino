@@ -51,7 +51,7 @@ void setupServer() {
   server.on("/setIndu",handleSetIndu);            // Indu ändenr
 
   server.on("/delSensor",handleDelSensor);        // Sensor löschen
-//  server.on("/delActor",handleDelActor);          // Aktor löschen
+  server.on("/delActor",handleDelActor);          // Aktor löschen
     
   server.onNotFound(handleWebRequests);           // Sonstiges
   
