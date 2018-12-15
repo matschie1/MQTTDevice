@@ -13,7 +13,7 @@ void loop() {
   handleSensors();
 
   // Aktoren aktualisieren
-  handleActors();
+//  handleActors();
 
   // Induktionskochfeld
   handleInduction();

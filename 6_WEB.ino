@@ -47,7 +47,7 @@ bool loadFromSpiffs(String path){
 
 void mqttreconnect() {
   while (!client.connected()) {
-    if (client.connect("ESP8266Client")) {
+    if (client.connect("Indu2")) {
       for (int i = 0; i < numberOfActors; i++) {
         actors[i].mqtt_subscribe();
         inductionCooker.mqtt_subscribe();

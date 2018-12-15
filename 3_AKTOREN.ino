@@ -3,9 +3,11 @@ class Actor
     unsigned long powerLast;          // Zeitmessung für High oder Low
     bool isInverted = false;
     int dutycycle_actor = 5000;
+    byte OFF;
+    byte ON;
     
   public:
-    byte pin_actor = 99;      // the number of the LED pin
+    byte pin_actor = 9;      // the number of the LED pin
     String argument_actor;
     String name_actor;
     byte power_actor;    
@@ -18,30 +20,30 @@ class Actor
     }
 
   void Update() {
-    if (isOn && power_actor > 0) {
-      if (millis() > powerLast + dutycycle_actor) { powerLast = millis(); }
-      if (millis() > powerLast + (dutycycle_actor * power_actor / 100L)) {
-        if (isInverted) { digitalWrite(pin_actor, LOW); }
-        else { digitalWrite(pin_actor, HIGH); }
+    if (isPin(pin_actor)) {
+      if (isOn && power_actor > 0) {
+       if (millis() > powerLast + dutycycle_actor) { powerLast = millis(); }
+        if (millis() > powerLast + (dutycycle_actor * power_actor / 100L)) {
+          digitalWrite(pin_actor, OFF);
+        } else {
+         digitalWrite(pin_actor, ON);
+        }         
       } else {
-        if (isInverted) { digitalWrite(pin_actor, HIGH); }
-        else { digitalWrite(pin_actor, LOW); }
-      }         
-    } else {
-      if (isInverted) { digitalWrite(pin_actor, LOW); }
-      else { digitalWrite(pin_actor, HIGH); }
+       digitalWrite(pin_actor, OFF);
+      }      
     }
   }
   
   void change(String pin, String argument, String aname, String ainverted) {
     // Set PIN    
-    if (pin_actor != 99) {
+    if (isPin(pin_actor)) {
       digitalWrite(pin_actor,HIGH);
       pins_used[pin_actor] = false;
       delay(5);
     }
-    if (getPIN(pin) != 99) {
-      pin_actor = getPIN(pin);    
+
+    pin_actor = StringToPin(pin);
+    if (isPin(pin_actor)) {
       pinMode(pin_actor,OUTPUT);
       digitalWrite(pin_actor,HIGH);
       pins_used[pin_actor] = true;
@@ -50,12 +52,22 @@ class Actor
     isOn = false;
     
     name_actor = aname;    
-    argument_actor = argument;
 
-    if (ainverted == "1") { isInverted = true; }
-    if (ainverted == "0") { isInverted = false; }
+    if (argument_actor != argument) {
+      mqtt_unsubscribe();
+      argument_actor = argument;
+      mqtt_subscribe();
+    }
+
+    if (ainverted == "1") { 
+      isInverted = true; 
+      ON = HIGH;
+      OFF = LOW;  }
+    if (ainverted == "0") { 
+      isInverted = false; 
+      ON = LOW;
+      OFF = HIGH; }  
     
-    mqtt_subscribe();
   }
 
   void mqtt_subscribe() {
@@ -66,6 +78,14 @@ class Actor
     client.subscribe(subscribemsg);
   }
 
+  void mqtt_unsubscribe() {
+    char subscribemsg[50];
+    argument_actor.toCharArray(subscribemsg,50);
+    Serial.print("Unsubscribing from ");
+    Serial.println(subscribemsg);
+    client.unsubscribe(subscribemsg);    
+  }
+  
   void handlemqtt(char* payload) {
     StaticJsonBuffer<128> jsonBuffer;
     JsonObject& json = jsonBuffer.parseObject(payload);
@@ -97,31 +117,6 @@ class Actor
     else {return "0"; }
   };
 
-  int getPIN(String pin) {
-      if (pin == "D0") { return D0; }
-      if (pin == "D1") { return D1; }
-      if (pin == "D2") { return D2; }
-      if (pin == "D3") { return D3; }
-      if (pin == "D4") { return D4; }
-      if (pin == "D5") { return D5; }
-      if (pin == "D6") { return D6; }
-      if (pin == "D7") { return D7; }
-      if (pin == "D8") { return D8; }
-      return 99;                 
-  }
-
-  String getPinStr() {
-      if (pin_actor == D0) { return "D0"; }
-      if (pin_actor == D1) { return "D1"; }
-      if (pin_actor == D2) { return "D2"; }
-      if (pin_actor == D3) { return "D3"; }
-      if (pin_actor == D4) { return "D4"; }
-      if (pin_actor == D5) { return "D5"; }
-      if (pin_actor == D6) { return "D6"; }
-      if (pin_actor == D7) { return "D7"; }
-      if (pin_actor == D8) { return "D8"; }
-      return "NaN";                 
-  }  
 };
 
 /* Initialisierung des Arrays */
@@ -159,7 +154,7 @@ void handleRequestActors() {
     message += F("</span><span class=\"badge badge-light\">");
     message += actors[i].argument_actor;
     message += F("</span> <span class=\"badge badge-light\">PIN ");
-    message += actors[i].getPinStr();
+    message += PinToString(actors[i].pin_actor);
     message += F("</span> <a href=\"\" class=\"badge badge-warning\" data-toggle=\"modal\" data-target=\"#actor_modal\" data-value=\"");
     message += i;
     message += F("\">Edit</a></li>");
@@ -179,7 +174,7 @@ void handleRequestActor() {
   } else {
     if (request == "name") { message = actors[id].name_actor; goto SendMessage; }
     if (request == "script") { message = actors[id].argument_actor; goto SendMessage; }
-    if (request == "pin") { message = actors[id].getPinStr(); goto SendMessage; }
+    if (request == "pin") { message = PinToString(actors[id].pin_actor); goto SendMessage; }
     if (request == "inverted") { message = actors[id].getInverted(); goto SendMessage; }
     message = "not found";    
   }
@@ -196,7 +191,7 @@ void handleSetActor() {
     numberOfActors += 1;            
   }
 
-  String ac_pin = actors[id].getPinStr();
+  String ac_pin = PinToString(actors[id].pin_actor);
   String ac_argument = actors[id].argument_actor;
   String ac_name = actors[id].name_actor;
   String ac_isinverted = actors[id].getInverted();
@@ -219,7 +214,7 @@ void handleDelActor() {
 
    for (int i = id; i < numberOfActors; i++) {
     if (i == 5) { actors[i].change("","","",""); } else {
-      actors[i].change(actors[i+1].getPinStr(),actors[i+1].argument_actor,actors[i+1].name_actor,actors[i+1].getInverted());     
+      actors[i].change(PinToString(actors[i+1].pin_actor),actors[i+1].argument_actor,actors[i+1].name_actor,actors[i+1].getInverted());     
     }
    }
   
@@ -233,7 +228,7 @@ void handlereqPins() {
   
   if (id != -1) {
     message += F("<option>");
-    message += actors[id].getPinStr();
+    message += PinToString(actors[id].pin_actor);
     message += F("</option><option disabled>──────────</option>");   
   }
   for (int i = 0; i < numberOfPins; i++) {
@@ -245,4 +240,34 @@ void handlereqPins() {
     yield();
   }
   server.send(200,"text/plain",message);    
+}
+
+byte StringToPin(String pinstring) {
+  for (int i = 0; i < numberOfPins; i++) {
+    if (pin_names[i] == pinstring) {
+      return pins[i];
+    }
+  }
+  return 9;
+}
+
+String PinToString(byte pinbyte) {
+  for (int i = 0; i < numberOfPins; i++) {
+    if (pins[i] == pinbyte) {
+      return pin_names[i];
+    }
+  }
+  return "NaN";  
+}
+
+bool isPin(byte pinbyte) {
+  bool returnValue = false;
+  for (int i = 0; i < numberOfPins; i++) {
+    if (pins[i] == pinbyte) {
+      returnValue = true;
+      goto Ende;
+    }
+  }
+  Ende:
+    return returnValue;
 }

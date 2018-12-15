@@ -42,14 +42,16 @@ void setupServer() {
   server.on("/reqSearchSensorAdresses",handleRequestSensorAddresses);
   server.on("/reqPins",handlereqPins);
   
-  server.on("/reqSensor",handleRequestSensor);    // Wert eines Sensors ausgeben
-  server.on("/reqActor",handleRequestActor);      // Wert eines Aktors ausgeben
+  server.on("/reqSensor",handleRequestSensor);    // Infos der Sensoren für WebConfig
+  server.on("/reqActor",handleRequestActor);      // Infos der Aktoren für WebConfig
+  server.on("/reqIndu",handleRequestIndu);        // Infos der Indu für WebConfig
 
   server.on("/setSensor",handleSetSensor);        // Sensor Ändern
   server.on("/setActor",handleSetActor);          // Aktor ändern
+  server.on("/setIndu",handleSetIndu);            // Indu ändenr
 
   server.on("/delSensor",handleDelSensor);        // Sensor löschen
-  server.on("/delActor",handleDelActor);          // Aktor löschen
+//  server.on("/delActor",handleDelActor);          // Aktor löschen
     
   server.onNotFound(handleWebRequests);           // Sonstiges
   

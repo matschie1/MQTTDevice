@@ -15,13 +15,14 @@ bool loadConfig() {
 
   configFile.readBytes(buf.get(), size);
 
-  StaticJsonBuffer<1000> jsonBuffer;
+  StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buf.get());
 
   if (!json.success()) {
     return false;
   } 
 
+  //Read Actors  
   JsonArray& jsonactors = json["actors"];
 
   numberOfActors = jsonactors.size();
@@ -30,7 +31,7 @@ bool loadConfig() {
     numberOfActors = 6; 
   }
   
-  // Read Actors  
+  
   for (int i = 0; i < numberOfActors; i++) {
     if (i < numberOfActors) {
      JsonObject& jsonactor = jsonactors[i];    
@@ -43,6 +44,7 @@ bool loadConfig() {
    yield();
   }
 
+  // Read Sensors
   JsonArray& jsonsensors = json["sensors"];
   numberOfSensors = jsonsensors.size();
   Serial.print("Number of Sensors loaded: ");
@@ -63,7 +65,23 @@ bool loadConfig() {
       sensors[i].change("","","");
     }   
   }
-    yield();
+
+  // Read Induction
+  JsonArray& jsinductions = json["induction"];
+  JsonObject& jsinduction = jsinductions[0]; 
+  String pin_white = jsinduction["PINWHITE"];
+  String pin_yellow = jsinduction["PINYELLOW"];
+  String pin_blue = jsinduction["PINBLUE"];
+  String is_enabled_str = jsinduction["ENABLED"];
+  bool is_enabled_bl = false;
+    if (is_enabled_str == "1") { is_enabled_bl = true; }
+
+  String mqtttopic = jsinduction["TOPIC"];
+  long delayoff = atol(jsinduction["DELAY"]);
+ 
+  inductionCooker.change(StringToPin(pin_white),StringToPin(pin_yellow),StringToPin(pin_blue),mqtttopic,delayoff,is_enabled_bl);  
+  
+  yield();
 return true;
 }
 
@@ -74,7 +92,7 @@ void saveConfigCallback () {
 
 bool saveConfig() {
   
-  StaticJsonBuffer<512> jsonBuffer;
+  StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
 
   File configFile = SPIFFS.open("/config.json", "w");
@@ -87,13 +105,14 @@ bool saveConfig() {
   JsonArray& jsactors = json.createNestedArray("actors");
   for (int i = 0; i < numberOfActors; i++) {
     JsonObject& jsactor = jsactors.createNestedObject();
-    jsactor["PIN"] = actors[i].getPinStr();
+    jsactor["PIN"] = PinToString(actors[i].pin_actor);
     jsactor["NAME"] = actors[i].name_actor;
     jsactor["SCRIPT"] = actors[i].argument_actor;
     jsactor["INVERTED"] = actors[i].getInverted();
     yield();
   }
-
+  
+  // Write Sensors
   JsonArray& jssensors = json.createNestedArray("sensors");
   for (int i = 0; i < numberOfSensors; i++) {
     JsonObject& jssensor = jssensors.createNestedObject();
@@ -102,7 +121,17 @@ bool saveConfig() {
     jssensor["SCRIPT"] = sensors[i].sens_mqtttopic;
     yield();
   }
-   
+
+  // Write Induction
+  JsonArray& jsinductions = json.createNestedArray("induction");
+  JsonObject&  jsinduction = jsinductions.createNestedObject();
+    if (inductionCooker.isEnabled) { jsinduction["ENABLED"] = "1"; } else { jsinduction["ENABLED"] = "0"; }
+    jsinduction["PINWHITE"] = PinToString(inductionCooker.PIN_WHITE); 
+    jsinduction["PINYELLOW"] = PinToString(inductionCooker.PIN_YELLOW); 
+    jsinduction["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT); 
+    jsinduction["TOPIC"] = inductionCooker.mqtttopic; 
+    jsinduction["DELAY"] = inductionCooker.delayAfteroff; 
+    
   json.printTo(configFile);
   return true;
 }

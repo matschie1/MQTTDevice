@@ -160,22 +160,22 @@
           </div>
           <div class="form-group">
             <label for="modal_induction_pinwhite">PIN White (Relais)</label>
-            <input type="text" class="form-control" placeholder="" id="modal_induction_pinwhite">
+            <select class="form-control" id="modal_induction_pinwhite"></select>
           </div>
           <div class="form-group">
             <label for="modal_induction_pinyellow">PIN Yellow (Command Channel)</label>
-            <input type="text" class="form-control" placeholder="" id="modal_induction_pinyellow">
+            <select class="form-control" id="modal_induction_pinyellow"></select>
           </div>
           <div class="form-group">
             <label for="modal_induction_pinblue">PIN Blue (Backchannel)</label>
-            <input type="text" class="form-control" placeholder="" id="modal_induction_pinblue">
+            <select class="form-control" id="modal_induction_pinblue"></select>
           </div>
           <div class="form-group">
             <label for="modal_induction_delay">Delay after Power off</label>
             <input type="text" class="form-control" placeholder="" id="modal_induction_delay">
           </div>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_sensor_btn_save">Save changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> <button type="button" class="btn btn-danger" id="modal_sensor_btn_delete">Delete Sensor</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_induction_btn_save">Save changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
       </div>
     </div>
   </div>
@@ -279,6 +279,7 @@
       modal.modal('hide')
     });
   </script>
+
   <script>
     $('#sensor_modal').on('show.bs.modal', function(event) {
       var button = $(event.relatedTarget) // Button that triggered the modal
@@ -343,4 +344,89 @@
           $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensor)
         });
   </script>
+
+  <script>
+    $('#induction_modal').on('show.bs.modal', function(event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      var mqtttopic;
+      var isEnabled;
+      var pin_white;
+      var pin_blue;
+      var pin_yellow;
+      var delay;
+
+      $.ajax({
+        url: '/reqIndu?req=isEnabled',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          isEnabled = data;
+        }
+      });
+      $.ajax({
+        url: '/reqIndu?req=topic',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          mqtttopic = data;
+        }
+      });
+      $.ajax({
+        url: '/reqIndu?req=delay',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function(data) {
+          delay = data;
+        }
+      });
+
+      $('#modal_induction_pinwhite').load('/reqIndu?req=pins&id=0')
+      $('#modal_induction_pinyellow').load('/reqIndu?req=pins&id=1')
+      $('#modal_induction_pinblue').load('/reqIndu?req=pins&id=2')
+
+
+      var modal = $(this)
+      modal.find('#modal_induction_script').val(mqtttopic)
+      modal.find('#modal_induction_delay').val(delay)
+      if (isEnabled == "1") { modal.find('#modal_induction_enabled').prop("checked",true) }
+      else {modal.find('#modal_induction_enabled').prop("checked",false)}
+
+      var modal = $(this)
+
+      });
+
+
+
+      $("#modal_induction_btn_save").click(function() {
+        var modal = $('#induction_modal')
+
+        var mqtttopic = modal.find('#modal_induction_script').val()
+        var pin_white = modal.find('#modal_induction_pinwhite').val()
+        var pin_blue = modal.find('#modal_induction_pinblue').val()
+        var pin_yellow = modal.find('#modal_induction_pinyellow').val()
+        var delay = modal.find('#modal_induction_delay').val()
+
+        if (modal.find('#modal_induction_enabled').prop("checked") == true) {
+          var isenabled = "1"
+        } else {
+          var isenabled = "0"
+        }
+
+        $.ajax({
+          url: '/setIndu?enabled=' + isenabled + '&topic=' + mqtttopic + '&pinwhite=' + pin_white + '&pinyellow=' + pin_yellow + '&pinblue=' + pin_blue + '&delay=' + delay,
+          type: 'POST',
+          dataType: 'html',
+          async: false,
+          cache: false
+        });
+        modal.modal('hide')
+      });
+  </script>
+
 </html>

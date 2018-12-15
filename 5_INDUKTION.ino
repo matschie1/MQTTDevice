@@ -1,10 +1,8 @@
 class induction
 {    
-  byte PIN_WHITE = D5;       // RELAIS
-  byte PIN_YELLOW = D7;      // AUSGABE AN PLATTE
-  byte PIN_INTERRUPT = D6;   // EINGABE VON PLATTE  
+
   unsigned long timeTurnedoff;
-  long delayAfteroff = 120000; 
+  
   long timeOutCommand = 5000;      // TimeOut für Seriellen Befehl
   long timeOutReaction = 2000;    // TimeOut für Induktionskochfeld
   unsigned long lastInterrupt;
@@ -22,44 +20,98 @@ class induction
   long powerLow = 0;   
      
   public:    
+    byte PIN_WHITE = 9;       // RELAIS
+    byte PIN_YELLOW = 9;      // AUSGABE AN PLATTE
+    byte PIN_INTERRUPT = 9;   // EINGABE VON PLATTE    
     int power = 0;    
     int newPower = 0;     
     byte CMD_CUR = 0;                 // Aktueller Befehl
     boolean isRelayon = false;        // Systemstatus: ist das Relais in der Platte an?
     boolean isInduon = false;         // Systemstatus: ist Power > 0?
     boolean isPower = false;
-    String mqtttopic = "mqtt_indu2";
-    boolean isEnabled = true;
+    String mqtttopic = "";
+    boolean isEnabled = false;
+    long delayAfteroff = 120000; 
     
-  induction(byte pin_white, byte pin_yellow, byte pin_interrupt, long delay_turnoff) { 
-    PIN_WHITE = pin_white;
-    PIN_YELLOW = pin_yellow;
-    PIN_INTERRUPT = pin_interrupt;
-    delayAfteroff = delay_turnoff;
-    
-    pinMode(PIN_WHITE, OUTPUT);
-    digitalWrite(PIN_WHITE, LOW);
-    pins_used[PIN_WHITE] = true;
-
-    pinMode(PIN_INTERRUPT, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
-    pins_used[PIN_INTERRUPT] = true;
-
-    pinMode(PIN_YELLOW, OUTPUT);     
-    digitalWrite(PIN_YELLOW, HIGH);
-    pins_used[PIN_YELLOW] = true;
-
-    
-    
+  induction() {   
     setupCommands();
   }
 
+ void change(byte pinwhite, byte pinyellow, byte pinblue, String topic, long delayoff, bool is_enabled) {
+    if (isEnabled) {
+      // aktuelle PINS deaktivieren
+      if (isPin(PIN_WHITE)) {
+        digitalWrite(PIN_WHITE, HIGH);
+        pins_used[PIN_WHITE] = false;        
+      }
+
+      if (isPin(PIN_YELLOW)) {
+        digitalWrite(PIN_YELLOW, HIGH);
+        pins_used[PIN_YELLOW] = false;         
+      }
+
+      if (isPin(PIN_INTERRUPT)) {
+        detachInterrupt(PIN_INTERRUPT);
+        pinMode(PIN_INTERRUPT, OUTPUT);
+        pins_used[PIN_INTERRUPT] = false;        
+      }
+
+      mqtt_unsubscribe();
+    }
+
+    // Neue Variablen Speichern
+
+    PIN_WHITE = pinwhite;
+    PIN_YELLOW = pinyellow;
+    PIN_INTERRUPT = pinblue;
+
+    mqtttopic = topic;
+    delayAfteroff = delayoff;
+
+    isEnabled = is_enabled;
+
+    saveConfig();
+
+    if (isEnabled) {
+      // neue PINS aktiveren
+      if (isPin(PIN_WHITE)) {
+        pinMode(PIN_WHITE, OUTPUT);
+        digitalWrite(PIN_WHITE, LOW);
+        pins_used[PIN_WHITE] = true;
+      }
+
+      if (isPin(PIN_YELLOW)) {
+        pinMode(PIN_YELLOW, OUTPUT);
+        digitalWrite(PIN_YELLOW, LOW);
+        pins_used[PIN_YELLOW] = true;
+      }
+
+      if (isPin(PIN_INTERRUPT)) {
+        pinMode(PIN_INTERRUPT, INPUT_PULLUP);
+        attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
+        pins_used[PIN_INTERRUPT] = true;  
+      }          
+
+      mqtt_subscribe();
+    } 
+ }
+
   void mqtt_subscribe() {
+    if (isEnabled) {
+      char subscribemsg[50];
+      mqtttopic.toCharArray(subscribemsg,50);
+      Serial.print("Subscribing to ");
+      Serial.println(subscribemsg);
+      client.subscribe(subscribemsg);      
+    }
+  }
+
+  void mqtt_unsubscribe() {
     char subscribemsg[50];
     mqtttopic.toCharArray(subscribemsg,50);
-    Serial.print("Subscribing to ");
+    Serial.print("Unsubscribing from ");
     Serial.println(subscribemsg);
-    client.subscribe(subscribemsg);
+    client.unsubscribe(subscribemsg);    
   }
     
 
@@ -237,7 +289,7 @@ class induction
   }   
 }
 
-inductionCooker = induction(D5,D7,D6,120000);
+inductionCooker = induction();
 
 void readInputWrap() {
   inductionCooker.readInput();
@@ -250,6 +302,8 @@ void handleInduction() {
 
 void handleRequestInduction() {
   String message;
+
+    if (inductionCooker.isEnabled) {
     message += F("<li class=\"list-group-item d-flex justify-content-between align-items-center\"> Relais status <span class=\"badge ");
     if (inductionCooker.isRelayon) { message += "badge-success\"> ON"; } else { message += "badge-danger\"> OFF"; }
     message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\"> Power requested <span class=\"badge badge-success\">");
@@ -259,6 +313,82 @@ void handleRequestInduction() {
     message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\">");
   //  message += induction.errorMessage;
     message += F("</li>");  
+    } else {
+      message = F("<li class=\"list-group-item d-flex justify-content-between align-items-center\">Induction Cooker Disabled</li>");
+    }
   
     server.send(200,"text/html", message);
+}
+
+void handleRequestIndu() {
+
+
+  String request = server.arg(0);
+  String message;
+
+    if (request == "isEnabled") { 
+      if (inductionCooker.isEnabled) { message = "1"; } 
+      else { message = "0"; }
+      goto SendMessage; 
+    }
+    if (request == "topic") { message = inductionCooker.mqtttopic; goto SendMessage; }
+    if (request == "delay") { message = inductionCooker.delayAfteroff; goto SendMessage; }
+    if (request == "pins")  { 
+      int id = server.arg(1).toInt();
+      byte pinswitched;
+        switch (id) {
+          case 0: 
+            pinswitched = inductionCooker.PIN_WHITE;
+            break;
+          case 1:
+            pinswitched = inductionCooker.PIN_YELLOW;
+            break;
+          case 2:
+            pinswitched = inductionCooker.PIN_INTERRUPT;
+            break;
+        }
+      if (isPin(pinswitched)) {
+        message += F("<option>");
+        message += PinToString(pinswitched);  
+        message += F("</option><option disabled>──────────</option>"); 
+      }
+
+      for (int i = 0; i < numberOfPins; i++) {
+        if (pins_used[pins[i]]== false) {
+          message += F("<option>");
+          message += pin_names[i];
+          message += F("</option>");      
+       }
+       yield();
+      }
+      goto SendMessage;
+    }  
+
+  SendMessage:
+    server.send(200,"text/plain",message);    
+}
+
+void handleSetIndu() {
+
+  byte pin_white = inductionCooker.PIN_WHITE;
+  byte pin_blue = inductionCooker.PIN_INTERRUPT;
+  byte pin_yellow = inductionCooker.PIN_YELLOW;
+  long delayoff = inductionCooker.delayAfteroff;
+  bool is_enabled = inductionCooker.isEnabled;
+  String topic = inductionCooker.mqtttopic;
+  
+  
+  for (int i = 0; i < server.args(); i++) {
+    if (server.argName(i) == "enabled") { if (server.arg(i) == "1") { is_enabled = true; } else { is_enabled = false; } }  
+    if (server.argName(i) == "topic")  {  topic = server.arg(i); }  
+    if (server.argName(i) == "pinwhite")  { pin_white = StringToPin(server.arg(i)); }
+    if (server.argName(i) == "pinyellow")  { pin_yellow = StringToPin(server.arg(i)); }
+    if (server.argName(i) == "pinblue")  { pin_blue = StringToPin(server.arg(i)); }
+    if (server.argName(i) == "delay")  { delayoff = server.arg(i).toInt(); }
+    yield();       
+  }
+
+  inductionCooker.change(pin_white,pin_yellow,pin_blue,topic,delayoff,is_enabled);  
+  
+  saveConfig();
 }

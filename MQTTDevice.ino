@@ -88,4 +88,4 @@ byte numberOfSensorsFound = 0;
 
 byte numberOfActors = 0;         // Gesamtzahl der Aktoren
 
-char mqtthost[16] = "192.168.178.236";
+char mqtthost[16] = "192.168.178.234";
