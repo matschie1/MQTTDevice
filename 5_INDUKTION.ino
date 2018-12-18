@@ -171,10 +171,12 @@ class induction
     isRelayon = updateRelay();
 
     if (isInduon && power > 0) {
-      if (millis() > powerLast + powerSampletime) { powerLast = millis(); }
-      if (millis() > powerLast + powerHigh) { sendCommand(CMD[CMD_CUR-1]); isPower = false; }
-      else                                  { sendCommand(CMD[CMD_CUR]);   isPower = true;  }         
-    } 
+        if (millis() > powerLast + powerSampletime) { powerLast = millis(); }
+        if (millis() > powerLast + powerHigh) { sendCommand(CMD[CMD_CUR-1]); isPower = false; }
+        else                                  { sendCommand(CMD[CMD_CUR]);   isPower = true;  }     
+    } else if (isRelayon) {
+        sendCommand(CMD[0]);      
+    }
   }
   
   void updatePower() {
