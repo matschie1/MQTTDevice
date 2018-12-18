@@ -49,12 +49,9 @@ class TemperatureSensor
      sens_name = new_name;
      if (new_address.length() == 16) {
       char address_char[16];
-      Serial.print("Saving new Address: ");
-      Serial.print(new_address);
-      Serial.print("/");   
+ 
       new_address.toCharArray(address_char,17);    
-      Serial.print(address_char);
-      Serial.print("/");
+
 
 
       char hexbyte[2];
@@ -153,8 +150,6 @@ String SensorAddressToString(byte addr[8]) {
 //  for (int i = 0; i < 8; i++) {
 //    AddressString += addr[i];
 //  }
-  Serial.print("Sending Sensor name ");
-  Serial.println(charbuffer);
   return charbuffer;
 }
 

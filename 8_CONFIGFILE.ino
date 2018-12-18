@@ -41,7 +41,6 @@ bool loadConfig() {
      String ainverted = jsonactor["INVERTED"];
      actors[i].change(pin,script,aname,ainverted);     
    } 
-   yield();
   }
 
   // Read Sensors
@@ -76,12 +75,15 @@ bool loadConfig() {
   bool is_enabled_bl = false;
     if (is_enabled_str == "1") { is_enabled_bl = true; }
 
-  String mqtttopic = jsinduction["TOPIC"];
+  String js_mqtttopic = jsinduction["TOPIC"];
   long delayoff = atol(jsinduction["DELAY"]);
- 
-  inductionCooker.change(StringToPin(pin_white),StringToPin(pin_yellow),StringToPin(pin_blue),mqtttopic,delayoff,is_enabled_bl);  
-  
-  yield();
+
+  inductionCooker.change(StringToPin(pin_white),StringToPin(pin_yellow),StringToPin(pin_blue),js_mqtttopic,delayoff,is_enabled_bl);  
+
+  // General Settings
+  String json_mqtthost = json["MQTTHOST"];
+  json_mqtthost.toCharArray(mqtthost,16);    
+      
 return true;
 }
 
@@ -109,7 +111,6 @@ bool saveConfig() {
     jsactor["NAME"] = actors[i].name_actor;
     jsactor["SCRIPT"] = actors[i].argument_actor;
     jsactor["INVERTED"] = actors[i].getInverted();
-    yield();
   }
   
   // Write Sensors
@@ -119,7 +120,6 @@ bool saveConfig() {
     jssensor["ADDRESS"] = sensors[i].getSens_adress_string();
     jssensor["NAME"] = sensors[i].sens_name;
     jssensor["SCRIPT"] = sensors[i].sens_mqtttopic;
-    yield();
   }
 
   // Write Induction
@@ -131,7 +131,9 @@ bool saveConfig() {
     jsinduction["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT); 
     jsinduction["TOPIC"] = inductionCooker.mqtttopic; 
     jsinduction["DELAY"] = inductionCooker.delayAfteroff; 
-    
+
+  // Write General Stuff
+  json["MQTTHOST"] = mqtthost;
   json.printTo(configFile);
   return true;
 }

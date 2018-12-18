@@ -47,12 +47,12 @@ bool loadFromSpiffs(String path){
 
 void mqttreconnect() {
   while (!client.connected()) {
-    if (client.connect("Indu2")) {
+    if (client.connect("InductionSteuerung")) {
       for (int i = 0; i < numberOfActors; i++) {
         actors[i].mqtt_subscribe();
-        inductionCooker.mqtt_subscribe();
         yield();
       }
+    inductionCooker.mqtt_subscribe();
     }
   }
 }

@@ -5,12 +5,15 @@ void setup() {
   DS18B20.begin();        
 
   // Dateisystem laden
+  ESP.wdtFeed();
   if (!SPIFFS.begin())  { Serial.println("SPIFFS Mount failed"); } 
-
+  
   // Einstellungen laden
+  ESP.wdtFeed();
   loadConfig();
  
   // WiFi Manager
+  ESP.wdtFeed();
   WiFiManagerParameter cstm_mqtthost("host", "cbpi ip", mqtthost, 16);
   wifiManager.setSaveConfigCallback(saveConfigCallback);  
   wifiManager.addParameter(&cstm_mqtthost);
@@ -18,6 +21,7 @@ void setup() {
   strcpy(mqtthost, cstm_mqtthost.getValue());
   
   // Änderungen speichern
+  ESP.wdtFeed();
   saveConfig();
   
   // MQTT starten
@@ -25,6 +29,7 @@ void setup() {
   client.setCallback(mqttcallback);
 
   // Webserver starten
+  ESP.wdtFeed();
   setupServer();
 }
 

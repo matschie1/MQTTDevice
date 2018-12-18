@@ -71,8 +71,6 @@ class induction
 
     isEnabled = is_enabled;
 
-    saveConfig();
-
     if (isEnabled) {
       // neue PINS aktiveren
       if (isPin(PIN_WHITE)) {
@@ -92,8 +90,9 @@ class induction
         //attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
         pins_used[PIN_INTERRUPT] = true;  
       }          
-
-      mqtt_subscribe();
+      if (client.connected()) {
+        mqtt_subscribe();
+      }      
     } 
  }
 
@@ -391,7 +390,7 @@ void handleSetIndu() {
     yield();       
   }
 
-  inductionCooker.change(pin_white,pin_yellow,pin_blue,topic,delayoff,is_enabled);  
+  inductionCooker.change(pin_white,pin_yellow,pin_blue,topic,delayoff,is_enabled); 
   
   saveConfig();
 }
