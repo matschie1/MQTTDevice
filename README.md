@@ -15,7 +15,7 @@ This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication 
 
 * Web Interface for configuration
 
-(https://github.com/matschie1/MQTTDevice/img/overview.png)
+(https://github.com/matschie1/MQTTDevice/img/Overview.png)
 
 * Sensors
   * Search for OneWire addresses
