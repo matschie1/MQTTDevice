@@ -86,8 +86,8 @@ class induction
       }
 
       if (isPin(PIN_INTERRUPT)) {
-        //pinMode(PIN_INTERRUPT, INPUT_PULLUP);
-        //attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
+        pinMode(PIN_INTERRUPT, INPUT_PULLUP);
+        attachInterrupt(digitalPinToInterrupt(PIN_INTERRUPT), readInputWrap, CHANGE);
         pins_used[PIN_INTERRUPT] = true;  
       }          
       if (client.connected()) {
