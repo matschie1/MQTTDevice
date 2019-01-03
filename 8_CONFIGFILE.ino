@@ -3,7 +3,9 @@ bool loadConfig() {
   if (!configFile) {
     Serial.println("Failed to open config file");
     return false;
-  } else { Serial.println("opened config file"); }
+  } else {
+    Serial.println("opened config file");
+  }
 
   size_t size = configFile.size();
   if (size > 1024) {
@@ -20,27 +22,27 @@ bool loadConfig() {
 
   if (!json.success()) {
     return false;
-  } 
+  }
 
-  //Read Actors  
+  //Read Actors
   JsonArray& jsonactors = json["actors"];
 
   numberOfActors = jsonactors.size();
-  
-  if (numberOfActors > 6) { 
-    numberOfActors = 6; 
+
+  if (numberOfActors > 6) {
+    numberOfActors = 6;
   }
-  
-  
+
+
   for (int i = 0; i < numberOfActors; i++) {
     if (i < numberOfActors) {
-     JsonObject& jsonactor = jsonactors[i];    
-     String pin = jsonactor["PIN"];
-     String script = jsonactor["SCRIPT"];
-     String aname = jsonactor["NAME"];
-     String ainverted = jsonactor["INVERTED"];
-     actors[i].change(pin,script,aname,ainverted);     
-   } 
+      JsonObject& jsonactor = jsonactors[i];
+      String pin = jsonactor["PIN"];
+      String script = jsonactor["SCRIPT"];
+      String aname = jsonactor["NAME"];
+      String ainverted = jsonactor["INVERTED"];
+      actors[i].change(pin, script, aname, ainverted);
+    }
   }
 
   // Read Sensors
@@ -49,42 +51,44 @@ bool loadConfig() {
   Serial.print("Number of Sensors loaded: ");
   Serial.println(numberOfSensors);
 
-  if (numberOfSensors > 10) { 
-    numberOfSensors = 10; 
+  if (numberOfSensors > 10) {
+    numberOfSensors = 10;
   }
 
   for (int i = 0; i < 10; i++) {
     if (i < numberOfSensors) {
-     JsonObject& jsonsensor = jsonsensors[i];    
-     String aadress = jsonsensor["ADDRESS"];
-     String ascript = jsonsensor["SCRIPT"];
-     String aname = jsonsensor["NAME"];
-     sensors[i].change(aadress,ascript,aname); 
+      JsonObject& jsonsensor = jsonsensors[i];
+      String aadress = jsonsensor["ADDRESS"];
+      String ascript = jsonsensor["SCRIPT"];
+      String aname = jsonsensor["NAME"];
+      sensors[i].change(aadress, ascript, aname);
     } else {
-      sensors[i].change("","","");
-    }   
+      sensors[i].change("", "", "");
+    }
   }
 
   // Read Induction
   JsonArray& jsinductions = json["induction"];
-  JsonObject& jsinduction = jsinductions[0]; 
+  JsonObject& jsinduction = jsinductions[0];
   String pin_white = jsinduction["PINWHITE"];
   String pin_yellow = jsinduction["PINYELLOW"];
   String pin_blue = jsinduction["PINBLUE"];
   String is_enabled_str = jsinduction["ENABLED"];
   bool is_enabled_bl = false;
-    if (is_enabled_str == "1") { is_enabled_bl = true; }
+  if (is_enabled_str == "1") {
+    is_enabled_bl = true;
+  }
 
   String js_mqtttopic = jsinduction["TOPIC"];
   long delayoff = atol(jsinduction["DELAY"]);
 
-  inductionCooker.change(StringToPin(pin_white),StringToPin(pin_yellow),StringToPin(pin_blue),js_mqtttopic,delayoff,is_enabled_bl);  
+  inductionCooker.change(StringToPin(pin_white), StringToPin(pin_yellow), StringToPin(pin_blue), js_mqtttopic, delayoff, is_enabled_bl);
 
   // General Settings
   String json_mqtthost = json["MQTTHOST"];
-  json_mqtthost.toCharArray(mqtthost,16);    
-      
-return true;
+  json_mqtthost.toCharArray(mqtthost, 16);
+
+  return true;
 }
 
 void saveConfigCallback () {
@@ -93,7 +97,7 @@ void saveConfigCallback () {
 
 
 bool saveConfig() {
-  
+
   StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
 
@@ -112,7 +116,7 @@ bool saveConfig() {
     jsactor["SCRIPT"] = actors[i].argument_actor;
     jsactor["INVERTED"] = actors[i].getInverted();
   }
-  
+
   // Write Sensors
   JsonArray& jssensors = json.createNestedArray("sensors");
   for (int i = 0; i < numberOfSensors; i++) {
@@ -125,12 +129,16 @@ bool saveConfig() {
   // Write Induction
   JsonArray& jsinductions = json.createNestedArray("induction");
   JsonObject&  jsinduction = jsinductions.createNestedObject();
-    if (inductionCooker.isEnabled) { jsinduction["ENABLED"] = "1"; } else { jsinduction["ENABLED"] = "0"; }
-    jsinduction["PINWHITE"] = PinToString(inductionCooker.PIN_WHITE); 
-    jsinduction["PINYELLOW"] = PinToString(inductionCooker.PIN_YELLOW); 
-    jsinduction["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT); 
-    jsinduction["TOPIC"] = inductionCooker.mqtttopic; 
-    jsinduction["DELAY"] = inductionCooker.delayAfteroff; 
+  if (inductionCooker.isEnabled) {
+    jsinduction["ENABLED"] = "1";
+  } else {
+    jsinduction["ENABLED"] = "0";
+  }
+  jsinduction["PINWHITE"] = PinToString(inductionCooker.PIN_WHITE);
+  jsinduction["PINYELLOW"] = PinToString(inductionCooker.PIN_YELLOW);
+  jsinduction["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT);
+  jsinduction["TOPIC"] = inductionCooker.mqtttopic;
+  jsinduction["DELAY"] = inductionCooker.delayAfteroff;
 
   // Write General Stuff
   json["MQTTHOST"] = mqtthost;
