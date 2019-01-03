@@ -4,6 +4,9 @@ void loop() {
     wifiManager.autoConnect("MQTTDevice");
   }
 
+  // OTA
+  ArduinoOTA.handle();
+
   // MQTT Status prüfen
   if (!client.connected()) {
     mqttreconnect();
