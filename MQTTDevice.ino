@@ -1,12 +1,12 @@
 /*
- * Sketch für ESP8266
- * Kommunikation via MQTT mit CraftBeerPi v3
- * 
- * Unterstützung für DS18B20 Sensoren
- * Unterstützung für GPIO Aktoren
- * Unterstützung für GGM Induktionskochfeld
- * Unterstützung für "PWM" Steuerung mit GPIO (Heizstab)
- */
+   Sketch für ESP8266
+   Kommunikation via MQTT mit CraftBeerPi v3
+
+   Unterstützung für DS18B20 Sensoren
+   Unterstützung für GPIO Aktoren
+   Unterstützung für GGM Induktionskochfeld
+   Unterstützung für "PWM" Steuerung mit GPIO (Heizstab)
+*/
 
 /*########## INCLUDES ##########*/
 //#include <Wire.h>               // i2C Kommunikation, derzeit ungenutzt
@@ -25,7 +25,7 @@
 /*########## KONSTANTEN #########*/
 
 // OneWire
-#define ONE_WIRE_BUS D3         
+#define ONE_WIRE_BUS D3
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
 
@@ -36,13 +36,13 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 
 // Induktion
-/*  Signallaufzeiten */ 
-const int SIGNAL_HIGH = 5120; 
+/*  Signallaufzeiten */
+const int SIGNAL_HIGH = 5120;
 const int SIGNAL_HIGH_TOL = 1500;
-const int SIGNAL_LOW = 1280;  
+const int SIGNAL_LOW = 1280;
 const int SIGNAL_LOW_TOL = 500;
 const int SIGNAL_START = 25;
-const int SIGNAL_START_TOL = 10; 
+const int SIGNAL_START_TOL = 10;
 const int SIGNAL_WAIT = 10;
 const int SIGNAL_WAIT_TOL = 5;
 
@@ -53,8 +53,9 @@ int CMD[6][33] = {
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0},  // P2
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},  // P3
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},  // P4
-  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0} };// P5
-byte PWR_STEPS[] = {0,20,40,60,80,100}; // Prozentuale Abstufung zwischen den Stufen
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}
+};// P5
+byte PWR_STEPS[] = {0, 20, 40, 60, 80, 100}; // Prozentuale Abstufung zwischen den Stufen
 
 String errorMessages[10] = {
   "E0",
@@ -67,12 +68,12 @@ String errorMessages[10] = {
   "E7",
   "E8",
   "EC"
-  };  
+};
 
 bool pins_used[17];
-const byte pins[9] = {D0,D1,D2,D3,D4,D5,D6,D7,D8};
+const byte pins[9] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 const byte numberOfPins = 9;
-const String pin_names[9] = {"D0","D1","D2","D3","D4","D5","D6","D7","D8"};
+const String pin_names[9] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
 // Induktionskochfeld
 //const byte PIN_WHITE = D5;       // RELAIS
