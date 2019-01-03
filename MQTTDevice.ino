@@ -6,6 +6,8 @@
    Unterstützung für GPIO Aktoren
    Unterstützung für GGM Induktionskochfeld
    Unterstützung für "PWM" Steuerung mit GPIO (Heizstab)
+
+   Unterstützung for OverTheAir Firmware Changes
 */
 
 /*########## INCLUDES ##########*/
@@ -22,6 +24,9 @@
 #include <FS.h>                 // SPIFFS Zugriff
 #include <ArduinoJson.h>        // Lesen und schreiben von JSON Dateien
 
+#include <ESP8266mDNS.h>        // OTA
+#include <WiFiUdp.h>            // OTA
+#include <ArduinoOTA.h>         // OTA
 /*########## KONSTANTEN #########*/
 
 // OneWire
@@ -34,6 +39,9 @@ ESP8266WebServer server(80);
 WiFiManager wifiManager;
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+// OTA
+WiFiServer TelnetServer(8266);
 
 // Induktion
 /*  Signallaufzeiten */
@@ -82,11 +90,11 @@ const String pin_names[9] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8
 
 /*########## VARIABLEN #########*/
 
-byte numberOfSensors = 0;        // Gesamtzahl der Sensoren
+byte numberOfSensors = 0;              // Gesamtzahl der Sensoren
 const byte numberOfSensorsMax = 10;    // Maximale Gesamtzahl Sensoren
 byte addressesFound[numberOfSensorsMax][8];
 byte numberOfSensorsFound = 0;
 
-byte numberOfActors = 0;         // Gesamtzahl der Aktoren
+byte numberOfActors = 0;                // Gesamtzahl der Aktoren
 
-char mqtthost[16] = "192.168.178.234";
+char mqtthost[16] = "192.168.178.234";  // Default Value für MQTT Server

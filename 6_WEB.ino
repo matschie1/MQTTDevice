@@ -50,8 +50,11 @@ bool loadFromSpiffs(String path) {
 }
 
 void mqttreconnect() {
+  int mqtt_chip_key = ESP.getChipId();
+  char mqtt_clientid[25];
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
   while (!client.connected()) {
-    if (client.connect("InductionSteuerung")) {
+    if (client.connect(mqtt_clientid)) {
       for (int i = 0; i < numberOfActors; i++) {
         actors[i].mqtt_subscribe();
         yield();
