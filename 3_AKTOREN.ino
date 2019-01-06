@@ -75,19 +75,24 @@ class Actor
     }
 
     void mqtt_subscribe() {
-      char subscribemsg[50];
-      argument_actor.toCharArray(subscribemsg, 50);
-      Serial.print("Subscribing to ");
-      Serial.println(subscribemsg);
-      client.subscribe(subscribemsg);
+      if (client.connected()) {
+        char subscribemsg[50];
+        argument_actor.toCharArray(subscribemsg, 50);
+        Serial.print("Subscribing to ");
+        Serial.println(subscribemsg);
+        client.subscribe(subscribemsg);      
+      }
+
     }
 
     void mqtt_unsubscribe() {
-      char subscribemsg[50];
-      argument_actor.toCharArray(subscribemsg, 50);
-      Serial.print("Unsubscribing from ");
-      Serial.println(subscribemsg);
-      client.unsubscribe(subscribemsg);
+     if (client.connected()) {
+        char subscribemsg[50];
+        argument_actor.toCharArray(subscribemsg, 50);
+        Serial.print("Unsubscribing from ");
+        Serial.println(subscribemsg);
+        client.unsubscribe(subscribemsg);      
+      }
     }
 
     void handlemqtt(char* payload) {

@@ -83,11 +83,6 @@ const byte pins[9] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 const byte numberOfPins = 9;
 const String pin_names[9] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
-// Induktionskochfeld
-//const byte PIN_WHITE = D5;       // RELAIS
-//const byte PIN_YELLOW = D7;      // AUSGABE AN PLATTE
-//const byte PIN_INTERRUPT = D6;   // EINGABE VON PLATTE
-
 /*########## VARIABLEN #########*/
 
 byte numberOfSensors = 0;              // Gesamtzahl der Sensoren
@@ -98,3 +93,6 @@ byte numberOfSensorsFound = 0;
 byte numberOfActors = 0;                // Gesamtzahl der Aktoren
 
 char mqtthost[16] = "192.168.178.234";  // Default Value für MQTT Server
+long mqttconnectlasttry;
+long mqttconnectdelay = 30000;
+byte mqttnumberoftrys = 3;
