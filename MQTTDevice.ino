@@ -40,9 +40,6 @@ WiFiManager wifiManager;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// OTA
-WiFiServer TelnetServer(8266);
-
 // Induktion
 /*  Signallaufzeiten */
 const int SIGNAL_HIGH = 5120;
@@ -96,3 +93,8 @@ char mqtthost[16] = "192.168.178.234";  // Default Value für MQTT Server
 long mqttconnectlasttry;
 long mqttconnectdelay = 30000;
 byte mqttnumberoftrys = 3;
+
+int mqtt_chip_key = ESP.getChipId();
+char mqtt_clientid[25];
+
+File fsUploadFile;                      // a File object to temporarily store the received file

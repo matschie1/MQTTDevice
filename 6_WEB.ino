@@ -50,12 +50,7 @@ bool loadFromSpiffs(String path) {
 }
 
 void mqttreconnect() {
-  // Create MQTT Name from Chip ID
-  int mqtt_chip_key = ESP.getChipId();
-  char mqtt_clientid[25];
-  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
   // 10 Tries for reconnect
-
   // Wenn Client nicht verbunden, Verbindung herstellen
   if (!client.connected()) {
     // Delay prüfen

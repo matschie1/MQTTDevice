@@ -9,6 +9,23 @@ void setup() {
   if (!SPIFFS.begin())  {
     Serial.println("SPIFFS Mount failed");
   }
+  Dir dir = SPIFFS.openDir("/");
+  Serial.printf("\n");
+  while (dir.next()) {
+    String fileName = dir.fileName();
+    size_t fileSize = dir.fileSize();
+    Serial.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
+  }
+  Serial.printf("\n");
+
+  // Set device name
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
+  
+  // mDNS laden
+  ESP.wdtFeed();
+  if (!MDNS.begin(mqtt_clientid)) {
+    Serial.println("Error setting up MDNS responder!");
+  }
 
   // Einstellungen laden
   ESP.wdtFeed();
@@ -28,20 +45,58 @@ void setup() {
 
   // ArduinoOTA aktivieren
   setupOTA();
-  
+
   // MQTT starten
   client.setServer(mqtthost, 1883);
   client.setCallback(mqttcallback);
 
+  // FSBrowser initialisieren
+  // list directory
+  server.on("/list", HTTP_GET, handleFileList);
+  // load editor
+  server.on("/edit", HTTP_GET, []() {
+    if (!handleFileRead("/edit.htm")) {
+      server.send(404, "text/plain", "FileNotFound");
+    }
+  });
+  // create file
+  server.on("/edit", HTTP_PUT, handleFileCreate);
+  // delete file
+  server.on("/edit", HTTP_DELETE, handleFileDelete);
+  // first callback is called after the request has ended with all parsed arguments
+  // second callback handles file uploads at that location
+  server.on("/edit", HTTP_POST, []() {
+    server.send(200, "text/plain", "");
+  }, handleFileUpload);
+
+  // called when the url is not defined here
+  // use it to load content from SPIFFS
+  server.onNotFound([]() {
+    if (!handleFileRead(server.uri())) {
+      server.send(404, "text/plain", "FileNotFound");
+    }
+  });
+
+  // get heap status, analog input value and all GPIO statuses in one json call
+  server.on("/all", HTTP_GET, []() {
+    String json = "{";
+    json += "\"heap\":" + String(ESP.getFreeHeap());
+    json += ", \"analog\":" + String(analogRead(A0));
+    json += ", \"gpio\":" + String((uint32_t)(((GPI | GPO) & 0xFFFF) | ((GP16I & 0x01) << 16)));
+    json += "}";
+    server.send(200, "text/json", json);
+    json = String();
+  });
+  
   // Webserver starten
   ESP.wdtFeed();
   setupServer();
 }
 
+
 void setupServer() {
-
   server.on("/", handleRoot);
-
+  
   server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
   server.on("/setupSensor", handleSetSensor);     // Einstellen der Sensoren
 
@@ -70,14 +125,13 @@ void setupServer() {
 
 
 void setupOTA() {
-  Serial.print("Configuring OTA device...");
-  TelnetServer.begin();   //Necesary to make Arduino Software autodetect OTA device
+  Serial.print("Configuring OTA device ");
+  Serial.println(mqtt_clientid);
   ArduinoOTA.onStart([]() {
     Serial.println("OTA starting...");
   });
   ArduinoOTA.onEnd([]() {
     Serial.println("OTA update finished!");
-    Serial.println("Rebooting...");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("OTA in progress: %u%%\r\n", (progress / (total / 100)));
@@ -91,5 +145,4 @@ void setupOTA() {
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
   ArduinoOTA.begin();
-  Serial.println("OTA OK");
 }
