@@ -1,7 +1,7 @@
 void loop() {
   // set device name
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  
+
   // WiFi Status prüfen, ggf. Reconnecten
   if (WiFi.status() != WL_CONNECTED) {
     wifiManager.autoConnect("MQTTDevice");
@@ -21,7 +21,7 @@ void loop() {
 
   // mDNS aktualisieren
   MDNS.update();
-  
+
   // Sensoren aktualisieren
   handleSensors();
 

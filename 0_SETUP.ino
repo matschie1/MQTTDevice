@@ -20,7 +20,7 @@ void setup() {
 
   // Set device name
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  
+
   // mDNS laden
   ESP.wdtFeed();
   if (!MDNS.begin(mqtt_clientid)) {
@@ -87,7 +87,7 @@ void setup() {
     server.send(200, "text/json", json);
     json = String();
   });
-  
+
   // Webserver starten
   ESP.wdtFeed();
   setupServer();
@@ -96,7 +96,7 @@ void setup() {
 
 void setupServer() {
   server.on("/", handleRoot);
-  
+
   server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
   server.on("/setupSensor", handleSetSensor);     // Einstellen der Sensoren
 
@@ -123,10 +123,7 @@ void setupServer() {
   server.begin();
 }
 
-
 void setupOTA() {
-  Serial.print("Configuring OTA device ");
-  Serial.println(mqtt_clientid);
   ArduinoOTA.onStart([]() {
     Serial.println("OTA starting...");
   });
