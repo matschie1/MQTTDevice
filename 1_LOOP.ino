@@ -4,6 +4,7 @@ void loop() {
 
   // WiFi Status prüfen, ggf. Reconnecten
   if (WiFi.status() != WL_CONNECTED) {
+    cbpiEventSystem(1);
     wifiManager.autoConnect("MQTTDevice");
   }
 
@@ -23,13 +24,21 @@ void loop() {
   MDNS.update();
 
   // Sensoren aktualisieren
-  handleSensors();
-
+  cbpiEventSensors(0);
+  //handleSensors();
+  
   // Aktoren aktualisieren
-  handleActors();
+  cbpiEventActors(0);
+  //handleActors();
 
   // Induktionskochfeld
-  handleInduction();
-
+  cbpiEventInduction(0);
+  //handleInduction();
+  
+  // Eventmanager
+  while(gEM.getNumEventsInQueue()) // process all queued events
+  {
+    gEM.processEvent();
+  }
   delay(100);
 }

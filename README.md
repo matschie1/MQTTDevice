@@ -29,3 +29,9 @@ This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication 
   * Control of a GGM Induction Cooker via serial communication
 
 ## Installation
+
+...
+
+EventManager:
+Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager. Please note origin EventManager won't work! 
+Change the value onErrorInterval as you prefer.

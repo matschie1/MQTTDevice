@@ -103,7 +103,7 @@ class induction
           mqtttopic.toCharArray(subscribemsg, 50);
           Serial.print("Subscribing to ");
           Serial.println(subscribemsg);
-          client.subscribe(subscribemsg);         
+          client.subscribe(subscribemsg);
         }
       }
     }
@@ -114,7 +114,7 @@ class induction
         mqtttopic.toCharArray(subscribemsg, 50);
         Serial.print("Unsubscribing from ");
         Serial.println(subscribemsg);
-        client.unsubscribe(subscribemsg);       
+        client.unsubscribe(subscribemsg);
       }
     }
 
@@ -255,7 +255,7 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
     }
 
     void readInput() {
-      //  // Variablen sichern
+      // Variablen sichern
       bool ishigh = digitalRead(PIN_INTERRUPT);
       unsigned long newInterrupt = micros();
       long signalTime = newInterrupt - lastInterrupt;

@@ -93,7 +93,6 @@ void handleFileUpload() {
   }
 }
 
-
 void handleFileDelete() {
   if (server.args() == 0) {
     return server.send(500, "text/plain", "BAD ARGS");

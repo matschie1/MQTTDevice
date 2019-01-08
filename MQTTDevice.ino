@@ -27,6 +27,7 @@
 #include <ESP8266mDNS.h>        // OTA
 #include <WiFiUdp.h>            // OTA
 #include <ArduinoOTA.h>         // OTA
+#include <EventManager.h>       // Eventmanager
 /*########## KONSTANTEN #########*/
 
 // OneWire
@@ -91,10 +92,17 @@ byte numberOfActors = 0;                // Gesamtzahl der Aktoren
 
 char mqtthost[16] = "192.168.178.234";  // Default Value für MQTT Server
 long mqttconnectlasttry;
-long mqttconnectdelay = 30000;
+long mqttconnectdelay = 5000;
 byte mqttnumberoftrys = 3;
 
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];
 
 File fsUploadFile;                      // a File object to temporarily store the received file
+
+EventManager gEM;                       // Eventmanager
+unsigned long onErrorInterval = 100000; // Event interval 10sec waiting before
+unsigned long lastToggledSys;           // System event delta
+unsigned long lastToggledSen;           // Sensor event delta
+unsigned long lastToggledAct;           // Actor event delta
+unsigned long lastToggledInd;           // Induction event delta

@@ -1,6 +1,17 @@
 void setup() {
   Serial.begin(115200);
 
+  // Add Listeners
+  lastToggledSys = millis();
+  lastToggledSen = millis();
+  lastToggledAct = millis();
+  lastToggledInd = millis();
+  
+  gEM.addListener( EventManager::cbpiEventSystem, listenerSystem );
+  gEM.addListener( EventManager::cbpiEventSensors, listenerSensors );
+  gEM.addListener( EventManager::cbpiEventActors, listenerActors );
+  gEM.addListener( EventManager::cbpiEventInduction, listenerInduction );
+    
   // Sensoren Starten
   DS18B20.begin();
 

@@ -7,7 +7,9 @@ class TemperatureSensor
     char sens_mqtttopic[50];      // Für MQTT Kommunikation
     byte sens_address[8];         // 1-Wire Adresse
     String sens_name;             // Name für Anzeige auf Website
-    float sens_value;             // Aktueller Wert
+    //float sens_value;             // Aktueller Wert
+    // Test: set default -127.0 (not found) 
+    float sens_value = -127.0;             // Aktueller Wert
 
     String getSens_adress_string() {
       return SensorAddressToString(sens_address);
@@ -35,11 +37,11 @@ class TemperatureSensor
             Serial.print("Sensor ");
             Serial.print(sens_name);
             Serial.println(" Error");
+            cbpiEventSensors(1);
           } else {
             publishmqtt();
           }
         }
-
         lastCalled = millis();
       }
     }
@@ -231,6 +233,7 @@ void handleRequestSensors() {
       message += F("&deg;C");
     } else {
       message += F("ERR");
+      cbpiEventSensors(1);
     }
     message += F("</span><span class=\"badge badge-info\">");
     message += sensors[i].sens_mqtttopic;
