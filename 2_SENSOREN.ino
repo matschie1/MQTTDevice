@@ -78,17 +78,19 @@ class TemperatureSensor
     }
 
     void publishmqtt() {
-      StaticJsonBuffer<256> jsonBuffer;
-      JsonObject& json = jsonBuffer.createObject();
+      if (client.connected()) {
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject& json = jsonBuffer.createObject();
 
-      json["Name"] = sens_name;
-      JsonObject& Sensor = json.createNestedObject("Sensor");
-      Sensor["Value"] = sens_value;
-      Sensor["Type"] = "1-wire";
+        json["Name"] = sens_name;
+        JsonObject& Sensor = json.createNestedObject("Sensor");
+        Sensor["Value"] = sens_value;
+        Sensor["Type"] = "1-wire";
 
-      char jsonMessage[100];
-      json.printTo(jsonMessage);
-      client.publish(sens_mqtttopic, jsonMessage);
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(sens_mqtttopic, jsonMessage);        
+      }
     }
 
     char* getValueString() {

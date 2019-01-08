@@ -50,19 +50,44 @@ bool loadFromSpiffs(String path) {
 }
 
 void mqttreconnect() {
+  // Create MQTT Name from Chip ID
   int mqtt_chip_key = ESP.getChipId();
   char mqtt_clientid[25];
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  while (!client.connected()) {
-    if (client.connect(mqtt_clientid)) {
-      for (int i = 0; i < numberOfActors; i++) {
-        actors[i].mqtt_subscribe();
-        yield();
+  // 10 Tries for reconnect
+
+  // Wenn Client nicht verbunden, Verbindung herstellen
+  if (!client.connected()) {
+    // Delay prüfen
+    if (millis() > mqttconnectlasttry + mqttconnectdelay) {
+      Serial.print("MQTT Trying to connect. Name:");
+      Serial.print(mqtt_clientid);
+      for (int i = 0; i < mqttnumberoftrys; i++) {
+        Serial.print(".. Try #");
+        Serial.print(i+1);
+        if (client.connect(mqtt_clientid)) {
+          Serial.print(".. Success. Subscribing.");
+          goto Subscribe;
+        }
+        delay(5);
       }
-      inductionCooker.mqtt_subscribe();
-    }
+      mqttconnectlasttry = millis();
+      Serial.print(".. Failed. Trying again in ");
+      Serial.print(mqttconnectdelay/1000);
+      Serial.println(" seconds");
+      return;
+    }   
   }
+
+  Subscribe:
+    for (int i = 0; i < numberOfActors; i++) {
+      actors[i].mqtt_subscribe();
+      yield();
+    }
+    inductionCooker.mqtt_subscribe();
+
 }
+
 
 void mqttcallback(char* topic, byte* payload, unsigned int length) {
   Serial.println("Received MQTT");
