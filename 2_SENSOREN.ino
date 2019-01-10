@@ -27,8 +27,6 @@ class TemperatureSensor
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
 #ifdef Debug
-        String s_addr;
-
         Serial.print(sens_name);
         Serial.print(" is connected: ");
         Serial.print(sens_isConnected);
