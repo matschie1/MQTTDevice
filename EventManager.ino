@@ -1,12 +1,9 @@
 void listenerSystem( int event, int parm )                           // System event listener
 {
-  // 1:= WLAN Error
-  // 2:= MQTT Error
   if ( ( millis() - lastToggledSys ) > onErrorInterval )
   {
     switch (parm) {
-      case 1:
-        //Serial.printf("Sys Even1t: %i, Parameter: %i%\r\n", event, parm);
+      case 1: // WLAN error
         // Stop actors
         for (int i = 0; i < numberOfActors; i++) {
           if (actors[i].isOn) {
@@ -23,7 +20,7 @@ void listenerSystem( int event, int parm )                           // System e
           inductionCooker.Update();
         }
         break;
-      case 2:
+      case 2: // MQTT Error
         //Serial.printf("Sys Event2: %i, Parameter: %i%\r\n", event, parm);
         // Stop actors
         for (int i = 0; i < numberOfActors; i++) {
@@ -33,7 +30,6 @@ void listenerSystem( int event, int parm )                           // System e
             actors[i].Update();
           }
           //actors[i].power_actor = 0;
-
         }
         // Stop induction
         if (inductionCooker.isInduon) {
@@ -42,7 +38,7 @@ void listenerSystem( int event, int parm )                           // System e
           inductionCooker.Update();
         }
         break;
-      default: // brewing ...
+      default:
         break;
     }
     lastToggledSys = millis();
@@ -55,6 +51,7 @@ void listenerSensors( int event, int parm )                           // Sensor 
   {
     switch (parm) {
       case 1:
+#ifdef StopActorsOnSensorError // Stop actors
         //Serial.printf("Sensor Event1: %i, Parameter: %i%\r\n", event, parm);
         // Stop actors
         for (int i = 0; i < numberOfActors; i++) {
@@ -64,16 +61,15 @@ void listenerSensors( int event, int parm )                           // Sensor 
             actors[i].Update();
           }
         }
-        // Stop induction
+#endif
+#ifdef StopInductionOnSensorError // Stop induction
         if (inductionCooker.isInduon) {
           inductionCooker.isInduon = false;
           inductionCooker.Update();
         }
         break;
-      case 2:
-        Serial.printf("Sensor Event2: %i, Parameter: %i%\r\n", event, parm);
-        break;
-      default: // brewing ...
+#endif
+      default:
         handleSensors();
         break;
     }
@@ -96,7 +92,7 @@ void listenerActors( int event, int parm )                           // Actor ev
       case 2:
         Serial.printf("Actor Event2: %i, Parameter: %i%\r\n", event, parm);
         break;
-      default: // brewing ...
+      default:
         handleActors();
         break;
     }
@@ -119,7 +115,7 @@ void listenerInduction( int event, int parm )                           // Induc
       case 2:
         Serial.printf("Induction Event2: %i, Parameter: %i%\r\n", event, parm);
         break;
-      default: // brewing ...
+      default:
         handleInduction();
         break;
     }
@@ -129,22 +125,18 @@ void listenerInduction( int event, int parm )                           // Induc
 
 void cbpiEventSystem(int parm)                                   // System events
 {
-  //Serial.printf("System: %i%\r\n", parm);
   gEM.queueEvent( EventManager::cbpiEventSystem, parm );
 }
 
 void cbpiEventSensors(int parm)                                   // Sensor events
 {
-  //Serial.printf("Sensors: %i%\r\n", parm);
   gEM.queueEvent( EventManager::cbpiEventSensors, parm );
 }
 void cbpiEventActors(int parm)                                   // Actor events
 {
-  //Serial.printf("Actors: %i%\r\n", parm);
   gEM.queueEvent( EventManager::cbpiEventActors, parm );
 }
 void cbpiEventInduction(int parm)                                // Induction events
 {
-  //Serial.printf("Induction: %i%\r\n", parm);
   gEM.queueEvent( EventManager::cbpiEventInduction, parm );
 }
