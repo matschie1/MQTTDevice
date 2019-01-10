@@ -35,3 +35,16 @@ This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication 
 EventManager:
 Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager. Please note origin EventManager won't work! 
 Change the value onErrorInterval as you prefer.
+
+Activate or deactive the following lines to manage the behavior of Eventmanager
+#define StopActorsOnSensorError
+#define StopInductionOnSensorError
+
+If you activate one or both lines corresponding actors will automatically set to off if sensor errors occour. The following sensor attributes are checked periodically:
+is connected (0 or 1)
+valid addresses (address staring with FF is not valid)
+valid temperature (-127.0 degrees means no data from sensor)
+
+Please activate 
+#define Debug 
+for testing purpose and check output in serial monitor to find out working settings for your equipment.
