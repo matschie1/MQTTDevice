@@ -30,7 +30,7 @@ This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication 
 
 ## Installation
 
-...
+[German Tutorial](https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196)
 
 EventManager:
 Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager. Please note origin EventManager won't work! 
