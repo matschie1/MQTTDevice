@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="theme.css" type="text/css">
 </head>
 
-<body onload="setInterval(refresh, 1000)">
+<body onload="setInterval(refresh, 3000)">
   <div class="py-2">
     <div class="container">
       <div class="row">
@@ -26,8 +26,6 @@
             <div class="card-header"> Sensors <a href="" class="badge badge-warning" data-target="#sensor_modal" data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
             <div class="card-body">
               <ul class="list-group" id="listSensors">
-                <!-- <li class="list-group-item justify-content-between align-items-center d-flex"> Fermenter 1 <span class="badge badge-primary">6.32°C</span> <span class="badge badge-light">mqtt_sens1</span> <a href="" class="badge badge-warning">Edit</a> </li>
-                <li class="list-group-item justify-content-between align-items-center d-flex"> Fermenter 2 <span class="badge badge-primary">6.32°C</span> <span class="badge badge-light">mqtt_sens2</span> <a href="" class="badge badge-warning">Edit</a> </li>-->
               </ul>
             </div>
           </div>
@@ -43,9 +41,6 @@
             <div class="card-header"> Actors <a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
             <div class="card-body">
               <ul class="list-group" id="listActors">
-                <!--  <li class="list-group-item d-flex justify-content-between align-items-center"> Fermenter 1 Chill <span class="badge badge-success">ON</span> <span class="badge badge-light">mqtt_act1</span> <a href="" class="badge badge-warning" data-toggle="modal" data-target="#actor_modal" data-value="0">Edit</a></li>
-                <li class="list-group-item d-flex justify-content-between align-items-center" style=""> Fermenter 1 Heat <span class="badge badge-dark">OFF</span> <span class="badge badge-light">mqtt_act2</span><a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="1">Edit</a> </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center" style=""> Fermenter 2 Chill <span class="badge badge-success">ON</span> <span class="badge badge-light">mqtt_act3</span><a href="" class="badge badge-warning" data-target="#actor_modal" data-toggle="modal" data-value="2">Edit</a> </li>-->
               </ul>
             </div>
           </div>
@@ -61,10 +56,6 @@
             <div class="card-header"> Induction Cooker <a href="" class="badge badge-warning" data-target="#induction_modal" data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
             <div class="card-body">
               <ul class="list-group" id="inductionCooker">
-                <!-- <li class="list-group-item d-flex justify-content-between align-items-center"> Relais status <span class="badge badge-success">ON</span> </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center"> Power requestes<span class="badge badge-success">80%</span> </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center"> Current Power level<span class="badge badge-success">P4</span> </li>
-                <li class="list-group-item d-flex justify-content-between align-items-center"> Status <span class="badge badge-success">OK</span> </li>-->
               </ul>
             </div>
           </div>
@@ -182,10 +173,55 @@
   <script src="jquery-3.2.1.js" crossorigin="anonymous"></script>
   <script src="popper.js" crossorigin="anonymous"></script>
   <script src="bootstrap.js" crossorigin="anonymous"></script>
-  <script style="" type="text/javascript">
+  <script type="text/javascript">
     function refresh() {
-      $('#listSensors').load('/reqSensors');
-      $('#listActors').load('/reqActors');
+      $.get( "/reqSensors", function( data ) {
+        let content = "";
+        data.forEach( function( element, index ) {
+          let sensor = "<li class='list-group-item justify-content-between align-items-center d-flex'>";
+          sensor += element.name;
+          sensor += "<span class='badge badge-light'>";
+          if(element.value === "ERR"){
+            sensor += "Error";
+          }
+          else{
+            sensor += element.value + "°C";
+          }
+          sensor += "</span> <span class='badge badge-info'>"
+          sensor += element.mqtt;
+          sensor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
+          sensor += index;
+          sensor += "'>Edit</a> </li>";
+          content += sensor;
+        });
+        $('#listSensors').html( content );
+      });
+      $.get( "/reqActors", function( data ) {
+        let content = "";
+        data.forEach( function( element, index ) {
+          let actor = "<li class='list-group-item d-flex justify-content-between align-items-center'>";
+          actor += element.name;
+          actor += "</span> <span class='badge";
+          // is actor "on"
+          if(element.status == true){
+            actor += "badge-success'>ON:";
+            actor += element.power;
+            actor += "%";
+          }
+          else{
+            actor += "badge-dark'>OFF";
+          }
+          actor += "</span><span class='badge badge-light'>";
+          actor += element.mqtt;
+          actor += "</span> <span class='badge badge-light'>PIN";
+          actor += element.pin;
+          actor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#actor_modal' data-value='";
+          actor += index;
+          actor += "'>Edit</a></li>";
+          content += actor;
+        });
+        $('#listActors').html( content );
+      });
       $('#inductionCooker').load('/reqInduction');
     }
   </script>
@@ -217,16 +253,6 @@
           actorscript = data;
         }
       });
-      //$.ajax({
-      //  url: '/reqActor?id=' + actorid + '&req=pin',
-      //  type: 'get',
-      //  dataType: 'html',
-      //  async: false,
-      //  cache: false,
-      //  success: function(data) {
-      //    actorpin = data;
-      //  }
-      //});
       $.ajax({
         url: '/reqActor?id=' + actorid + '&req=inverted',
         type: 'get',

@@ -446,4 +446,5 @@ void handleSetIndu() {
   inductionCooker.change(pin_white, pin_yellow, pin_blue, topic, delayoff, is_enabled);
 
   saveConfig();
+  server.send(201, "text/plain", "created");
 }
