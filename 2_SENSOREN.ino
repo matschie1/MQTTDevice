@@ -26,6 +26,7 @@ class TemperatureSensor
 
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+
 #ifdef Debug
         Serial.print(sens_name);
         Serial.print(" is connected: ");
@@ -36,64 +37,71 @@ class TemperatureSensor
           Serial.print(" ");
         }
         Serial.print(" sensor value: ");
-        Serial.println(sens_value);
+        Serial.print(sens_value);
+        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
+          Serial.println(" CRC check failed");
+        }
+        else Serial.println(" CRC check ok");
 #endif
-        if (sens_value == -127.0) {
-          if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
+        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) { // CRC check
+          if (sens_value == -127.0) {
+            if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
 #ifdef Debug
-            Serial.print("1. Sensor ");
-            Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
+              Serial.print("1. Sensor ");
+              Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
 #endif
-            cbpiEventSensors(1);
-          }
-          else if (!sens_isConnected && sens_address[0] != 0xFF) // Sensor with valid address not connected
-          {
+              cbpiEventSensors(1);
+            }
+            else if (!sens_isConnected && sens_address[0] != 0xFF) // Sensor with valid address not connected
+            {
 #ifdef Debug
-            Serial.print("2. Sensor ");
-            Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
+              Serial.print("2. Sensor ");
+              Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
 #endif
 
 #ifndef StopActorsOnSensorError // not defined
-            cbpiEventSensors(0);
+              cbpiEventSensors(0);
 #endif
 #ifdef StopActorsOnSensorError // defined
-            cbpiEventSensors(1);
+              cbpiEventSensors(1);
 #endif
-          }
-          else // not connected and unvalid address
-          {
+            }
+            else // not connected and unvalid address
+            {
 #ifndef StopActorsOnSensorError // not defined
-            cbpiEventSensors(0);
+              cbpiEventSensors(0);
 #endif
 #ifdef StopActorsOnSensorError // defined
-            cbpiEventSensors(1);
+              cbpiEventSensors(1);
 #endif
-          } // sens_isConnected
-        } // sens_value -127
+            } // sens_isConnected
+          } // sens_value -127
+          else cbpiEventSensors(0);
+        } // CRC check
         
         // removed check sens_value == 85.0
         /*
-        else
-        {
+          else
+          {
           if (sens_value == 85.0) { // missing VCC ???????? could not find anything in lib
-#ifdef Debug
+          #ifdef Debug
             Serial.print("3. Sensor ");
             Serial.println(" Error");
-#endif
+          #endif
             if (sens_isConnected && sens_address[0] != 0xFF) // Sensor connected AND sensor address not default FF
             {
-#ifdef Debug
+          #ifdef Debug
               Serial.print("4. Sensor ");
               Serial.println(" connected - Error");
-#endif
+          #endif
               cbpiEventSensors(1);
             }
             else
             {
-#ifdef Debug
+          #ifdef Debug
               Serial.print("5. Sensor ");
               Serial.println(" not connected - ignore");
-#endif
+          #endif
               cbpiEventSensors(0);
             }
           } // sens_value
@@ -102,7 +110,7 @@ class TemperatureSensor
             publishmqtt();
             cbpiEventSensors(0);
           }
-        } // else
+          } // else
         */
         lastCalled = millis();
       }
