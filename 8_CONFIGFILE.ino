@@ -48,6 +48,8 @@ bool loadConfig() {
   // Read Sensors
   JsonArray& jsonsensors = json["sensors"];
   numberOfSensors = jsonsensors.size();
+  Serial.print("Number of Sensors loaded: ");
+  Serial.println(numberOfSensors);
 
   if (numberOfSensors > 10) {
     numberOfSensors = 10;
