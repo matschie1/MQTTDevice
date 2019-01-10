@@ -41,6 +41,7 @@ Activate or deactive the following lines to manage the behavior of Eventmanager
 #define StopInductionOnSensorError
 
 If you activate one or both lines corresponding actors will automatically set to off if sensor errors occour. The following sensor attributes are checked periodically:
+CRC valid
 is connected (0 or 1)
 valid addresses (address staring with FF is not valid)
 valid temperature (-127.0 degrees means no data from sensor)
