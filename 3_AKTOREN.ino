@@ -80,18 +80,18 @@ class Actor
         argument_actor.toCharArray(subscribemsg, 50);
         Serial.print("Subscribing to ");
         Serial.println(subscribemsg);
-        client.subscribe(subscribemsg);      
+        client.subscribe(subscribemsg);
       }
 
     }
 
     void mqtt_unsubscribe() {
-     if (client.connected()) {
+      if (client.connected()) {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
         Serial.print("Unsubscribing from ");
         Serial.println(subscribemsg);
-        client.unsubscribe(subscribemsg);      
+        client.unsubscribe(subscribemsg);
       }
     }
 

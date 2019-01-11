@@ -30,7 +30,7 @@
 #include <EventManager.h>       // Eventmanager
 /*########## KONSTANTEN #########*/
 
-//#define Debug
+#define Debug
 //#define StopActorsOnSensorError
 #define StopInductionOnSensorError
 

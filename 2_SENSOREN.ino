@@ -23,9 +23,13 @@ class TemperatureSensor
     void Update() {
       if (millis() > (lastCalled + period)) {
         DS18B20.requestTemperatures(); // new conversion to get recent temperatures
-
+        if (sens_value == 85.0) { // can be real 85 degrees or reset default temp
+          delay(750);
+          DS18B20.requestTemperatures();
+        }
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+
 
 #ifdef Debug
         Serial.print(sens_name);
@@ -43,78 +47,49 @@ class TemperatureSensor
         }
         else Serial.println(" CRC check ok");
 #endif
-        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) { // CRC check
-          if (sens_value == -127.0) {
-            if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
-#ifdef Debug
-              Serial.print("1. Sensor ");
-              Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
-#endif
-              cbpiEventSensors(1);
-            }
-            else if (!sens_isConnected && sens_address[0] != 0xFF) // Sensor with valid address not connected
-            {
-#ifdef Debug
-              Serial.print("2. Sensor ");
-              Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-#endif
 
-#ifndef StopActorsOnSensorError // not defined
-              cbpiEventSensors(0);
+        if (sens_value == -127.0 || sens_value == 85.0) {
+          if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
+
+#ifdef Debug
+            Serial.print(sens_name);
+            Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
 #endif
-#ifdef StopActorsOnSensorError // defined
-              cbpiEventSensors(1);
+#ifdef StopActorsOnSensorError
+            cbpiEventActors(1);
 #endif
-            }
-            else // not connected and unvalid address
-            {
-#ifndef StopActorsOnSensorError // not defined
-              cbpiEventSensors(0);
+#ifdef StopInductionOnSensorError
+            cbpiEventInduction(1);
 #endif
-#ifdef StopActorsOnSensorError // defined
-              cbpiEventSensors(1);
-#endif
-            } // sens_isConnected
-          } // sens_value -127
-          else cbpiEventSensors(0);
-        } // CRC check
-        
-        // removed check sens_value == 85.0
-        /*
-          else
-          {
-          if (sens_value == 85.0) { // missing VCC ???????? could not find anything in lib
-          #ifdef Debug
-            Serial.print("3. Sensor ");
-            Serial.println(" Error");
-          #endif
-            if (sens_isConnected && sens_address[0] != 0xFF) // Sensor connected AND sensor address not default FF
-            {
-          #ifdef Debug
-              Serial.print("4. Sensor ");
-              Serial.println(" connected - Error");
-          #endif
-              cbpiEventSensors(1);
-            }
-            else
-            {
-          #ifdef Debug
-              Serial.print("5. Sensor ");
-              Serial.println(" not connected - ignore");
-          #endif
-              cbpiEventSensors(0);
-            }
-          } // sens_value
-          else
-          {
-            publishmqtt();
-            cbpiEventSensors(0);
           }
-          } // else
-        */
+          else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
+
+#ifdef Debug
+            Serial.print(sens_name);
+            Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
+#endif
+#ifdef StopActorsOnSensorError
+            cbpiEventActors(1);
+#endif
+#ifdef StopInductionOnSensorError
+            cbpiEventInduction(1);
+#endif
+          }
+          else {// not connected and unvalid address
+#ifdef StopActorsOnSensorError
+            cbpiEventActors(1);
+#endif
+#ifdef StopInductionOnSensorError
+            cbpiEventInduction(1);
+#endif
+          } // sens_isConnected
+        } // sens_value -127 || +85
+        //else publishmqtt(); // Sensor should be fine
+        
+        publishmqtt();
         lastCalled = millis();
-      }
-    }
+      } // if millis
+    } // void Update
 
     void change(String new_address, String new_mqtttopic, String new_name) {
       new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
@@ -123,8 +98,6 @@ class TemperatureSensor
         char address_char[16];
 
         new_address.toCharArray(address_char, 17);
-
-
 
         char hexbyte[2];
         int octets[8] ;
@@ -142,9 +115,9 @@ class TemperatureSensor
         }
         for (int i = 0; i < 8; i++) {
           sens_address[i] = octets[i];
-          //Serial.print(sens_address[i], HEX);
+          Serial.print(sens_address[i], HEX);
         }
-        //Serial.println("");
+        Serial.println("");
       }
       DS18B20.setResolution(sens_address, 10);
     }
@@ -303,7 +276,6 @@ void handleRequestSensors() {
       message += F("&deg;C");
     } else {
       message += F("ERR");
-      cbpiEventSensors(1);
     }
     message += F("</span><span class=\"badge badge-info\">");
     message += sensors[i].sens_mqtttopic;

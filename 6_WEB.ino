@@ -66,8 +66,6 @@ void mqttreconnect() {
         }
         delay(5);
       }
-      // Event MQTT
-      cbpiEventSystem(2);
       mqttconnectlasttry = millis();
       Serial.print(".. Failed. Trying again in ");
       Serial.print(mqttconnectdelay/1000);

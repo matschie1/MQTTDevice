@@ -20,8 +20,8 @@ void loop() {
   // Webserver prüfen
   server.handleClient();
 
-  // mDNS aktualisieren
-  MDNS.update();
+   //mDNS aktualisieren
+   MDNS.update();
 
   // Sensoren aktualisieren
   cbpiEventSensors(0);

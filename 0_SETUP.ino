@@ -32,12 +32,6 @@ void setup() {
   // Set device name
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
 
-  // mDNS laden
-  ESP.wdtFeed();
-  if (!MDNS.begin(mqtt_clientid)) {
-    Serial.println("Error setting up MDNS responder!");
-  }
-
   // Einstellungen laden
   ESP.wdtFeed();
   loadConfig();
@@ -50,16 +44,22 @@ void setup() {
   wifiManager.autoConnect("MQTTDevice");
   strcpy(mqtthost, cstm_mqtthost.getValue());
 
+  // mDNS laden
+  ESP.wdtFeed();
+  if (!MDNS.begin(mqtt_clientid)) {
+    Serial.println("Error setting up MDNS responder!");
+  }
+
+    // MQTT starten
+  client.setServer(mqtthost, 1883);
+  client.setCallback(mqttcallback);
+
   // Änderungen speichern
   ESP.wdtFeed();
   saveConfig();
 
   // ArduinoOTA aktivieren
   setupOTA();
-
-  // MQTT starten
-  client.setServer(mqtthost, 1883);
-  client.setCallback(mqttcallback);
 
   // FSBrowser initialisieren
   // list directory
@@ -106,6 +106,7 @@ void setup() {
 
 
 void setupServer() {
+
   server.on("/", handleRoot);
 
   server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren

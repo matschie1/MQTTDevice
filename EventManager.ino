@@ -15,13 +15,13 @@ void listenerSystem( int event, int parm )                           // System e
         }
         // Stop induction
         if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to WLAN error");
           inductionCooker.isInduon = false;
           //inductionCooker.newPower = 0;
           inductionCooker.Update();
         }
         break;
       case 2: // MQTT Error
-        //Serial.printf("Sys Event2: %i, Parameter: %i%\r\n", event, parm);
         // Stop actors
         for (int i = 0; i < numberOfActors; i++) {
           if (actors[i].isOn) {
@@ -33,8 +33,8 @@ void listenerSystem( int event, int parm )                           // System e
         }
         // Stop induction
         if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to MQTT error");
           inductionCooker.isInduon = false;
-          //inductionCooker.newPower = 0;
           inductionCooker.Update();
         }
         break;
@@ -47,12 +47,11 @@ void listenerSystem( int event, int parm )                           // System e
 void listenerSensors( int event, int parm )                           // Sensor event listener
 {
   // 1:= Sensor on Err
-  if ( ( millis() - lastToggledSys ) > onErrorInterval )
+  if (( millis() - lastToggledSen ) > onErrorInterval )
   {
     switch (parm) {
       case 1:
-#ifdef StopActorsOnSensorError // Stop actors
-        //Serial.printf("Sensor Event1: %i, Parameter: %i%\r\n", event, parm);
+#ifdef StopActorsOnSensorError
         // Stop actors
         for (int i = 0; i < numberOfActors; i++) {
           if (actors[i].isOn) {
@@ -62,17 +61,19 @@ void listenerSensors( int event, int parm )                           // Sensor 
           }
         }
 #endif
-#ifdef StopInductionOnSensorError // Stop induction
+#ifdef StopInductionOnSensorError
+        // Stop Induction
         if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to sensor error");
           inductionCooker.isInduon = false;
           inductionCooker.Update();
         }
-        break;
 #endif
+        break;
       default:
-        handleSensors();
         break;
     }
+    handleSensors();
     lastToggledSen = millis();
   }
 }
@@ -82,20 +83,16 @@ void listenerActors( int event, int parm )                           // Actor ev
   {
     switch (parm) {
       case 1:
-        Serial.printf("Actor Event1: %i, Parameter: %i%\r\n", event, parm);
         for (int i = 0; i < numberOfActors; i++) {
+          Serial.printf("Set actor %i off due to actor error%\r\n", i);
           actors[i].isOn = false;
-          //actors[i].power_actor = 0;
           actors[i].Update();
         }
         break;
-      case 2:
-        Serial.printf("Actor Event2: %i, Parameter: %i%\r\n", event, parm);
-        break;
       default:
-        handleActors();
         break;
     }
+    handleActors();
     lastToggledAct = millis();
   }
 }
@@ -105,20 +102,17 @@ void listenerInduction( int event, int parm )                           // Induc
   {
     switch (parm) {
       case 1:
-        Serial.printf("Induction Event1: %i, Parameter: %i%\r\n", event, parm);
         if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to induction error");
           inductionCooker.isInduon = false;
           //inductionCooker.newPower = 0;
           inductionCooker.Update();
         }
         break;
-      case 2:
-        Serial.printf("Induction Event2: %i, Parameter: %i%\r\n", event, parm);
-        break;
       default:
-        handleInduction();
         break;
     }
+    handleInduction();
     lastToggledInd = millis();
   }
 }
