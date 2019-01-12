@@ -31,7 +31,7 @@ class TemperatureSensor
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
 
 
-#ifdef Debug
+#ifdef DEBUG
         Serial.print(sens_name);
         Serial.print(" is connected: ");
         Serial.print(sens_isConnected);
@@ -51,7 +51,7 @@ class TemperatureSensor
         if (sens_value == -127.0 || sens_value == 85.0) {
           if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
 
-#ifdef Debug
+#ifdef DEBUG
             Serial.print(sens_name);
             Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
 #endif
@@ -64,7 +64,7 @@ class TemperatureSensor
           }
           else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
 
-#ifdef Debug
+#ifdef DEBUG
             Serial.print(sens_name);
             Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
 #endif

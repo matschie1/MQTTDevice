@@ -30,9 +30,12 @@
 #include <EventManager.h>       // Eventmanager
 /*########## KONSTANTEN #########*/
 
-#define Debug
+//#define Debug
 //#define StopActorsOnSensorError
 #define StopInductionOnSensorError
+
+//#define DEBUG
+#include "DebugUtils.h"
 
 // OneWire
 #define ONE_WIRE_BUS D3
@@ -105,7 +108,7 @@ char mqtt_clientid[25];
 File fsUploadFile;                      // a File object to temporarily store the received file
 
 EventManager gEM;                       // Eventmanager
-unsigned long onErrorInterval = 100000; // Event interval 10sec waiting before
+unsigned long onErrorInterval = 10000; // Event interval 10sec waiting before
 unsigned long lastToggledSys;           // System event delta
 unsigned long lastToggledSen;           // Sensor event delta
 unsigned long lastToggledAct;           // Actor event delta

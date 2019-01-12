@@ -11,6 +11,7 @@ void listenerSystem( int event, int parm )                           // System e
             actors[i].isOn = false;
             //actors[i].power_actor = 0;
             actors[i].Update();
+            actors[i].publishmqtt();
           }
         }
         // Stop induction
@@ -19,6 +20,7 @@ void listenerSystem( int event, int parm )                           // System e
           inductionCooker.isInduon = false;
           //inductionCooker.newPower = 0;
           inductionCooker.Update();
+          inductionCooker.publishmqtt();
         }
         break;
       case 2: // MQTT Error
@@ -28,14 +30,15 @@ void listenerSystem( int event, int parm )                           // System e
             Serial.printf("Set actor %i off due to MQTT error%\r\n", i);
             actors[i].isOn = false;
             actors[i].Update();
+            actors[i].publishmqtt();
           }
-          //actors[i].power_actor = 0;
         }
         // Stop induction
         if (inductionCooker.isInduon) {
           Serial.println("Set induction off due to MQTT error");
           inductionCooker.isInduon = false;
           inductionCooker.Update();
+          inductionCooker.publishmqtt();
         }
         break;
       default:
@@ -58,6 +61,7 @@ void listenerSensors( int event, int parm )                           // Sensor 
             Serial.printf("Set actor %i off due to Sensor error%\r\n", i);
             actors[i].isOn = false;
             actors[i].Update();
+            actors[i].publishmqtt();
           }
         }
 #endif
@@ -67,6 +71,7 @@ void listenerSensors( int event, int parm )                           // Sensor 
           Serial.println("Set induction off due to sensor error");
           inductionCooker.isInduon = false;
           inductionCooker.Update();
+          inductionCooker.publishmqtt();
         }
 #endif
         break;
@@ -87,6 +92,7 @@ void listenerActors( int event, int parm )                           // Actor ev
           Serial.printf("Set actor %i off due to actor error%\r\n", i);
           actors[i].isOn = false;
           actors[i].Update();
+          actors[i].publishmqtt();
         }
         break;
       default:
@@ -107,6 +113,7 @@ void listenerInduction( int event, int parm )                           // Induc
           inductionCooker.isInduon = false;
           //inductionCooker.newPower = 0;
           inductionCooker.Update();
+          inductionCooker.publishmqtt();
         }
         break;
       default:

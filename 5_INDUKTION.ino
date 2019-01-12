@@ -33,6 +33,9 @@ class induction
     boolean isEnabled = false;
     long delayAfteroff = 120000;
 
+    // Test MQTT Publish
+    char induction_mqtttopic[50];      // Für MQTT Kommunikation
+
     induction() {
       setupCommands();
     }
@@ -68,6 +71,7 @@ class induction
 
       mqtttopic = topic;
       delayAfteroff = delayoff;
+      mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
 
       isEnabled = is_enabled;
 
@@ -115,6 +119,23 @@ class induction
         Serial.print("Unsubscribing from ");
         Serial.println(subscribemsg);
         client.unsubscribe(subscribemsg);
+      }
+    }
+
+    // Test MQTT Publish
+    void publishmqtt() {
+      if (client.connected()) {
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject& json = jsonBuffer.createObject();
+        if(isInduon)
+          json["State"] = "on";
+        else 
+          json["State"] = "off";
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(induction_mqtttopic, jsonMessage);
+        DEBUG_PRINT("MQTT pub message: ");
+        DEBUG_PRINT(jsonMessage);
       }
     }
 

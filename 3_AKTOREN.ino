@@ -12,7 +12,9 @@ class Actor
     String name_actor;
     byte power_actor;
     bool isOn;
-
+    
+    // Test MQTT Publish
+    char actor_mqtttopic[50];      // Für MQTT Kommunikation
 
     Actor(String pin, String argument, String aname, String ainverted)
     {
@@ -54,11 +56,13 @@ class Actor
       isOn = false;
 
       name_actor = aname;
-
+      
       if (argument_actor != argument) {
         mqtt_unsubscribe();
         argument_actor = argument;
         mqtt_subscribe();
+        // Test MQTT Publish
+        argument.toCharArray(actor_mqtttopic, argument.length() + 1);
       }
 
       if (ainverted == "1") {
@@ -72,6 +76,22 @@ class Actor
         OFF = HIGH;
       }
 
+    }
+
+    void publishmqtt() {
+      if (client.connected()) {
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject& json = jsonBuffer.createObject();
+        if(isOn)
+          json["State"] = "on";
+        else 
+          json["State"] = "off";
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(actor_mqtttopic, jsonMessage);
+        DEBUG_PRINT("MQTT pub message: ");
+        DEBUG_PRINT(jsonMessage);
+      }
     }
 
     void mqtt_subscribe() {
