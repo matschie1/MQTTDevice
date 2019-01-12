@@ -178,20 +178,20 @@
       $.get( "/reqSensors", function( data ) {
         let content = "";
         data.forEach( function( element, index ) {
-          let sensor = "<li class='list-group-item justify-content-between align-items-center d-flex'>";
+          let sensor = "<li class='list-group-item justify-content-between align-items-center d-flex'> ";
           sensor += element.name;
-          sensor += "<span class='badge badge-light'>";
+          sensor += "<span class='badge badge-light'> ";
           if(element.value === "ERR"){
             sensor += "Error";
           }
           else{
             sensor += element.value + "°C";
           }
-          sensor += "</span> <span class='badge badge-info'>"
+          sensor += " </span> <span class='badge badge-info'> "
           sensor += element.mqtt;
-          sensor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
+          sensor += " </span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
           sensor += index;
-          sensor += "'>Edit</a> </li>";
+          sensor += "'> Edit </a> </li>";
           content += sensor;
         });
         $('#listSensors').html( content );
@@ -199,30 +199,50 @@
       $.get( "/reqActors", function( data ) {
         let content = "";
         data.forEach( function( element, index ) {
-          let actor = "<li class='list-group-item d-flex justify-content-between align-items-center'>";
+          let actor = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
           actor += element.name;
-          actor += "</span> <span class='badge";
+          actor += " </span> <span class='badge";
           // is actor "on"
           if(element.status == true){
-            actor += "badge-success'>ON:";
+            actor += "badge-success'> ON:";
             actor += element.power;
             actor += "%";
           }
           else{
-            actor += "badge-dark'>OFF";
+            actor += "badge-dark'> OFF";
           }
-          actor += "</span><span class='badge badge-light'>";
+          actor += "</span> <span class='badge badge-light'>";
           actor += element.mqtt;
-          actor += "</span> <span class='badge badge-light'>PIN";
+          actor += "</span> <span class='badge badge-light'> PIN";
           actor += element.pin;
           actor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#actor_modal' data-value='";
           actor += index;
-          actor += "'>Edit</a></li>";
+          actor += "'> Edit </a> </li>";
           content += actor;
         });
         $('#listActors').html( content );
       });
-      $('#inductionCooker').load('/reqInduction');
+      $.get( "/reqInduction", function( data ) {
+        let inductionRender  = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
+        if(data.enabled){
+          inductionRender += " Relais status <span class='badge";
+          if(data.relayOn){
+            inductionRender += " badge-success'> ON";
+          }
+          else{
+            inductionRender += " badge-danger'> OFF";
+          }
+          inductionRender += "</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Power requested <span class='badge badge-success'>";
+          inductionRender += data.power;
+          inductionRender += "%</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Current Power Level <span class='badge badge-success'> P";
+          inductionRender += data.powerLevel;
+          inductionRender += " </span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> </li>";
+        }
+        else{
+          inductionRender += "Induction Cooker Disabled </li>";
+        }
+        $('#inductionCooker').html( inductionRender );
+      });
     }
   </script>
   <script>

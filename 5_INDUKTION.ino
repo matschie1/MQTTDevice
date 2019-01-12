@@ -103,7 +103,7 @@ class induction
           mqtttopic.toCharArray(subscribemsg, 50);
           Serial.print("Subscribing to ");
           Serial.println(subscribemsg);
-          client.subscribe(subscribemsg);         
+          client.subscribe(subscribemsg);
         }
       }
     }
@@ -114,7 +114,7 @@ class induction
         mqtttopic.toCharArray(subscribemsg, 50);
         Serial.print("Unsubscribing from ");
         Serial.println(subscribemsg);
-        client.unsubscribe(subscribemsg);       
+        client.unsubscribe(subscribemsg);
       }
     }
 
@@ -322,36 +322,26 @@ void handleInduction() {
 }
 
 void handleRequestInduction() {
-  String message;
+  StaticJsonBuffer<1024> jsonBuffer;
+  JsonObject& inductionResponse = jsonBuffer.createObject();
 
+  inductionResponse["enabled"] = inductionCooker.isEnabled;
   if (inductionCooker.isEnabled) {
-    message += F("<li class=\"list-group-item d-flex justify-content-between align-items-center\"> Relais status <span class=\"badge ");
-    if (inductionCooker.isRelayon) {
-      message += "badge-success\"> ON";
-    } else {
-      message += "badge-danger\"> OFF";
-    }
-    message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\"> Power requested <span class=\"badge badge-success\">");
-    message += inductionCooker.power;
-    message += F("%</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\"> Current Power Level <span class=\"badge badge-success\">P");
+    inductionResponse["relayOn"] = inductionCooker.isRelayon;
+    inductionResponse["power"] = inductionCooker.power;
+    inductionResponse["relayOn"] = inductionCooker.isRelayon;
     if (inductionCooker.isPower) {
-      message += inductionCooker.CMD_CUR;
+      inductionResponse["powerLevel"] = inductionCooker.CMD_CUR;
     } else {
-      message += max(0, inductionCooker.CMD_CUR - 1);
+      inductionResponse["powerLevel"] = max(0, inductionCooker.CMD_CUR - 1);
     }
-    message += F("</span> </li><li class=\"list-group-item d-flex justify-content-between align-items-center\">");
-    //  message += induction.errorMessage;
-    message += F("</li>");
-  } else {
-    message = F("<li class=\"list-group-item d-flex justify-content-between align-items-center\">Induction Cooker Disabled</li>");
   }
-
-  server.send(200, "text/html", message);
+  String response;
+  inductionResponse.printTo(response);
+  server.send(200, "application/json", response);
 }
 
 void handleRequestIndu() {
-
-
   String request = server.arg(0);
   String message;
 
