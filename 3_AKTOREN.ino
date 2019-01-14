@@ -172,28 +172,23 @@ void handleActors() {
 
 /* Funktionen für Web */
 void handleRequestActors() {
-  String message;
+  StaticJsonBuffer<1024> jsonBuffer;
+  JsonArray& actorsResponse = jsonBuffer.createArray();
+  
   for (int i = 0; i < numberOfActors; i++) {
-    message += F("<li class=\"list-group-item d-flex justify-content-between align-items-center\">");
-    message += actors[i].name_actor;
-    message += F("</span> <span class=\"badge ");
-    if (actors[i].isOn) {
-      message += F("badge-success\">ON: ");
-      message += actors[i].power_actor;
-      message += F("%");
-    } else {
-      message += F("badge-dark\">OFF");
-    }
-    message += F("</span><span class=\"badge badge-light\">");
-    message += actors[i].argument_actor;
-    message += F("</span> <span class=\"badge badge-light\">PIN ");
-    message += PinToString(actors[i].pin_actor);
-    message += F("</span> <a href=\"\" class=\"badge badge-warning\" data-toggle=\"modal\" data-target=\"#actor_modal\" data-value=\"");
-    message += i;
-    message += F("\">Edit</a></li>");
+    JsonObject& actorResponse = jsonBuffer.createObject();;
+    actorResponse["name"] = actors[i].name_actor;
+    actorResponse["status"] = actors[i].isOn;
+    actorResponse["power"] = actors[i].power_actor;
+    actorResponse["mqtt"] = actors[i].argument_actor;
+    actorResponse["pin"] = PinToString(actors[i].pin_actor);
+    actorsResponse.add(actorResponse);
     yield();
   }
-  server.send(200, "text/html", message);
+  
+  String response;
+  actorsResponse.printTo(response);
+  server.send(200, "application/json", response);
 }
 
 void handleRequestActor() {
@@ -260,7 +255,9 @@ void handleSetActor() {
   actors[id].change(ac_pin, ac_argument, ac_name, ac_isinverted);
 
   saveConfig();
+  server.send(201, "text/plain", "created");
 }
+
 
 void handleDelActor() {
   int id = server.arg(0).toInt();
@@ -275,6 +272,7 @@ void handleDelActor() {
 
   numberOfActors -= 1;
   saveConfig();
+  server.send(200, "text/plain", "deleted");
 }
 
 void handlereqPins() {

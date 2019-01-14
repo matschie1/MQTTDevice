@@ -231,6 +231,7 @@ void handleSetSensor() {
   sensors[id].change(new_address, new_mqtttopic, new_name);
 
   saveConfig();
+  server.send(201, "text/plain", "created");
 }
 
 void handleDelSensor() {
@@ -244,6 +245,7 @@ void handleDelSensor() {
   // den letzten löschen
   numberOfSensors -= 1;
   saveConfig();
+  server.send(200, "text/plain", "deleted");
 }
 
 void handleRequestSensorAddresses() {
@@ -265,26 +267,25 @@ void handleRequestSensorAddresses() {
 }
 
 void handleRequestSensors() {
-  String message;
+  StaticJsonBuffer<1024> jsonBuffer;
+  JsonArray& sensorsResponse = jsonBuffer.createArray();
+
   for (int i = 0; i < numberOfSensors; i++) {
-    message += F("<li class=\"list-group-item d-flex justify-content-between align-items-center\">");
-    message += sensors[i].sens_name;
-    message += F("<span class=\"badge badge-light\">");
+    JsonObject& sensorResponse = jsonBuffer.createObject();;
+    sensorResponse["name"] = sensors[i].sens_name;
     if ((sensors[i].sens_value != -127.0) && (sensors[i].sens_value != 85.0)) {
-      ;
-      message += sensors[i].getValueString();
-      message += F("&deg;C");
+      sensorResponse["value"] = sensors[i].getValueString();
     } else {
-      message += F("ERR");
+      sensorResponse["value"] = "ERR";
     }
-    message += F("</span><span class=\"badge badge-info\">");
-    message += sensors[i].sens_mqtttopic;
-    message += F("</span> <a href=\"\" class=\"badge badge-warning\" data-toggle=\"modal\" data-target=\"#sensor_modal\" data-value=\"");
-    message += i;
-    message += F("\">Edit</a> </li>");
+    sensorResponse["mqtt"] = sensors[i].sens_mqtttopic;
+    sensorsResponse.add(sensorResponse);
     yield();
   }
-  server.send(200, "text/html", message);
+  
+  String response;
+  sensorsResponse.printTo(response);
+  server.send(200, "application/json", response);
 }
 
 void handleRequestSensor() {
