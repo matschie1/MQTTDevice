@@ -30,12 +30,12 @@
 #include <EventManager.h>       // Eventmanager
 /*########## KONSTANTEN #########*/
 
-//#define Debug
+//#define DEBUG
 //#define StopActorsOnSensorError
 #define StopInductionOnSensorError
 
 //#define DEBUG
-#include "DebugUtils.h"
+//#include "DebugUtils.h"
 
 // OneWire
 #define ONE_WIRE_BUS D3

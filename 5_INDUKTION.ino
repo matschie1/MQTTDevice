@@ -33,7 +33,7 @@ class induction
     boolean isEnabled = false;
     long delayAfteroff = 120000;
 
-    // Test MQTT Publish
+    // MQTT Publish
     char induction_mqtttopic[50];      // Für MQTT Kommunikation
 
     induction() {
@@ -122,7 +122,7 @@ class induction
       }
     }
 
-    // Test MQTT Publish
+    // MQTT Publish
     void publishmqtt() {
       if (client.connected()) {
         StaticJsonBuffer<256> jsonBuffer;
@@ -134,8 +134,8 @@ class induction
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(induction_mqtttopic, jsonMessage);
-        DEBUG_PRINT("MQTT pub message: ");
-        DEBUG_PRINT(jsonMessage);
+        //Serial.print("MQTT pub message: ");
+        //Serial.println(jsonMessage);
       }
     }
 

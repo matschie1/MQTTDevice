@@ -13,7 +13,7 @@ class Actor
     byte power_actor;
     bool isOn;
     
-    // Test MQTT Publish
+    // MQTT Publish
     char actor_mqtttopic[50];      // Für MQTT Kommunikation
 
     Actor(String pin, String argument, String aname, String ainverted)
@@ -61,7 +61,7 @@ class Actor
         mqtt_unsubscribe();
         argument_actor = argument;
         mqtt_subscribe();
-        // Test MQTT Publish
+        // MQTT Publish
         argument.toCharArray(actor_mqtttopic, argument.length() + 1);
       }
 
@@ -89,8 +89,8 @@ class Actor
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(actor_mqtttopic, jsonMessage);
-        DEBUG_PRINT("MQTT pub message: ");
-        DEBUG_PRINT(jsonMessage);
+        //Serial.print("MQTT pub message: ");
+        //Serial.println(jsonMessage);
       }
     }
 
