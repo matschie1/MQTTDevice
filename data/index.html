@@ -12,8 +12,14 @@
   <div class="py-2">
     <div class="container">
       <div class="row">
-        <div class="col-md-12">
-          <h1 class="">Overview</h1>
+        <div class="col">
+          <h1 class="text-center">Overview</h1>
+        </div>
+        <div class="col-md-auto">
+          <a href="config.json" download="config.json" class="btn btn-outline-primary" id="btn_downloadConfig">Download
+            Config</a>
+          <button type="button" class="btn btn-outline-danger" id="btn_disable_mqtt">Disable MQTT</button>
+          <button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
         </div>
       </div>
     </div>
@@ -89,11 +95,6 @@
           <div class="form-group">
             <label for="modal_actor_pin">PIN</label>
             <select class="form-control" id="modal_actor_pin">
-              <!--    <option>1</option>
-              <option>2</option>
-              <option>3</option>
-              <option>4</option>
-              <option>5</option>-->
             </select>
           </div>
           <div class="form-check">
@@ -119,11 +120,6 @@
             <div class="form-group">
               <label for="modal_sensor_address">Address</label>
               <select class="form-control" id="modal_sensor_address">
-                <!--    <option>1</option>
-                <option>2</option>
-                <option>3</option>
-                <option>4</option>
-                <option>5</option>-->
               </select>
               <button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
               </button>
@@ -185,6 +181,7 @@
   <script src="jquery-3.2.1.min.js"></script>
   <script src="bootstrap.bundle.js"></script>
   <script type="text/javascript">
+
     function refresh() {
       $.get("/reqSensors", function (data) {
         let content = "";
@@ -255,8 +252,7 @@
         $('#inductionCooker').html(inductionRender);
       });
     }
-  </script>
-  <script>
+
     $('#actor_modal').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget) // Button that triggered the modal
       var actorid = button.data('value') // Extract info from data-* attributes
@@ -303,6 +299,7 @@
       if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked", true) }
       else { modal.find('#modal_actor_inverted').prop("checked", false) }
     })
+
     $("#modal_actor_btn_save").click(function () {
       var modal = $('#actor_modal')
       var actorname = modal.find('#modal_actor_name').val()
@@ -323,6 +320,7 @@
       });
       modal.modal('hide')
     });
+
     $("#modal_actor_btn_delete").click(function () {
       var modal = $('#actor_modal')
       var actorid = modal.attr('actor_id')
@@ -335,9 +333,7 @@
       });
       modal.modal('hide')
     });
-  </script>
 
-  <script>
     $('#sensor_modal').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget) // Button that triggered the modal
       var sensorid = button.data('value') // Extract info from data-* attributes
@@ -369,6 +365,7 @@
       modal.find('#modal_sensor_script').val(sensorscript)
       modal.attr('sensor_id', sensorid)
     })
+
     $("#modal_sensor_btn_save").click(function () {
       var modal = $('#sensor_modal')
       var sensorname = modal.find('#modal_sensor_name').val()
@@ -384,6 +381,7 @@
       });
       modal.modal('hide')
     });
+
     $("#modal_sensor_btn_delete").click(function () {
       var modal = $('#sensor_modal')
       var sensorid = modal.attr('sensor_id')
@@ -396,13 +394,12 @@
       });
       modal.modal('hide')
     });
+
     $("#modal_sensor_address_refresh").click(function () {
       var sensorid = modal.attr('sensor_id')
       $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensor)
     });
-  </script>
 
-  <script>
     $('#induction_modal').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget) // Button that triggered the modal
       var mqtttopic;
@@ -458,8 +455,6 @@
 
     });
 
-
-
     $("#modal_induction_btn_save").click(function () {
       var modal = $('#induction_modal')
 
@@ -484,6 +479,28 @@
       });
       modal.modal('hide')
     });
+
+    $("#btn_reboot").click(function () {
+      $.ajax({
+        url: '/reboot',
+        type: 'POST',
+        async: false,
+        cache: false
+      }).done(function (msg) {
+        alert("Device says: " + msg + "\n Page will be reloaded now!");
+        window.location.reload(true);
+      });;
+    });
+
+    $("#btn_disable_mqtt").click(function () {
+      $.ajax({
+        url: '/mqttOff',
+        type: 'POST',
+        async: true,
+        cache: false
+      });
+    });
+
   </script>
 
 </html>

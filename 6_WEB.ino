@@ -1,6 +1,6 @@
 void handleRoot() {
   server.sendHeader("Location", "/index.html", true);  //Redirect to our html web page
-  server.send(302, "text/plane", "");
+  server.send(302, "text/plain", "");
 }
 
 void handleWebRequests() {
