@@ -31,7 +31,7 @@
 /*########## KONSTANTEN #########*/
 
 // OneWire
-#define ONE_WIRE_BUS D6 // Change this accordingly!
+#define ONE_WIRE_BUS D3 // Change this accordingly!
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
 
