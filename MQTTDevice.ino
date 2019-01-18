@@ -34,9 +34,6 @@
 //#define StopActorsOnSensorError
 #define StopInductionOnSensorError
 
-//#define DEBUG
-//#include "DebugUtils.h"
-
 // OneWire
 #define ONE_WIRE_BUS D3
 OneWire oneWire(ONE_WIRE_BUS);
@@ -101,6 +98,9 @@ char mqtthost[16] = "192.168.178.234";  // Default Value für MQTT Server
 long mqttconnectlasttry;
 long mqttconnectdelay = 5000;
 byte mqttnumberoftrys = 3;
+// if false, no mqtt communcation is send or received (security feature to turn on when leaving the brewery
+// TODO: Not yet implemented!
+bool mqttCommunication = true;
 
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];

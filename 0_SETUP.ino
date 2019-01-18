@@ -123,13 +123,15 @@ void setupServer() {
   server.on("/reqActor", handleRequestActor);     // Infos der Aktoren für WebConfig
   server.on("/reqIndu", handleRequestIndu);       // Infos der Indu für WebConfig
 
-  server.on("/setSensor", handleSetSensor);       // Sensor Ändern
+  server.on("/setSensor", handleSetSensor);       // Sensor ändern
   server.on("/setActor", handleSetActor);         // Aktor ändern
-  server.on("/setIndu", handleSetIndu);           // Indu ändenr
+  server.on("/setIndu", handleSetIndu);           // Indu ändern
 
   server.on("/delSensor", handleDelSensor);       // Sensor löschen
   server.on("/delActor", handleDelActor);         // Aktor löschen
 
+  server.on("/reboot", rebootDevice);             // reboots the whole Device
+  server.on("/mqttOff", turnMqttOff);             // Turns off MQTT completly until reboot
   server.onNotFound(handleWebRequests);           // Sonstiges
 
   server.begin();
