@@ -31,7 +31,7 @@
 /*########## KONSTANTEN #########*/
 
 //#define DEBUG
-//#define StopActorsOnSensorError
+#define StopActorsOnSensorError
 #define StopInductionOnSensorError
 
 // OneWire

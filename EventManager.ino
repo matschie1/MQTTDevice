@@ -1,5 +1,7 @@
 void listenerSystem( int event, int parm )                           // System event listener
 {
+  if (parm > 9) { lastToggledSys = 0; } // SysEvents > 9
+  
   if ( ( millis() - lastToggledSys ) > onErrorInterval )
   {
     switch (parm) {
@@ -40,6 +42,48 @@ void listenerSystem( int event, int parm )                           // System e
           inductionCooker.Update();
           inductionCooker.publishmqtt();
         }
+        break;
+      case 10: // Disable MQTT
+        // Stop actors
+        for (int i = 0; i < numberOfActors; i++) {
+          if (actors[i].isOn) {
+            Serial.printf("Set actor %i off due to MQTT disabled%\r\n", i);
+            actors[i].isOn = false;
+            actors[i].Update();
+            actors[i].publishmqtt();
+          }
+        }
+        // Stop induction
+        if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to MQTT disabled");
+          inductionCooker.isInduon = false;
+          inductionCooker.Update();
+          inductionCooker.publishmqtt();
+        }
+        mqttCommunication = false;
+        server.send(200, "text/plain", "CAUTION! I don't work yet: turned off, please reboot to turn on again...");
+        break;
+      case 11: // Reboot ESP
+        // Stop actors
+        for (int i = 0; i < numberOfActors; i++) {
+          if (actors[i].isOn) {
+            Serial.printf("Set actor %i off due to reboot%\r\n", i);
+            actors[i].isOn = false;
+            actors[i].Update();
+            actors[i].publishmqtt();
+          }
+        }
+        // Stop induction
+        if (inductionCooker.isInduon) {
+          Serial.println("Set induction off due to reboot");
+          inductionCooker.isInduon = false;
+          inductionCooker.Update();
+          inductionCooker.publishmqtt();
+        }
+        server.send(200, "text/plain", "rebooting...");
+        delay(1000);
+        // CAUTION: known (library) issue: only works if you (hardware)button-reset once after flashing the device
+        ESP.restart();
         break;
       default:
         break;

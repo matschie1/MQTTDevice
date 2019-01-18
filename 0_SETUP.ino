@@ -6,12 +6,12 @@ void setup() {
   lastToggledSen = millis();
   lastToggledAct = millis();
   lastToggledInd = millis();
-  
+
   gEM.addListener( EventManager::cbpiEventSystem, listenerSystem );
   gEM.addListener( EventManager::cbpiEventSensors, listenerSensors );
   gEM.addListener( EventManager::cbpiEventActors, listenerActors );
   gEM.addListener( EventManager::cbpiEventInduction, listenerInduction );
-    
+
   // Sensoren Starten
   DS18B20.begin();
 
@@ -50,7 +50,7 @@ void setup() {
     Serial.println("Error setting up MDNS responder!");
   }
 
-    // MQTT starten
+  // MQTT starten
   client.setServer(mqtthost, 1883);
   client.setCallback(mqttcallback);
 
