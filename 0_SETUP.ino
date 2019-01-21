@@ -1,4 +1,5 @@
-void setup() {
+void setup()
+{
   Serial.begin(115200);
 
   // Sensoren Starten
@@ -6,7 +7,8 @@ void setup() {
 
   // Dateisystem laden
   ESP.wdtFeed();
-  if (!SPIFFS.begin())  {
+  if (!SPIFFS.begin())
+  {
     Serial.println("SPIFFS Mount failed");
   }
 
@@ -28,9 +30,9 @@ void setup() {
 
   // ArduinoOTA aktivieren
   setupOTA();
-  
+
   // MQTT starten
-  client.setServer(mqtthost, 1883);
+  client.setServer(mqtthost, MQTT_SERVER_PORT);
   client.setCallback(mqttcallback);
 
   // Webserver starten
@@ -38,42 +40,43 @@ void setup() {
   setupServer();
 }
 
-void setupServer() {
-
+void setupServer()
+{
   server.on("/", handleRoot);
 
-  server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
-  server.on("/setupSensor", handleSetSensor);     // Einstellen der Sensoren
+  server.on("/setupActor", handleSetActor);   // Einstellen der Aktoren
+  server.on("/setupSensor", handleSetSensor); // Einstellen der Sensoren
 
   server.on("/reqSensors", handleRequestSensors); // Liste der Sensoren ausgeben
   server.on("/reqActors", handleRequestActors);   // Liste der Aktoren ausgeben
   server.on("/reqInduction", handleRequestInduction);
 
-  server.on("/reqSearchSensorAdresses", handleRequestSensorAddresses);
-  server.on("/reqPins", handlereqPins);
+  // Search for OneWire sensors on the bus
+  server.on("/reqSearchSensorAdresses", handleRequestOneWireSensorAddresses);
+  server.on("/reqPins", handleRequestPins);
 
-  server.on("/reqSensor", handleRequestSensor);   // Infos der Sensoren für WebConfig
-  server.on("/reqActor", handleRequestActor);     // Infos der Aktoren für WebConfig
-  server.on("/reqIndu", handleRequestIndu);       // Infos der Indu für WebConfig
+  server.on("/reqSensor", handleRequestSensor); // Infos der Sensoren für WebConfig
+  server.on("/reqActor", handleRequestActor);   // Infos der Aktoren für WebConfig
+  server.on("/reqIndu", handleRequestIndu);     // Infos der Indu für WebConfig
 
-  server.on("/setSensor", handleSetSensor);       // Sensor ändern
-  server.on("/setActor", handleSetActor);         // Aktor ändern
-  server.on("/setIndu", handleSetIndu);           // Indu ändern
+  server.on("/setSensor", handleSetSensor); // Sensor ändern
+  server.on("/setActor", handleSetActor);   // Aktor ändern
+  server.on("/setIndu", handleSetIndu);     // Indu ändern
 
-  server.on("/delSensor", handleDelSensor);       // Sensor löschen
-  server.on("/delActor", handleDelActor);         // Aktor löschen
+  server.on("/delSensor", handleDelSensor); // Sensor löschen
+  server.on("/delActor", handleDelActor);   // Aktor löschen
 
-  server.on("/reboot", rebootDevice);             // reboots the whole Device
-  server.on("/mqttOff", turnMqttOff);             // Turns off MQTT completly until reboot
-  server.onNotFound(handleWebRequests);           // Sonstiges
+  server.on("/reboot", rebootDevice);   // Reboots the device
+  server.on("/mqttOff", turnMqttOff);   // Turns off MQTT completly until reboot
+  server.onNotFound(handleWebRequests); // Sonstiges
 
   server.begin();
 }
 
-
-void setupOTA() {
+void setupOTA()
+{
   Serial.print("Configuring OTA device...");
-  TelnetServer.begin();   //Necesary to make Arduino Software autodetect OTA device
+  TelnetServer.begin(); //Necesary to make Arduino Software autodetect OTA device
   ArduinoOTA.onStart([]() {
     Serial.println("OTA starting...");
   });
@@ -86,11 +89,16 @@ void setupOTA() {
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    if (error == OTA_AUTH_ERROR)
+      Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      Serial.println("End Failed");
   });
   ArduinoOTA.begin();
   Serial.println("OTA OK");
