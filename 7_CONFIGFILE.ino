@@ -32,8 +32,9 @@ bool loadConfig()
 
   //Read Actors
   JsonArray &jsonactors = json["actors"];
-
   numberOfActors = jsonactors.size();
+  Serial.print("Number of actors loaded: ");
+  Serial.println(numberOfActors);
 
   if (numberOfActors > numberOfActorsMax)
   {
@@ -46,37 +47,63 @@ bool loadConfig()
     {
       JsonObject &jsonactor = jsonactors[i];
       String pin = jsonactor["PIN"];
-      String script = jsonactor["SCRIPT"];
-      String aname = jsonactor["NAME"];
-      String ainverted = jsonactor["INVERTED"];
-      actors[i].change(pin, script, aname, ainverted);
+      String topic = jsonactor["TOPIC"];
+      String name = jsonactor["NAME"];
+      String inverted = jsonactor["INVERTED"];
+      actors[i].change(pin, topic, name, inverted);
     }
   }
 
-  // Read Sensors
-  JsonArray &jsonsensors = json["sensors"];
-  numberOfSensors = jsonsensors.size();
-  Serial.print("Number of Sensors loaded: ");
-  Serial.println(numberOfSensors);
-
-  if (numberOfSensors > numberOfSensorsMax)
+  // Read OneWire Sensors
+  JsonArray &jsonOneWireSensors = json["OneWireSensors"];
+  numberOfOneWireSensors = jsonOneWireSensors.size();
+  if (numberOfOneWireSensors > numberOfSensorsMax)
   {
-    numberOfSensors = numberOfSensorsMax;
+    numberOfOneWireSensors = numberOfSensorsMax;
   }
+  Serial.print("Number of OneWire sensors loaded: ");
+  Serial.println(numberOfOneWireSensors);
 
   for (int i = 0; i < numberOfSensorsMax; i++)
   {
-    if (i < numberOfSensors)
+    if (i < numberOfOneWireSensors)
     {
-      JsonObject &jsonsensor = jsonsensors[i];
-      String aaddress = jsonsensor["ADDRESS"];
-      String ascript = jsonsensor["SCRIPT"];
-      String aname = jsonsensor["NAME"];
-      oneWireSensors[i].change(aaddress, ascript, aname);
+      JsonObject &jsonsensor = jsonOneWireSensors[i];
+      String address = jsonsensor["ADDRESS"];
+      String topic = jsonsensor["TOPIC"];
+      String name = jsonsensor["NAME"];
+      oneWireSensors[i].change(address, topic, name);
     }
     else
     {
       oneWireSensors[i].change("", "", "");
+    }
+  }
+
+  // Read PT100/1000 sensors
+  JsonArray &jsonPTSensors = json["PTSensors"];
+  numberOfPTSensors = jsonPTSensors.size();
+  if (numberOfPTSensors > numberOfSensorsMax)
+  {
+    numberOfPTSensors = numberOfSensorsMax;
+  }
+  Serial.print("Number of PT100/1000 sensors loaded: ");
+  Serial.println(numberOfPTSensors);
+
+  for (int i = 0; i < numberOfSensorsMax; i++)
+  {
+    if (i < numberOfPTSensors)
+    {
+      JsonObject &jsonPTSensor = jsonPTSensors[i];
+      byte csPin = jsonPTSensor["CSPIN"];
+      byte numberOfWires = jsonPTSensor["WIRES"];
+      String topic = jsonPTSensor["TOPIC"];
+      String name = jsonPTSensor["NAME"];
+      ptSensors[i].change(csPin, numberOfWires, topic, name);
+    }
+    else
+    {
+      ptSensors[i].change(NO_PT_SENSOR, NO_PT_SENSOR, "", "");
     }
   }
 
@@ -105,11 +132,6 @@ bool loadConfig()
   return true;
 }
 
-void saveConfigCallback()
-{
-  Serial.println("Should save config");
-}
-
 bool saveConfig()
 {
 
@@ -130,18 +152,29 @@ bool saveConfig()
     JsonObject &jsactor = jsactors.createNestedObject();
     jsactor["PIN"] = PinToString(actors[i].pin_actor);
     jsactor["NAME"] = actors[i].name_actor;
-    jsactor["SCRIPT"] = actors[i].argument_actor;
+    jsactor["TOPIC"] = actors[i].argument_actor;
     jsactor["INVERTED"] = actors[i].getInverted();
   }
 
-  // Write Sensors
-  JsonArray &jssensors = json.createNestedArray("sensors");
-  for (int i = 0; i < numberOfSensors; i++)
+  // Write OneWire sensors
+  JsonArray &jsonOneWireSensors = json.createNestedArray("OneWireSensors");
+  for (int i = 0; i < numberOfOneWireSensors; i++)
   {
-    JsonObject &jssensor = jssensors.createNestedObject();
-    jssensor["ADDRESS"] = oneWireSensors[i].getSens_address_string();
-    jssensor["NAME"] = oneWireSensors[i].sens_name;
-    jssensor["SCRIPT"] = oneWireSensors[i].sens_mqtttopic;
+    JsonObject &jsonOneWireSensor = jsonOneWireSensors.createNestedObject();
+    jsonOneWireSensor["ADDRESS"] = oneWireSensors[i].getSens_address_string();
+    jsonOneWireSensor["NAME"] = oneWireSensors[i].sens_name;
+    jsonOneWireSensor["TOPIC"] = oneWireSensors[i].sens_mqtttopic;
+  }
+
+  // Write PT100/1000 sensors
+  JsonArray &jsonPTSensors = json.createNestedArray("PTSensors");
+  for (int i = 0; i < numberOfOneWireSensors; i++)
+  {
+    JsonObject &jsonPTSensor = jsonPTSensors.createNestedObject();
+    jsonPTSensor["CSPIN"] = ptSensors[i].csPin;
+    jsonPTSensor["WIRES"] = ptSensors[i].numberOfWires;
+    jsonPTSensor["NAME"] = ptSensors[i].name;
+    jsonPTSensor["TOPIC"] = ptSensors[i].mqttTopic;
   }
 
   // Write Induction
@@ -165,4 +198,10 @@ bool saveConfig()
   json["MQTTHOST"] = mqtthost;
   json.printTo(configFile);
   return true;
+}
+
+/* Needed for the WifiManager */
+void saveConfigCallback()
+{
+  Serial.println("Should save config");
 }

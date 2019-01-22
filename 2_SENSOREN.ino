@@ -4,265 +4,269 @@
 */
 class OneWireSensor
 {
-  unsigned long lastCalled;                  // Wann wurde der Sensor zuletzt aktualisiert
-  long period = defaultSensorUpdateInterval; // Aktualisierungshäufigkeit
+    unsigned long lastCalled;                  // Wann wurde der Sensor zuletzt aktualisiert
+    long period = defaultSensorUpdateInterval; // Aktualisierungshäufigkeit
 
-public:
-  char sens_mqtttopic[50]; // Für MQTT Kommunikation
-  byte sens_address[8];    // 1-Wire Adresse
-  String sens_name;        // Name für Anzeige auf Website
-  float sens_value;        // Aktueller Wert
+  public:
+    char sens_mqtttopic[50]; // Für MQTT Kommunikation
+    byte sens_address[8];    // 1-Wire Adresse
+    String sens_name;        // Name für Anzeige auf Website
+    float sens_value;        // Aktueller Wert
 
-  String getSens_address_string()
-  {
-    return OneWireAddressToString(sens_address);
-  }
-
-  OneWireSensor(String address, String mqtttopic, String name)
-  {
-    change(address, mqtttopic, name);
-  }
-
-  void update()
-  {
-    if (millis() > (lastCalled + period))
+    String getSens_address_string()
     {
+      return OneWireAddressToString(sens_address);
+    }
 
-      DS18B20.requestTemperatures();
-      sens_value = DS18B20.getTempC(sens_address);
+    OneWireSensor(String address, String mqtttopic, String name)
+    {
+      change(address, mqtttopic, name);
+    }
 
-      if (sens_value == -127.0)
+    void update()
+    {
+      if (millis() > (lastCalled + period))
       {
-        Serial.print("OneWire Sensor ");
-        Serial.print(sens_name);
-        Serial.println(" not found!");
-      }
-      else
-      {
-        if (sens_value == 85.0)
+
+        DS18B20.requestTemperatures();
+        sens_value = DS18B20.getTempC(sens_address);
+
+        if (sens_value == -127.0)
         {
-          Serial.print("One Wire Sensor ");
+          Serial.print("OneWire Sensor ");
           Serial.print(sens_name);
-          Serial.println(" Error!");
+          Serial.println(" not found!");
+        }
+        else
+        {
+          if (sens_value == 85.0)
+          {
+            Serial.print("One Wire Sensor ");
+            Serial.print(sens_name);
+            Serial.println(" Error!");
+          }
+          else
+          {
+            publishmqtt();
+          }
+        }
+
+        lastCalled = millis();
+      }
+    }
+
+    void change(String new_address, String new_mqtttopic, String new_name)
+    {
+      new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
+      sens_name = new_name;
+      // if this check fails, this could also mean a call from array init
+      // (no actual sensor defined for this array entry, so skip init here)
+      if (new_address.length() == 16)
+      {
+        char address_char[16];
+
+        new_address.toCharArray(address_char, 17);
+
+        char hexbyte[2];
+        int octets[8];
+
+        for (int d = 0; d < 16; d += 2)
+        {
+          // Assemble a digit pair into the hexbyte string
+          hexbyte[0] = address_char[d];
+          hexbyte[1] = address_char[d + 1];
+
+          // Convert the hex pair to an integer
+          sscanf(hexbyte, "%x", &octets[d / 2]);
+          yield();
+        }
+        Serial.print("Starting OneWire sensor: ");
+        for (int i = 0; i < 8; i++)
+        {
+          sens_address[i] = octets[i];
+          Serial.print(sens_address[i], HEX);
+        }
+        Serial.println("");
+        DS18B20.setResolution(sens_address, ONE_WIRE_RESOLUTION);
+      }
+    }
+
+    void publishmqtt()
+    {
+      if (client.connected())
+      {
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject &json = jsonBuffer.createObject();
+
+        json["Name"] = sens_name;
+        JsonObject &Sensor = json.createNestedObject("Sensor");
+        Sensor["Value"] = sens_value;
+        Sensor["Type"] = "1-wire";
+
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(sens_mqtttopic, jsonMessage);
+      }
+    }
+
+    char *getValueString()
+    {
+      char buf[5];
+      dtostrf(sens_value, 2, 1, buf);
+      return buf;
+    }
+};
+
+class PTSensor
+{
+    unsigned long lastCalled;                  // timestamp
+    long period = defaultSensorUpdateInterval; // update interval
+
+    // reference to amplifier board, with initial values (will be overwritten in "constructor")
+    Adafruit_MAX31865 maxChip = Adafruit_MAX31865(DEFAULT_CS_PIN, PTPins[0], PTPins[1], PTPins[2]);
+
+  public:
+    byte csPin;
+    byte numberOfWires;
+    char mqttTopic[50]; // topic for mqtt sending
+    String name;        // frontend name
+    float value;        // current value
+
+    PTSensor(byte csPin, byte numberOfWires, String mqtttopic, String name)
+    {
+      change(csPin, numberOfWires, mqtttopic, name);
+    }
+
+    void update()
+    {
+      if (millis() > (lastCalled + period))
+      {
+        value = maxChip.temperature(RNOMINAL, RREF);
+        // fault codes taken from library example
+        uint8_t fault = maxChip.readFault();
+        if (fault)
+        {
+          Serial.print("Fault 0x");
+          Serial.println(fault, HEX);
+          if (fault & MAX31865_FAULT_HIGHTHRESH)
+          {
+            Serial.println("RTD High Threshold");
+          }
+          if (fault & MAX31865_FAULT_LOWTHRESH)
+          {
+            Serial.println("RTD Low Threshold");
+          }
+          if (fault & MAX31865_FAULT_REFINLOW)
+          {
+            Serial.println("REFIN- > 0.85 x Bias");
+          }
+          if (fault & MAX31865_FAULT_REFINHIGH)
+          {
+            Serial.println("REFIN- < 0.85 x Bias - FORCE- open");
+          }
+          if (fault & MAX31865_FAULT_RTDINLOW)
+          {
+            Serial.println("RTDIN- < 0.85 x Bias - FORCE- open");
+          }
+          if (fault & MAX31865_FAULT_OVUV)
+          {
+            Serial.println("Under/Over voltage");
+          }
+          maxChip.clearFault();
         }
         else
         {
           publishmqtt();
         }
+        lastCalled = millis();
       }
-
-      lastCalled = millis();
     }
-  }
 
-  void change(String new_address, String new_mqtttopic, String new_name)
-  {
-    new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
-    sens_name = new_name;
-    if (new_address.length() == 16)
+    void change(byte newCSPin, byte newNumberOfWires, String newMqttTopic, String newName)
     {
-      char address_char[16];
-
-      new_address.toCharArray(address_char, 17);
-
-      char hexbyte[2];
-      int octets[8];
-
-      for (int d = 0; d < 16; d += 2)
+      // check for initial empty array entry initialization
+      // (no actual sensor defined in this call)
+      if (newCSPin != NO_PT_SENSOR)
       {
-        // Assemble a digit pair into the hexbyte string
-        hexbyte[0] = address_char[d];
-        hexbyte[1] = address_char[d + 1];
+        newMqttTopic.toCharArray(mqttTopic, newMqttTopic.length() + 1);
+        csPin = newCSPin;
+        numberOfWires = newNumberOfWires;
+        name = newName;
+        // currently, CS = D0 = 16 (NodeMCU Dev Board) TODO!!
+        csPin = 16;
+        maxChip = Adafruit_MAX31865(newCSPin, PTPins[0], PTPins[1], PTPins[2]);
+        Serial.print("Starting PT100 with ");
+        Serial.print(newNumberOfWires);
+        Serial.print(" wires. CS Pin is ");
+        Serial.println(newCSPin);
 
-        // Convert the hex pair to an integer
-        sscanf(hexbyte, "%x", &octets[d / 2]);
-        yield();
+        if (newNumberOfWires == 4)
+        {
+          maxChip.begin(MAX31865_4WIRE);
+        }
+        else if (newNumberOfWires == 3)
+        {
+          maxChip.begin(MAX31865_3WIRE);
+        }
+        else
+        {
+          maxChip.begin(MAX31865_2WIRE); // set to 2 wires as default
+        }
       }
-      for (int i = 0; i < 8; i++)
+    }
+
+    void publishmqtt()
+    {
+      if (client.connected())
       {
-        sens_address[i] = octets[i];
-        Serial.print(sens_address[i], HEX);
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject &json = jsonBuffer.createObject();
+
+        json["Name"] = name;
+        JsonObject &Sensor = json.createNestedObject("Sensor");
+        Sensor["Value"] = value;
+        Sensor["Type"] = "PTSensor";
+
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(mqttTopic, jsonMessage);
       }
-      Serial.println("");
     }
-    DS18B20.setResolution(sens_address, 10);
-  }
 
-  void publishmqtt()
-  {
-    if (client.connected())
+    char *getValueString()
     {
-      StaticJsonBuffer<256> jsonBuffer;
-      JsonObject &json = jsonBuffer.createObject();
-
-      json["Name"] = sens_name;
-      JsonObject &Sensor = json.createNestedObject("Sensor");
-      Sensor["Value"] = sens_value;
-      Sensor["Type"] = "1-wire";
-
-      char jsonMessage[100];
-      json.printTo(jsonMessage);
-      client.publish(sens_mqtttopic, jsonMessage);
+      char buf[5];
+      dtostrf(value, 2, 1, buf);
+      return buf;
     }
-  }
-
-  char *getValueString()
-  {
-    char buf[5];
-    dtostrf(sens_value, 2, 1, buf);
-    return buf;
-  }
-};
-
-class PTSensor
-{
-  unsigned long lastCalled;                  // timestamp
-  long period = defaultSensorUpdateInterval; // update interval
-
-  // reference to amplifier board, with initial values (will be overwritten in "constructor")
-  Adafruit_MAX31865 maxChip = Adafruit_MAX31865(defaultCSPin, PTPins[0], PTPins[1], PTPins[2]);
-
-public:
-  char mqttTopic[50]; // topic for mqtt sending
-  String name;        // frontend name
-  float value;        // current value
-
-  PTSensor(byte CSPin, byte numberOfWires, String mqtttopic, String name)
-  {
-    change(CSPin, numberOfWires, mqtttopic, name);
-  }
-
-  void update()
-  {
-    if (millis() > (lastCalled + period))
-    {
-      value = maxChip.temperature(RNOMINAL, RREF);
-      // fault codes taken from library example
-      uint8_t fault = maxChip.readFault();
-      if (fault)
-      {
-        Serial.print("Fault 0x");
-        Serial.println(fault, HEX);
-        if (fault & MAX31865_FAULT_HIGHTHRESH)
-        {
-          Serial.println("RTD High Threshold");
-        }
-        if (fault & MAX31865_FAULT_LOWTHRESH)
-        {
-          Serial.println("RTD Low Threshold");
-        }
-        if (fault & MAX31865_FAULT_REFINLOW)
-        {
-          Serial.println("REFIN- > 0.85 x Bias");
-        }
-        if (fault & MAX31865_FAULT_REFINHIGH)
-        {
-          Serial.println("REFIN- < 0.85 x Bias - FORCE- open");
-        }
-        if (fault & MAX31865_FAULT_RTDINLOW)
-        {
-          Serial.println("RTDIN- < 0.85 x Bias - FORCE- open");
-        }
-        if (fault & MAX31865_FAULT_OVUV)
-        {
-          Serial.println("Under/Over voltage");
-        }
-        maxChip.clearFault();
-      }
-      else
-      {
-        publishmqtt();
-      }
-      lastCalled = millis();
-    }
-  }
-
-  void change(byte newCSPin, byte newNumberOfWires, String newMqttTopic, String newName)
-  {
-    newMqttTopic.toCharArray(mqttTopic, newMqttTopic.length() + 1);
-    name = newName;
-
-    // currently, CS = D0 = 16 (NodeMCU Dev Board) TODO!!
-    newCSPin = 16;
-    maxChip = Adafruit_MAX31865(newCSPin, PTPins[0], PTPins[1], PTPins[2]);
-    Serial.print("Starting PT100 with ");
-    Serial.print(newNumberOfWires);
-    Serial.print(" wires. CS Pin is ");
-    Serial.println(newCSPin);
-
-    if (newNumberOfWires == 4)
-    {
-      maxChip.begin(MAX31865_2WIRE);
-    }
-    else if (newNumberOfWires == 3)
-    {
-      maxChip.begin(MAX31865_2WIRE);
-    }
-    else
-    {
-      maxChip.begin(MAX31865_2WIRE); // set to 2 wires as default
-    }
-  }
-
-  void publishmqtt()
-  {
-    if (client.connected())
-    {
-      StaticJsonBuffer<256> jsonBuffer;
-      JsonObject &json = jsonBuffer.createObject();
-
-      json["Name"] = name;
-      JsonObject &Sensor = json.createNestedObject("Sensor");
-      Sensor["Value"] = value;
-      Sensor["Type"] = "PTSensor";
-
-      char jsonMessage[100];
-      json.printTo(jsonMessage);
-      client.publish(mqttTopic, jsonMessage);
-    }
-  }
-
-  char *getValueString()
-  {
-    char buf[5];
-    dtostrf(value, 2, 1, buf);
-    return buf;
-  }
 };
 
 /*
-Initializing Arrays
-Please mind: max sensor capacity currently is interpreted as max of each type
+  Initializing Arrays
+  Please mind: max sensor capacity currently is interpreted as max of each type
 */
 OneWireSensor oneWireSensors[numberOfSensorsMax] = {
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", ""),
-    OneWireSensor("", "", "")};
+  OneWireSensor("", "", ""),
+  OneWireSensor("", "", ""),
+  OneWireSensor("", "", ""),
+  OneWireSensor("", "", ""),
+  OneWireSensor("", "", ""),
+  OneWireSensor("", "", "")
+};
 
 PTSensor ptSensors[numberOfSensorsMax] = {
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
-    PTSensor(0, 0, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
 };
 
 /* Called in loop() */
 void handleSensors()
 {
-  for (int i = 0; i < numberOfSensors; i++)
+  for (int i = 0; i < numberOfOneWireSensors; i++)
   {
     oneWireSensors[i].update();
     ptSensors[i].update();
@@ -310,15 +314,14 @@ void handleSetSensor()
   int id = server.arg(0).toInt();
   int type = server.arg(1).toInt();
 
-  if (id == -1)
-  {
-    // means: create new sensor request
-    id = numberOfSensors;
-    numberOfSensors += 1;
-  }
-
   if (type == SENSOR_TYPE_ONE_WIRE)
   {
+    if (id == -1)
+    {
+      // means: create new sensor request
+      id = numberOfOneWireSensors;
+      numberOfOneWireSensors += 1;
+    }
     // Copy old values (TODO: needed?)
     String new_mqtttopic = oneWireSensors[id].sens_mqtttopic;
     String new_name = oneWireSensors[id].sens_name;
@@ -366,13 +369,13 @@ void handleDelSensor()
   {
     // move all sensors following the given id one to the front of array,
     // effectively overwriting the sensor to be deleted..
-    for (int i = id; i < numberOfSensors; i++)
+    for (int i = id; i < numberOfOneWireSensors; i++)
     {
       oneWireSensors[i].change(oneWireSensors[i + 1].getSens_address_string(), oneWireSensors[i + 1].sens_mqtttopic, oneWireSensors[i + 1].sens_name);
       yield();
     }
     // ..and declare the array's content to one sensor less
-    numberOfSensors -= 1;
+    numberOfOneWireSensors -= 1;
   }
   else if (type == SENSOR_TYPE_PT)
   {
@@ -407,8 +410,6 @@ void handleRequestOneWireSensorAddresses()
   {
 
     String foundAddress = OneWireAddressToString(oneWireAddressesFound[i]);
-    Serial.print("returning ");
-    Serial.print(foundAddress);
     if (id == -1 || !(oneWireSensors[id].getSens_address_string() == foundAddress))
     {
       message += F("<option>");
@@ -429,7 +430,7 @@ void handleRequestSensors()
   StaticJsonBuffer<1024> jsonBuffer;
   JsonArray &sensorsResponse = jsonBuffer.createArray();
 
-  for (int i = 0; i < numberOfSensors; i++)
+  for (int i = 0; i < numberOfOneWireSensors; i++)
   {
     JsonObject &sensorResponse = jsonBuffer.createObject();
     ;
@@ -487,57 +488,57 @@ byte convertCharToHex(char ch)
   byte returnType;
   switch (ch)
   {
-  case '0':
-    returnType = 0;
-    break;
-  case '1':
-    returnType = 1;
-    break;
-  case '2':
-    returnType = 2;
-    break;
-  case '3':
-    returnType = 3;
-    break;
-  case '4':
-    returnType = 4;
-    break;
-  case '5':
-    returnType = 5;
-    break;
-  case '6':
-    returnType = 6;
-    break;
-  case '7':
-    returnType = 7;
-    break;
-  case '8':
-    returnType = 8;
-    break;
-  case '9':
-    returnType = 9;
-    break;
-  case 'A':
-    returnType = 10;
-    break;
-  case 'B':
-    returnType = 11;
-    break;
-  case 'C':
-    returnType = 12;
-    break;
-  case 'D':
-    returnType = 13;
-    break;
-  case 'E':
-    returnType = 14;
-    break;
-  case 'F':
-    returnType = 15;
-    break;
-  default:
-    returnType = 0;
-    break;
+    case '0':
+      returnType = 0;
+      break;
+    case '1':
+      returnType = 1;
+      break;
+    case '2':
+      returnType = 2;
+      break;
+    case '3':
+      returnType = 3;
+      break;
+    case '4':
+      returnType = 4;
+      break;
+    case '5':
+      returnType = 5;
+      break;
+    case '6':
+      returnType = 6;
+      break;
+    case '7':
+      returnType = 7;
+      break;
+    case '8':
+      returnType = 8;
+      break;
+    case '9':
+      returnType = 9;
+      break;
+    case 'A':
+      returnType = 10;
+      break;
+    case 'B':
+      returnType = 11;
+      break;
+    case 'C':
+      returnType = 12;
+      break;
+    case 'D':
+      returnType = 13;
+      break;
+    case 'E':
+      returnType = 14;
+      break;
+    case 'F':
+      returnType = 15;
+      break;
+    default:
+      returnType = 0;
+      break;
   }
   return returnType;
 }

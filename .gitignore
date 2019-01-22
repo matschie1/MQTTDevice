@@ -1,5 +1,5 @@
 .DS_Store
-.vscode/c_cpp_properties.json
+.vscode/*
 .vscode/arduino.json
 spiffs.image
 /data/config.json

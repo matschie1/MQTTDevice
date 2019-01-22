@@ -41,15 +41,17 @@
 // OneWire
 // Change this according to your wiring
 #define ONE_WIRE_BUS D6
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature DS18B20(&oneWire);
+// Ranges from 9 to 12, higher is better (and slower!)
+#define ONE_WIRE_RESOLUTION 10
 // PT100/1000
+// no sensor was defined, used for array init (leave as is)
+#define NO_PT_SENSOR 255
+// default pin for the CS of a PT100 (for initial initialization, will be overwritten)
+#define DEFAULT_CS_PIN 16
 // 430.0 for PT100 and 4300.0 for PT1000
 #define RREF 430.0
 // 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL 100.0
-// default pin for the CS of a PT100 (for initial initialization, will be overwritten)
-const byte defaultCSPin = 16;
 
 // WiFi und MQTT
 #define WEB_SERVER_PORT 80
@@ -79,7 +81,7 @@ const byte numberOfPins = 9;
 const byte pins[numberOfPins] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 const String pin_names[numberOfPins] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
-const byte numberOfSensorsMax = 10;           // max number of sensors per sensor type
+const byte numberOfSensorsMax = 6;            // max number of sensors per sensor type
 const byte numberOfActorsMax = 6;             // max number of actors
 const int defaultSensorUpdateInterval = 5000; // how often should sensors update
 
@@ -93,27 +95,30 @@ WiFiServer TelnetServer(TELNET_SERVER_PORT); // OTA
 
 //  Binäre Signale für Induktionsplatte
 int CMD[6][33] = {
-    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, // Aus
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0}, // P1
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0}, // P2
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0}, // P3
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, // P4
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}  // P5
+  {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, // Aus
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0}, // P1
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0}, // P2
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0}, // P3
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0}, // P4
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}  // P5
 };
 
 bool pins_used[17];
 
 /*
-Common pins across all PT100/1000 sensors: DI, DO, CLK
-When using multiple sensors, you can reuse these pins
-and only define the CS PIN. (example: 2 sensors -> 5 pins needed)
+  Common pins across all PT100/1000 sensors: DI, DO, CLK
+  When using multiple sensors, you can reuse these pins
+  and only define the CS PIN. (example: 2 sensors -> 5 pins needed)
 */
 // current initial values:  D1, D2, D3 of NODEMCU Dev Board
 byte PTPins[3] = {5, 4, 0};
+byte numberOfPTSensors = 0; // current number of PT100 sensors
 
-byte numberOfSensors = 0; // current number of sensors
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature DS18B20(&oneWire);
 byte oneWireAddressesFound[numberOfSensorsMax][8];
-byte numberOfOneWireSensorsFound = 0;
+byte numberOfOneWireSensors = 0;      // current number of OneWire sensors
+byte numberOfOneWireSensorsFound = 0; // OneWire sensors found on the bus
 
 byte numberOfActors = 0; // current number of actors
 
