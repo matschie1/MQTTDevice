@@ -1,44 +1,39 @@
-void loop() {
-  // set device name
-  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
+void loop()
+{
+  cbpiEventSystem(20);              // Check WLAN
 
-  // WiFi Status prüfen, ggf. Reconnecten
-  if (WiFi.status() != WL_CONNECTED) {
-    cbpiEventSystem(1);
-    wifiManager.autoConnect("MQTTDevice");
+  if (lastToggledSys - millis() > SYS_UPDATE)
+  {
+    cbpiEventSystem(30);              // Display Update, NTP
+  }
+  cbpiEventSystem(21);              // OTA handle
+
+  cbpiEventSystem(22);              // Check MQTT
+
+  cbpiEventSystem(23);              // Webserver handle
+
+  cbpiEventSystem(24);              // MDNS handle
+
+  if (lastToggledSen -millis() > ON_ERROR_SEN)
+  {
+    cbpiEventSensors(0);              // Sensor handle
+  }
+  if (lastToggledAct - millis() > ON_ERROR_ACT)
+  {
+    cbpiEventActors(0);               // Actor handle
+  }
+  if (lastToggledInd - millis() > ON_ERROR_IND)
+  {
+    cbpiEventInduction(0);            // Induction handle
   }
 
-  // OTA
-  ArduinoOTA.handle();
-
-  // MQTT Status prüfen
-  if (!client.connected()) {
-    mqttreconnect();
-  }
-  client.loop();
-
-  // Webserver prüfen
-  server.handleClient();
-
-   //mDNS aktualisieren
-   MDNS.update();
-
-  // Sensoren aktualisieren
-  cbpiEventSensors(0);
-  //handleSensors();
-  
-  // Aktoren aktualisieren
-  cbpiEventActors(0);
-  //handleActors();
-
-  // Induktionskochfeld
-  cbpiEventInduction(0);
-  //handleInduction();
-  
-  // Eventmanager
-  while(gEM.getNumEventsInQueue()) // process all queued events
+  while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
   {
     gEM.processEvent();
   }
   delay(100);
+  lastToggledSys = millis();
+  lastToggledSen = millis();
+  lastToggledAct = millis();
+  lastToggledInd = millis();
 }

@@ -31,19 +31,14 @@ This Device offers a wireless conntection via the MQTT protocol from CBPi to you
 [German Tutorial](https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196)
 
 EventManager:
-Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager. Please note origin EventManager won't work! 
+Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager.
 Change the value onErrorInterval as you prefer.
 
 Activate or deactive the following lines to manage the behavior of Eventmanager
 #define StopActorsOnSensorError
 #define StopInductionOnSensorError
 
-If you activate one or both lines corresponding actors will automatically set to off if sensor errors occour. The following sensor attributes are checked periodically:
-CRC valid
-is connected (0 or 1)
-valid addresses (address staring with FF is not valid)
-valid temperature (-127.0 degrees means no data from sensor)
+If you activate one or both lines corresponding actors will automatically set to off if sensor errors occour. The following sensor attributes are checked periodically: CRC valid, is connected (0 or 1), valid addresses, valid temperature (sensors are init with -127.0 degrees which means no valid data from sensor)
 
-Please activate 
 #define Debug 
 for testing purpose and check output in serial monitor to find out working settings for your equipment.

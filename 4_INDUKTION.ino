@@ -105,8 +105,8 @@ class induction
         if (client.connected()) {
           char subscribemsg[50];
           mqtttopic.toCharArray(subscribemsg, 50);
-          Serial.print("Subscribing to ");
-          Serial.println(subscribemsg);
+          DBG_PRINT("Subscribing to ");
+          DBG_PRINTLN(subscribemsg);
           client.subscribe(subscribemsg);
         }
       }
@@ -116,8 +116,8 @@ class induction
       if (client.connected()) {
         char subscribemsg[50];
         mqtttopic.toCharArray(subscribemsg, 50);
-        Serial.print("Unsubscribing from ");
-        Serial.println(subscribemsg);
+        DBG_PRINT("Unsubscribing from ");
+        DBG_PRINTLN(subscribemsg);
         client.unsubscribe(subscribemsg);
       }
     }
@@ -127,15 +127,15 @@ class induction
       if (client.connected()) {
         StaticJsonBuffer<256> jsonBuffer;
         JsonObject& json = jsonBuffer.createObject();
-        if(isInduon)
+        if (isInduon)
           json["State"] = "on";
-        else 
+        else
           json["State"] = "off";
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(induction_mqtttopic, jsonMessage);
-        //Serial.print("MQTT pub message: ");
-        //Serial.println(jsonMessage);
+        //DBG_PRINT("MQTT pub message: ");
+        //DBG_PRINTLN(jsonMessage);
       }
     }
 
@@ -172,14 +172,14 @@ class induction
 
     bool updateRelay() {
       if (isInduon == true && isRelayon == false) {         /* Relais einschalten */
-        Serial.println("Turning Relay on");
+        DBG_PRINTLN("Turning Relay on");
         digitalWrite(PIN_WHITE, HIGH);
         return true;
       }
 
       if (isInduon == false && isRelayon == true) {         /* Relais ausschalten */
         if (millis() > timeTurnedoff + delayAfteroff) {
-          Serial.println("Turning Relay off");
+          DBG_PRINTLN("Turning Relay off");
           digitalWrite(PIN_WHITE, LOW);
           return false;
         }
@@ -224,9 +224,8 @@ class induction
         if (newPower < 0)   {
           newPower = 0;    /* Nicht < 0 */
         }
-        Serial.print("Setting Power to ");
-        Serial.println(newPower);
-
+        DBG_PRINT("Setting Power to ");
+        DBG_PRINTLN(newPower);
         power = newPower;
 
         timeTurnedoff = 0;

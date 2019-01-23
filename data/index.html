@@ -3,6 +3,7 @@
 
 <head>
   <meta charset="utf-8">
+  <title>MQTT Device</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="font-awesome.min.css" type="text/css">
   <link rel="stylesheet" href="theme.css" type="text/css">
@@ -16,10 +17,11 @@
           <h1 class="text-center">Overview</h1>
         </div>
         <div class="col-md-auto">
-          <a href="config.json" download="config.json" class="btn btn-outline-primary" id="btn_downloadConfig">Download
-            Config</a>
-          <button type="button" class="btn btn-outline-danger" id="btn_disable_mqtt">Disable MQTT</button>
-          <button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
+			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
+			<a href="/all" class="btn btn-outline-primary" id="btn_gpio">GPIO</a>
+			<button type="button" class="btn btn-outline-danger" id="btn_disable_mqtt">Disable MQTT</button>
+			<button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
+			<button type="button" class="btn btn-outline-danger" id="btn_disable_display">Display on/off</button>
         </div>
       </div>
     </div>
@@ -65,6 +67,22 @@
                 data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
             <div class="card-body">
               <ul class="list-group" id="inductionCooker">
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="py-2">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-header"> OLED display <a href="" class="badge badge-warning" data-target="#display_modal"
+                data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
+            <div class="card-body">
+              <ul class="list-group" id="oledDisplay">
               </ul>
             </div>
           </div>
@@ -178,6 +196,28 @@
       </div>
     </div>
   </div>
+  <div class="modal fade" id="display_modal">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Modify OLED display</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_display_enabled">
+            <label class="form-check-label" for="modal_display_enabled"> Enable OLED display </label>
+          </div>
+          <div class="form-group">
+            <label for="modal_display_address">OLED address (0x3C or 0x3D) </label>
+            <input type="text" class="form-control" placeholder="" id="modal_display_address">
+          </div>
+        </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_display_btn_save">Save
+            changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
+      </div>
+    </div>
+  </div>
   <script src="jquery-3.2.1.min.js"></script>
   <script src="bootstrap.bundle.js"></script>
   <script type="text/javascript">
@@ -250,6 +290,23 @@
           inductionRender += "Induction Cooker Disabled </li>";
         }
         $('#inductionCooker').html(inductionRender);
+      });
+	  
+	  $.get("/reqDisplay", function (data) {
+        let displayRender = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
+        if (data.enabled) {
+          displayRender += " Display status <span class='badge";
+          if (data.displayOn) {
+            displayRender += " badge-success'> ON";
+          }
+          else {
+            displayRender += " badge-danger'> OFF";
+          }
+        }
+        else {
+          displayRender += "Display disabled </li>";
+        }
+        $('#oledDisplay').html(displayRender);
       });
     }
 
@@ -479,6 +536,60 @@
       });
       modal.modal('hide')
     });
+	
+	$('#display_modal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget) // Button that triggered the modal
+      var isEnabled;
+	  var address;
+
+      $.ajax({
+        url: '/reqDisp?req=isEnabled',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          isEnabled = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqDisp?req=address',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          address = data;
+        }
+      });
+      
+      var modal = $(this)
+	  modal.find('#modal_display_address').val(address)
+      if (isEnabled == "1") { modal.find('#modal_display_enabled').prop("checked", true) }
+      else { modal.find('#modal_display_enabled').prop("checked", false) }
+
+      var modal = $(this)
+	});
+	
+	$("#modal_display_btn_save").click(function () {
+      var modal = $('#display_modal')
+	  var address = modal.find('#modal_display_address').val()
+	  
+      if (modal.find('#modal_display_enabled').prop("checked") == true) {
+        var isenabled = "1"
+      } else {
+        var isenabled = "0"
+      }
+
+      $.ajax({
+        url: '/setDisp?enabled=' + isenabled + '&address=' + address,
+        type: 'POST',
+        dataType: 'html',
+        async: false,
+        cache: false
+      });
+      modal.modal('hide')
+    });
 
     $("#btn_reboot").click(function () {
       $.ajax({
@@ -501,6 +612,15 @@
       });
     });
 
+	$("#btn_disable_display").click(function () {
+      $.ajax({
+        url: '/displayOff',
+        type: 'POST',
+        async: true,
+        cache: false
+      });
+    });
+	
   </script>
 
 </html>

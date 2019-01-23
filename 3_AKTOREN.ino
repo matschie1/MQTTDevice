@@ -12,7 +12,7 @@ class Actor
     String name_actor;
     byte power_actor;
     bool isOn;
-    
+
     // MQTT Publish
     char actor_mqtttopic[50];      // Für MQTT Kommunikation
 
@@ -56,7 +56,7 @@ class Actor
       isOn = false;
 
       name_actor = aname;
-      
+
       if (argument_actor != argument) {
         mqtt_unsubscribe();
         argument_actor = argument;
@@ -82,15 +82,13 @@ class Actor
       if (client.connected()) {
         StaticJsonBuffer<256> jsonBuffer;
         JsonObject& json = jsonBuffer.createObject();
-        if(isOn)
+        if (isOn)
           json["State"] = "on";
-        else 
+        else
           json["State"] = "off";
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(actor_mqtttopic, jsonMessage);
-        //Serial.print("MQTT pub message: ");
-        //Serial.println(jsonMessage);
       }
     }
 
@@ -98,8 +96,8 @@ class Actor
       if (client.connected()) {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
-        Serial.print("Subscribing to ");
-        Serial.println(subscribemsg);
+        DBG_PRINT("Subscribing to ");
+        DBG_PRINTLN(subscribemsg);
         client.subscribe(subscribemsg);
       }
 
@@ -109,8 +107,8 @@ class Actor
       if (client.connected()) {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
-        Serial.print("Unsubscribing from ");
-        Serial.println(subscribemsg);
+        DBG_PRINT("Unsubscribing from ");
+        DBG_PRINTLN(subscribemsg);
         client.unsubscribe(subscribemsg);
       }
     }
@@ -174,7 +172,7 @@ void handleActors() {
 void handleRequestActors() {
   StaticJsonBuffer<1024> jsonBuffer;
   JsonArray& actorsResponse = jsonBuffer.createArray();
-  
+
   for (int i = 0; i < numberOfActors; i++) {
     JsonObject& actorResponse = jsonBuffer.createObject();;
     actorResponse["name"] = actors[i].name_actor;
@@ -185,7 +183,7 @@ void handleRequestActors() {
     actorsResponse.add(actorResponse);
     yield();
   }
-  
+
   String response;
   actorsResponse.printTo(response);
   server.send(200, "application/json", response);

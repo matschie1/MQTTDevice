@@ -1,6 +1,6 @@
 void setup() {
-  Serial.begin(115200);
-
+    Serial.begin(115200);
+  
   // Add Listeners
   lastToggledSys = millis();
   lastToggledSen = millis();
@@ -18,7 +18,7 @@ void setup() {
   // Dateisystem laden
   ESP.wdtFeed();
   if (!SPIFFS.begin())  {
-    Serial.println("SPIFFS Mount failed");
+  DBG_PRINT("SPIFFS Mount failed");
   }
   Dir dir = SPIFFS.openDir("/");
   Serial.printf("\n");
@@ -27,21 +27,24 @@ void setup() {
     size_t fileSize = dir.fileSize();
     Serial.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
   }
-  Serial.printf("\n");
-
+ 
   // Set device name
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-
+  
   // Einstellungen laden
   ESP.wdtFeed();
   loadConfig();
-
+  showDispCbpi();
+  delay(2000);
+  
   // WiFi Manager
   ESP.wdtFeed();
+  WiFi.hostname(mqtt_clientid);
   WiFiManagerParameter cstm_mqtthost("host", "cbpi ip", mqtthost, 16);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.addParameter(&cstm_mqtthost);
-  wifiManager.autoConnect("MQTTDevice");
+  //wifiManager.autoConnect("MQTTDevice");
+  wifiManager.autoConnect(mqtt_clientid);
   strcpy(mqtthost, cstm_mqtthost.getValue());
 
   // mDNS laden
@@ -80,14 +83,6 @@ void setup() {
     server.send(200, "text/plain", "");
   }, handleFileUpload);
 
-  // called when the url is not defined here
-  // use it to load content from SPIFFS
-  server.onNotFound([]() {
-    if (!handleFileRead(server.uri())) {
-      server.send(404, "text/plain", "FileNotFound");
-    }
-  });
-
   // get heap status, analog input value and all GPIO statuses in one json call
   server.on("/all", HTTP_GET, []() {
     String json = "{";
@@ -104,9 +99,8 @@ void setup() {
   setupServer();
 }
 
-
 void setupServer() {
-
+  
   server.on("/", handleRoot);
 
   server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
@@ -126,26 +120,37 @@ void setupServer() {
   server.on("/setSensor", handleSetSensor);       // Sensor ändern
   server.on("/setActor", handleSetActor);         // Aktor ändern
   server.on("/setIndu", handleSetIndu);           // Indu ändern
-
+  
   server.on("/delSensor", handleDelSensor);       // Sensor löschen
   server.on("/delActor", handleDelActor);         // Aktor löschen
 
   server.on("/reboot", rebootDevice);             // reboots the whole Device
   server.on("/mqttOff", turnMqttOff);             // Turns off MQTT completly until reboot
+
+#ifdef DISPLAY
+  server.on("/reqDisplay", handleRequestDisplay);
+  server.on("/reqDisp", handleRequestDisp);       // Infos Display für WebConfig
+  server.on("/setDisp", handleSetDisp);           // Display ändern
+  server.on("/displayOff", turnDisplayOff);       // Turns off display completly until reboot
+#endif
+
   server.onNotFound(handleWebRequests);           // Sonstiges
 
   server.begin();
 }
 
 void setupOTA() {
+  ArduinoOTA.begin();
   ArduinoOTA.onStart([]() {
-    Serial.println("OTA starting...");
-  });
-  ArduinoOTA.onEnd([]() {
-    Serial.println("OTA update finished!");
+    DBG_PRINTLN("OTA starting...");
+    showDispSet("OTA started");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("OTA in progress: %u%%\r\n", (progress / (total / 100)));
+  });
+  ArduinoOTA.onEnd([]() {
+    DBG_PRINTLN("OTA update finished!");
+    showDispSet("OTA finished");
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
@@ -154,6 +159,6 @@ void setupOTA() {
     else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    showDispSet("!!!OTA Error !!!");
   });
-  ArduinoOTA.begin();
 }

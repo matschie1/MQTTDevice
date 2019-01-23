@@ -52,60 +52,70 @@ bool loadFromSpiffs(String path) {
 void mqttreconnect() {
   // 10 Tries for reconnect
   // Wenn Client nicht verbunden, Verbindung herstellen
+
+  // Delay prüfen - mqttreconnect hängt wenn es keine subscribes gibt
   if (!client.connected()) {
-    // Delay prüfen
     if (millis() > mqttconnectlasttry + mqttconnectdelay) {
-      Serial.print("MQTT Trying to connect. Name:");
-      Serial.print(mqtt_clientid);
+      DBG_PRINT("MQTT Trying to connect. Device name: ");
+      DBG_PRINT(mqtt_clientid);
+//      showDispSet("MQTT connecting");
       for (int i = 0; i < mqttnumberoftrys; i++) {
-        Serial.print(".. Try #");
-        Serial.print(i+1);
+//        showDispSet("MQTT connect: #");
+//        showDispVal(i + 1);
+        DBG_PRINT(".. Try #");
+        DBG_PRINT(i + 1);
         if (client.connect(mqtt_clientid)) {
-          Serial.print(".. Success. Subscribing.");
+          DBG_PRINT("MQTT connect successful. Subscribing.");
+//#ifdef DISPLAY
+//          oledDisplay.dispUpdate();
+//#endif
           goto Subscribe;
         }
         delay(5);
       }
-      // Possible vvent MQTT
-      // cbpiEventSystem(2);
+
+      // Event MQTT
+      cbpiEventSystem(2);
+
       mqttconnectlasttry = millis();
-      Serial.print(".. Failed. Trying again in ");
-      Serial.print(mqttconnectdelay/1000);
-      Serial.println(" seconds");
+      DBG_PRINTLN("");
+      DBG_PRINT("MQTT connect failed. Try again in ");
+      DBG_PRINT(mqttconnectdelay / 1000);
+      DBG_PRINTLN(" seconds");
       return;
-    }   
+    }
   }
 
-  Subscribe:
-    for (int i = 0; i < numberOfActors; i++) {
-      actors[i].mqtt_subscribe();
-      yield();
-    }
-    inductionCooker.mqtt_subscribe();
+Subscribe:
+  for (int i = 0; i < numberOfActors; i++) {
+    actors[i].mqtt_subscribe();
+    yield();
+  }
+  inductionCooker.mqtt_subscribe();
 }
 
 void mqttcallback(char* topic, byte* payload, unsigned int length) {
-  Serial.println("Received MQTT");
-  Serial.print("Topic: ");
-  Serial.println(topic);
-  Serial.print("Payload: ");
 
+  DBG_PRINTLN("Received MQTT");
+  DBG_PRINT("Topic: ");
+  DBG_PRINTLN(topic);
+  DBG_PRINT("Payload: ");
   for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  } Serial.println(" ");
+    DBG_PRINT((char)payload[i]);
+  } DBG_PRINTLN(" ");
   char payload_msg[length];
   for (int i = 0; i < length; i++) {
     payload_msg[i] = payload[i];
   }
 
   if (inductionCooker.mqtttopic == topic) {
-    Serial.println("passing mqtt to induction");
+    DBG_PRINTLN("passing mqtt to induction");
     inductionCooker.handlemqtt(payload_msg);
   }
   for (int i = 0; i < numberOfActors; i++) {
     if (actors[i].argument_actor == topic) {
-      Serial.print("passing mqtt to actor ");
-      Serial.println(actors[i].name_actor);
+      DBG_PRINT("passing mqtt to actor ");
+      DBG_PRINTLN(actors[i].name_actor);
       actors[i].handlemqtt(payload_msg);
     }
     yield();

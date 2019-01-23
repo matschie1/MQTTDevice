@@ -7,8 +7,6 @@ class TemperatureSensor
     char sens_mqtttopic[50];      // Für MQTT Kommunikation
     byte sens_address[8];         // 1-Wire Adresse
     String sens_name;             // Name für Anzeige auf Website
-    //float sens_value;             // Aktueller Wert
-    // Test: set default -127.0 (not found)
     float sens_value = -127.0;    // Aktueller Wert
     bool sens_isConnected;        // check if Sensor is connected
 
@@ -23,7 +21,7 @@ class TemperatureSensor
     void Update() {
       if (millis() > (lastCalled + period)) {
         DS18B20.requestTemperatures(); // new conversion to get recent temperatures
-        if (sens_value == 85.0) { // can be real 85 degrees or reset default temp
+        if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
           delay(750);
           DS18B20.requestTemperatures();
         }
@@ -31,30 +29,30 @@ class TemperatureSensor
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
 
 
-#ifdef DEBUG
-        Serial.print(sens_name);
-        Serial.print(" is connected: ");
-        Serial.print(sens_isConnected);
-        Serial.print(" sensor address: ");
+        DBG_PRINT(sens_name);
+        DBG_PRINT(" is connected: ");
+        DBG_PRINT(sens_isConnected);
+        DBG_PRINT(" sensor address: ");
         for (int i = 0; i < 8; i++) {
-          Serial.print(sens_address[i], HEX);
-          Serial.print(" ");
-        }
-        Serial.print(" sensor value: ");
-        Serial.print(sens_value);
-        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
-          Serial.println(" CRC check failed");
-        }
-        else Serial.println(" CRC check ok");
+#ifdef DEBUG
+          Serial.println(sens_address[i], HEX);
 #endif
+          DBG_PRINT(" ");
+        }
+        DBG_PRINT(" sensor value: ");
+        DBG_PRINT(sens_value);
+        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
+          DBG_PRINTLN(" CRC check failed");
+        }
+        else DBG_PRINTLN(" CRC check ok");
 
         if (sens_value == -127.0 || sens_value == 85.0) {
           if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
 
-#ifdef DEBUG
-            Serial.print(sens_name);
-            Serial.println(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
-#endif
+
+            DBG_PRINT(sens_name);
+            DBG_PRINTLN(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
+
 #ifdef StopActorsOnSensorError
             cbpiEventActors(1);
 #endif
@@ -64,10 +62,9 @@ class TemperatureSensor
           }
           else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
 
-#ifdef DEBUG
-            Serial.print(sens_name);
-            Serial.println(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-#endif
+            DBG_PRINT(sens_name);
+            DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
+
 #ifdef StopActorsOnSensorError
             cbpiEventActors(1);
 #endif
@@ -85,7 +82,7 @@ class TemperatureSensor
           } // sens_isConnected
         } // sens_value -127 || +85
         //else publishmqtt(); // Sensor should be fine
-        
+
         publishmqtt();
         lastCalled = millis();
       } // if millis
@@ -115,9 +112,11 @@ class TemperatureSensor
         }
         for (int i = 0; i < 8; i++) {
           sens_address[i] = octets[i];
-          Serial.print(sens_address[i], HEX);
+#ifdef DEBUG
+          Serial.println(sens_address[i], HEX);
+#endif
         }
-        Serial.println("");
+        DBG_PRINTLN("");
       }
       DS18B20.setResolution(sens_address, 10);
     }
@@ -175,12 +174,14 @@ byte searchSensors() {
   while (oneWire.search(addr)) {
 
     if ( OneWire::crc8( addr, 7) == addr[7]) {
-      Serial.print("Sensor found:");
+      DBG_PRINT("Sensor found:");
       for ( i = 0; i < 8; i++) {
         addressesFound[n][i] = addr[i];
-        Serial.print(addr[i], HEX);
+#ifdef DEBUG
+        Serial.println(addr[i], HEX);
+#endif
       }
-      Serial.println("");
+      DBG_PRINTLN("");
       n += 1;
     }
     yield();
@@ -273,7 +274,8 @@ void handleRequestSensors() {
   for (int i = 0; i < numberOfSensors; i++) {
     JsonObject& sensorResponse = jsonBuffer.createObject();;
     sensorResponse["name"] = sensors[i].sens_name;
-    if ((sensors[i].sens_value != -127.0) && (sensors[i].sens_value != 85.0)) {
+    //if ((sensors[i].sens_value != -127.0) && (sensors[i].sens_value != 85.0)) {
+    if (sensors[i].sens_value != -127.0) {
       sensorResponse["value"] = sensors[i].getValueString();
     } else {
       sensorResponse["value"] = "ERR";
@@ -282,7 +284,7 @@ void handleRequestSensors() {
     sensorsResponse.add(sensorResponse);
     yield();
   }
-  
+
   String response;
   sensorsResponse.printTo(response);
   server.send(200, "application/json", response);

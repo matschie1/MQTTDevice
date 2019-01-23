@@ -45,7 +45,7 @@ String getContentType(String filename) {
 }
 
 bool handleFileRead(String path) {
-  Serial.println("handleFileRead: " + path);
+  //  DBG_PRINTLN("handleFileRead: " + path);
   if (path.endsWith("/")) {
     path += "index.html";
   }
@@ -73,13 +73,13 @@ void handleFileUpload() {
     if (!filename.startsWith("/")) {
       filename = "/" + filename;
     }
-    Serial.print("handleFileUpload Name: ");
-    Serial.println(filename);
+    DBG_PRINT("handleFileUpload Name: ");
+    DBG_PRINTLN(filename);
     fsUploadFile = SPIFFS.open(filename, "w");
     filename = String();
   } else if (upload.status == UPLOAD_FILE_WRITE) {
-    //Serial.print("handleFileUpload Data: ");
-    //Serial.println(upload.currentSize);
+    DBG_PRINT("handleFileUpload Data: ");
+    DBG_PRINTLN(upload.currentSize);
     if (fsUploadFile) {
       fsUploadFile.write(upload.buf, upload.currentSize);
     }
@@ -87,8 +87,8 @@ void handleFileUpload() {
     if (fsUploadFile) {
       fsUploadFile.close();
     }
-    Serial.print("handleFileUpload Size: ");
-    Serial.println(upload.totalSize);
+    DBG_PRINT("handleFileUpload Size: ");
+    DBG_PRINTLN(upload.totalSize);
     loadConfig();
   }
 }
@@ -137,9 +137,8 @@ void handleFileList() {
     server.send(500, "text/plain", "BAD ARGS");
     return;
   }
-
   String path = server.arg("dir");
-  Serial.println("handleFileList: " + path);
+  //DBG_PRINTLN("handleFileList: " + path);
   Dir dir = SPIFFS.openDir(path);
   path = String();
 
@@ -157,7 +156,6 @@ void handleFileList() {
     output += "\"}";
     entry.close();
   }
-
   output += "]";
   server.send(200, "text/json", output);
 }
