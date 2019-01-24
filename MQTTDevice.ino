@@ -107,16 +107,12 @@ byte numberOfActors = 0;                // Gesamtzahl der Aktoren
 
 char mqtthost[16] = "192.168.100.30";  // Default Value für MQTT Server
 long mqttconnectlasttry;
-long mqttconnectdelay = 5000;
-byte mqttnumberoftrys = 3;
+#define MQTT_DELAY 10000
+#define MQTT_NUM_TRY 3
 
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];
 bool dispEnabled = 0;                   // Display init default off
-
-/* ## Set up NTP ## */
-//unsigned long NTP_PRE_MILLIS = 0;
-//const unsigned long NTP_INTERVALL = 3600000;
 
 /* ## Set up the NTP UDP client ## */
 /* ## Define NTP properties ## */
@@ -133,11 +129,10 @@ File fsUploadFile;                      // a File object to temporarily store th
 
 /*######### EventManager ########*/
 EventManager gEM;                       // Eventmanager
-#define ON_ERROR_SEN 100000  // wait this time in ms before an event is raised up - change this value as you need
-#define ON_ERROR_ACT 100000
-#define ON_ERROR_IND 100000
-#define SYS_UPDATE 300000
-
+#define ON_ERROR_SEN  10000  //  wait this time in ms before a sensor event is raised up - change this value as you need
+#define ON_ERROR_ACT  10000  //  actor event
+#define ON_ERROR_IND  10000  //  induction cooker event
+#define SYS_UPDATE    30000  //  NTP and display update
 
 //#define StopActorsOnSensorError       // Uncomment this line, if you want to stop all actors on error after onErrorInterval ms
 #define StopInductionOnSensorError      // Uncomment this line, if you want to stop InductionCooker on error after onErrorInterval ms
@@ -149,31 +144,16 @@ unsigned long lastToggledInd = 0;           // Induction event delta
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
-
 #define DISPLAY                         // Uncomment this line if you have an OLED display connected
-//#ifdef DISPLAY
-//#define DISP_PRINTVAL(x)    showDispVal (x)
-//#define DISP_PRINTLINE(x)   showDispLine (x)
-//#define DISP_CLEAR()       showDispClear ()
-//#else
-//#define DISP_PRINTVAL
-//#define DISP_PRINTLINE
-//#define DISP_CLEAR
-//#endif
-
-/*########### DISPLAY ###########*/
-
 #ifdef DISPLAY
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-//#include <Fonts/FreeMono9pt7b.h>
-//#include <Fonts/FreeMono24pt7b.h>
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+//#define OLED_RESET D4
 Adafruit_SSD1306 display(-1);
-#include "wlan_logo.h"
-#include "mqtt_logo.h"
-#include "cbpi_logo.h"
+#include "icons.h"
 #endif
+/*########### DISPLAY ###########*/

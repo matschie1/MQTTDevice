@@ -1,6 +1,6 @@
 void setup() {
     Serial.begin(115200);
-  
+
   // Add Listeners
   lastToggledSys = millis();
   lastToggledSen = millis();

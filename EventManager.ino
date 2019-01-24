@@ -110,7 +110,10 @@ void listenerSystem( int event, int parm )                           // System e
 #ifdef DISPLAY
     case 30:
       oledDisplay.digClock();
-      oledDisplay.dispUpdate();
+      if (lastToggledSys - millis() > SYS_UPDATE)
+      {
+        oledDisplay.dispUpdate();
+      }
       break;
     case 31:
       if (oledDisplay.dispEnabled) {
