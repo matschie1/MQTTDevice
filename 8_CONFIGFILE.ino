@@ -101,6 +101,7 @@ bool loadConfig() {
   {
     dispEnabled = 0;
   }
+  DBG_PRINTLN("Config: Display change");
   oledDisplay.change(address, dispEnabled);
   DBG_PRINTLN("--------------------");
 #endif

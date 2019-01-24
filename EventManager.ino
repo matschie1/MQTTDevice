@@ -78,22 +78,35 @@ void listenerSystem( int event, int parm )                           // System e
         inductionCooker.publishmqtt();
       }
       server.send(200, "text/plain", "rebooting...");
-      delay(1000);
+      //delay(1000);
       showDispClear();
       ESP.restart();
       break;
 
     // Loop events comes here
-    case 20: // check WLAN
-      if (WiFi.status() != WL_CONNECTED) {
-        cbpiEventSystem(1);
-        wifiManager.autoConnect("MQTTDevice");
+    case EM_WLAN: // check WLAN (20)
+      /*
+        if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
+        else if (WiFi.status() == WL_IDLE_STATUS)     DBG_PRINTLN("Wifi Status: WL_IDLE_STATUS");     // connection result 0
+        else if (WiFi.status() == WL_NO_SSID_AVAIL)   DBG_PRINTLN("Wifi Status: WL_NO_SSID_AVAIL");   // connection result 1
+        else if (WiFi.status() == WL_SCAN_COMPLETED)  DBG_PRINTLN("Wifi Status: WL_SCAN_COMPLETED");  // connection result 2
+        else if (WiFi.status() == WL_CONNECTED)       DBG_PRINTLN("Wifi Status: WL_CONNECTED");       // connection result 3
+        else if (WiFi.status() == WL_CONNECT_FAILED)  DBG_PRINTLN("Wifi Status: WL_CONNECT_FAILED");  // connection result 4
+        else if (WiFi.status() == WL_CONNECTION_LOST) DBG_PRINTLN("Wifi Status: WL_CONNECTION_LOST"); // connection result 5
+        else if (WiFi.status() == WL_DISCONNECTED)    DBG_PRINTLN("Wifi Status: WL_DISCONNECTED");    // connection result 6
+      */
+
+      if (WiFi.status() != WL_CONNECTED) {        // no WLAN settings (AP mode) or no config (STA mode)
+        dispAPMode();
+        wifiManager.autoConnect(mqtt_clientid);
       }
+      if (WiFi.status() != WL_CONNECTION_LOST) cbpiEventSystem(1);
+      if (WiFi.status() != WL_CONNECT_FAILED) cbpiEventSystem(1);
       break;
-    case 21: // check OTA
+    case EM_OTA: // check OTA (21)
       ArduinoOTA.handle();
       break;
-    case 22: // check MQTT
+    case EM_MQTT: // check MQTT (22)
       if ((numberOfActors + numberOfSensors) || inductionCooker.isEnabled) // subs available?
       {
         if (!client.connected()) {
@@ -101,12 +114,21 @@ void listenerSystem( int event, int parm )                           // System e
         }
       }
       break;
-    case 23:  // Webserver
+    case EM_WEB:  // Webserver (23)
       server.handleClient();
       break;
-    case 24: // check MDSN
+    case EM_MDNS: // check MDSN (24)
       MDNS.update();
       break;
+    case 25: // SPIFFS mount error
+      DBG_PRINT("SPIFFS Mount failed");
+      showDispSet("Error: SPIFFS mount");
+      break;
+    case 26: // MDNS failed
+      DBG_PRINT("MDNS failed");
+      showDispSet("Error: MDNS failed");
+      break;
+
 #ifdef DISPLAY
     case 30:
       oledDisplay.digClock();
@@ -123,6 +145,16 @@ void listenerSystem( int event, int parm )                           // System e
       else {
         display.ssd1306_command(SSD1306_DISPLAYON);
         oledDisplay.dispEnabled = 1;
+      }
+      break;
+      case 32:
+      if (WiFi.status() != WL_CONNECTED) {        // no WLAN settings (AP mode) or no config (STA mode)
+        dispAPMode();
+      }
+      break;
+      case 33:
+      if (WiFi.status() == 6 && oledDisplay.address == 0) {  // no WLAN connected but no config (STA mode)
+          dispSTAMode();
       }
       break;
 #endif

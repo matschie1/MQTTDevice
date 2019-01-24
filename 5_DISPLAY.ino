@@ -11,12 +11,11 @@ class oled
     bool actOK = 0;
     bool indOK = 0;
 
-    oled(){
+    oled() {
     }
 
     void dispUpdate() {
       if (dispEnabled == 1) {
-        DBG_PRINTLN("Display update");
         showDispClear();
         showDispTime(t);
         showDispIP(WiFi.localIP().toString());
@@ -29,19 +28,17 @@ class oled
         showDispDisplay();
       }
     }
-    
+
     void change(int dispAddress, bool is_enabled) {
       if (is_enabled == 1) {
         address = dispAddress;
         display.begin(SSD1306_SWITCHCAPVCC, address, true);
         display.ssd1306_command(SSD1306_DISPLAYON);
-        showDispClear();
-        showDispSet("OLED changed");
-        showDispDisplay();
+        display.clearDisplay();
+        display.display();
         dispEnabled = is_enabled;
         timeClient.begin();
         digClock();
-        dispUpdate();
       }
       else {
         dispEnabled = is_enabled;
@@ -55,7 +52,11 @@ class oled
       // update the NTP client and get the UNIX UTC timestamp
       if (!timeClient.update())
       {
-        delay(100);           // if network is up and running just wait a second for NTP
+        //delay(100);           // if network is up and running just wait a second for NTP
+        unsigned long pause = millis();
+        while (millis() < pause + 100) {
+          //wait approx. [period] ms
+        }
         timeClient.update();
       }
       unsigned long epochTime =  timeClient.getEpochTime();
@@ -151,23 +152,35 @@ void handleSetDisp() {
 }
 #endif
 
-void showDispVal(String value)
-{
+
+void dispAPMode() {
 #ifdef DISPLAY
-  display.print(value);
-  display.display();
+  File configFile = SPIFFS.open("/config.json", "r");
+  if (!configFile)
+  {
+    display.begin(SSD1306_SWITCHCAPVCC, DISP_DEF_ADDRESS, true);
+    display.ssd1306_command(SSD1306_DISPLAYON);
+    display.clearDisplay();
+    display.display();
+    showDispAP("AP Mode");
+  }
 #endif
 }
 
-void showDispVal(int value)
-{
+void dispSTAMode() {
 #ifdef DISPLAY
-  display.print(value);
+  display.begin(SSD1306_SWITCHCAPVCC, DISP_DEF_ADDRESS, true);
+  display.ssd1306_command(SSD1306_DISPLAYON);
+  display.clearDisplay();
   display.display();
+  showDispSet("Setup");
+  showDispVal(WiFi.localIP().toString());
 #endif
 }
 
-void showDispClear()
+/* ######### Display functions ######### */
+
+void showDispClear()              // Clear Display
 {
 #ifdef DISPLAY
   display.clearDisplay();
@@ -175,14 +188,30 @@ void showDispClear()
 #endif
 }
 
-void showDispDisplay()
+void showDispDisplay()            // Show
 {
 #ifdef DISPLAY
   display.display();
 #endif
 }
 
-void showDispWlan()
+void showDispVal(String value)    // Display a String value
+{
+#ifdef DISPLAY
+  display.print(value);
+  display.display();
+#endif
+}
+
+void showDispVal(int value)       // Display a Int value
+{
+#ifdef DISPLAY
+  display.print(value);
+  display.display();
+#endif
+}
+
+void showDispWlan()               // Show WLAN icon
 {
 #ifdef DISPLAY
   if (WiFi.status() == WL_CONNECTED) {
@@ -190,7 +219,7 @@ void showDispWlan()
   }
 #endif
 }
-void showDispMqtt()
+void showDispMqtt()               // SHow MQTT icon
 {
 #ifdef DISPLAY
   if (client.connected()) {
@@ -198,16 +227,17 @@ void showDispMqtt()
   }
 #endif
 }
-void showDispCbpi()
+void showDispCbpi()               // SHow CBPI icon
 {
 #ifdef DISPLAY
   display.clearDisplay();
-  display.drawBitmap(39, 7, cbpi_logo, 50, 50, WHITE);
+  //display.drawBitmap(39, 7, cbpi_logo, 50, 50, WHITE);
+  display.drawBitmap(41, 0, cbpi_logo, 50, 50, WHITE);
   display.display();
 #endif
 }
 
-void showDispLines()
+void showDispLines()              // Draw lines in the bottom
 {
 #ifdef DISPLAY
   display.drawLine(0, 50, 128, 50, WHITE);
@@ -216,7 +246,7 @@ void showDispLines()
 #endif
 }
 
-void showDispSen()
+void showDispSen()                // Show Sensor status on the left
 {
 #ifdef DISPLAY
   display.setTextSize(1);
@@ -225,7 +255,7 @@ void showDispSen()
   oledDisplay.senOK ? display.print("Sen:Er") : display.print("Sen:ok");
 #endif
 }
-void showDispAct()
+void showDispAct()                // Show actor status in the mid
 {
 #ifdef DISPLAY
   display.setCursor(45, 55);
@@ -233,7 +263,7 @@ void showDispAct()
   oledDisplay.actOK ? display.print("Act:Er") : display.print("Act:ok");
 #endif
 }
-void showDispInd()
+void showDispInd()                // Show InductionCooker status on the right
 {
 #ifdef DISPLAY
   display.setTextSize(1);
@@ -243,7 +273,7 @@ void showDispInd()
 #endif
 }
 
-void showDispTime(String value)
+void showDispTime(String value)   // Show time value in the upper left with fontsize 2
 {
 #ifdef DISPLAY
   display.setCursor(5, 5);
@@ -253,7 +283,7 @@ void showDispTime(String value)
 #endif
 }
 
-void showDispIP(String value)
+void showDispIP(String value)      // Show IP address under time value with fontsize 1
 {
 #ifdef DISPLAY
   display.setCursor(5, 30);
@@ -262,19 +292,29 @@ void showDispIP(String value)
   display.print(value);
 #endif
 }
-void showDispSet(String value)
+void showDispSet(String value)    // Show current station mode
 {
 #ifdef DISPLAY
-  display.clearDisplay();
-  display.display();
-  display.drawPixel(0, 0, WHITE);
-  display.drawPixel(127, 0, WHITE);
-  display.drawPixel(0, 63, WHITE);
-  display.drawPixel(127, 63, WHITE);
+  showDispCbpi();
   display.setTextSize(1);
   display.setTextColor(WHITE);
-  display.setCursor(27, 30);
+  display.setCursor(8, 54);
   display.print(value);
+  display.display();
+#endif
+}
+
+void showDispAP(String value)       // Show AP mode
+{
+#ifdef DISPLAY
+  //display.clearDisplay();
+  showDispCbpi();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(8, 54);
+  display.print(value);
+  display.print(": 192.168.4.1");
+  //display.print(WiFi.softAPIP().toString());
   display.display();
 #endif
 }

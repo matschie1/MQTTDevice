@@ -56,27 +56,23 @@ void mqttreconnect() {
   // Delay prüfen - mqttreconnect hängt wenn es keine subscribes gibt
   if (!client.connected()) {
     if (millis() > mqttconnectlasttry + MQTT_DELAY) {
-      DBG_PRINT("MQTT Trying to connect. Device name: ");
-      DBG_PRINT(mqtt_clientid);
-//      showDispSet("MQTT connecting");
+      //DBG_PRINT("MQTT Trying to connect. Device name: ");
+      //DBG_PRINT(mqtt_clientid);
       for (int i = 0; i < MQTT_NUM_TRY; i++) {
-//        showDispSet("MQTT connect: #");
-//        showDispVal(i + 1);
-        DBG_PRINT(".. Try #");
-        DBG_PRINT(i + 1);
+        //DBG_PRINT(".. Try #");
+        //DBG_PRINTLN(i + 1);
         if (client.connect(mqtt_clientid)) {
           DBG_PRINT("MQTT connect successful. Subscribing.");
-//#ifdef DISPLAY
-//          oledDisplay.dispUpdate();
-//#endif
           goto Subscribe;
         }
-        delay(10);
+        unsigned long pause = millis();
+        while (millis() < pause + 1000) {
+          //wait approx. 1 sec
+        }
       }
 
       // Event MQTT
       cbpiEventSystem(2);
-
       mqttconnectlasttry = millis();
       DBG_PRINTLN("");
       DBG_PRINT("MQTT connect failed. Try again in ");

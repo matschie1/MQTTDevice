@@ -1,39 +1,41 @@
 void loop()
 {
-  cbpiEventSystem(20);              // Check WLAN
+  cbpiEventSystem(EM_WEB);              // Webserver handle
 
-  if (lastToggledSys - millis() > SYS_UPDATE)
+  if (millis() > lastToggledSen + SEN_UPDATE)
   {
-    cbpiEventSystem(30);              // Display Update, NTP
+    cbpiEventSensors(0);                // Sensor handle
+    lastToggledSen = millis();
   }
-  cbpiEventSystem(21);              // OTA handle
-
-  cbpiEventSystem(22);              // Check MQTT
-
-  cbpiEventSystem(23);              // Webserver handle
-
-  cbpiEventSystem(24);              // MDNS handle
-
-  if (lastToggledSen -millis() > ON_ERROR_SEN)
+  if (millis() > lastToggledAct + ACT_UPDATE)
   {
-    cbpiEventSensors(0);              // Sensor handle
+    cbpiEventActors(0);                 // Actor handle
+    lastToggledAct = millis();
   }
-  if (lastToggledAct - millis() > ON_ERROR_ACT)
+  if (millis() > lastToggledInd + IND_UPDATE)
   {
-    cbpiEventActors(0);               // Actor handle
-  }
-  if (lastToggledInd - millis() > ON_ERROR_IND)
-  {
-    cbpiEventInduction(0);            // Induction handle
+    cbpiEventInduction(0);              // Induction handle
+    lastToggledInd = millis();
   }
 
-  while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
+  if (millis() > lastToggledSys + SYS_UPDATE)
+  {
+    cbpiEventSystem(EM_WLAN);             // Check WLAN
+    cbpiEventSystem(EM_MDNS);             // MDNS handle
+    cbpiEventSystem(EM_MQTT);             // Check MQTT
+    cbpiEventSystem(EM_OTA);              // OTA handle
+    lastToggledSys = millis();
+  }
+  
+  if (millis() > lastToggledDisp + DISP_UPDATE)
+  {
+    cbpiEventSystem(EM_DISPUP);         // Display Update
+    lastToggledDisp = millis();
+  }
+
+  while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
   {
     gEM.processEvent();
   }
-  delay(100);
-  lastToggledSys = millis();
-  lastToggledSen = millis();
-  lastToggledAct = millis();
-  lastToggledInd = millis();
+  //delay(100);  // get rid off delay
 }

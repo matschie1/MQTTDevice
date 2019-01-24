@@ -22,7 +22,10 @@ class TemperatureSensor
       if (millis() > (lastCalled + period)) {
         DS18B20.requestTemperatures(); // new conversion to get recent temperatures
         if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
-          delay(750);
+          unsigned long pause = millis();
+          while (millis() < pause + 750) {
+            //wait approx. [period] ms
+          }
           DS18B20.requestTemperatures();
         }
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus

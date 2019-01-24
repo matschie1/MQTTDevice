@@ -43,7 +43,10 @@ class Actor
       if (isPin(pin_actor)) {
         digitalWrite(pin_actor, HIGH);
         pins_used[pin_actor] = false;
-        delay(5);
+        unsigned long pause = millis();
+        while (millis() < pause + 10) {
+          //wait approx. [period] ms
+        }
       }
 
       pin_actor = StringToPin(pin);

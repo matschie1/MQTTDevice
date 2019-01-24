@@ -129,10 +129,17 @@ File fsUploadFile;                      // a File object to temporarily store th
 
 /*######### EventManager ########*/
 EventManager gEM;                       // Eventmanager
-#define ON_ERROR_SEN  10000  //  wait this time in ms before a sensor event is raised up - change this value as you need
-#define ON_ERROR_ACT  10000  //  actor event
-#define ON_ERROR_IND  10000  //  induction cooker event
-#define SYS_UPDATE    30000  //  NTP and display update
+#define SEN_UPDATE  5000  //  wait this time in ms before a sensor event is raised up - change this value as you need
+#define ACT_UPDATE  5000  //  actor event
+#define IND_UPDATE  5000  //  induction cooker event
+#define DISP_UPDATE 10000 //  NTP and display update
+#define SYS_UPDATE  100
+#define EM_WLAN   20
+#define EM_OTA    21
+#define EM_MQTT   22
+#define EM_WEB    23
+#define EM_MDNS   24
+#define EM_DISPUP 30
 
 //#define StopActorsOnSensorError       // Uncomment this line, if you want to stop all actors on error after onErrorInterval ms
 #define StopInductionOnSensorError      // Uncomment this line, if you want to stop InductionCooker on error after onErrorInterval ms
@@ -141,6 +148,7 @@ unsigned long lastToggledSys = 0;           // System event delta
 unsigned long lastToggledSen = 0;           // Sensor event delta
 unsigned long lastToggledAct = 0;           // Actor event delta
 unsigned long lastToggledInd = 0;           // Induction event delta
+unsigned long lastToggledDisp = 0;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
@@ -150,10 +158,9 @@ unsigned long lastToggledInd = 0;           // Induction event delta
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#define SCREEN_WIDTH 128 // OLED display width, in pixels
-#define SCREEN_HEIGHT 64 // OLED display height, in pixels
-//#define OLED_RESET D4
+#define SCREEN_WIDTH 128                // OLED display width, in pixels
+#define SCREEN_HEIGHT 64                // OLED display height, in pixels
+#define DISP_DEF_ADDRESS 0x3c           // Only used on init setup!
 Adafruit_SSD1306 display(-1);
 #include "icons.h"
 #endif
-/*########### DISPLAY ###########*/
