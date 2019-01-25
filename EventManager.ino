@@ -100,7 +100,7 @@ void listenerSystem( int event, int parm )                           // System e
         dispAPMode();
         wifiManager.autoConnect(mqtt_clientid);
       }
-      if (WiFi.status() != WL_DISCONNECTED) DBG_PRINTLN("WiFi status disconnected");  // ToDo: Check status disconnected!!!
+      //if (WiFi.status() != WL_DISCONNECTED) DBG_PRINTLN("WiFi status disconnected");  // ToDo: Check status disconnected!!!
       if (WiFi.status() != WL_CONNECTION_LOST) cbpiEventSystem(1);
       if (WiFi.status() != WL_CONNECT_FAILED) cbpiEventSystem(1);
       break;

@@ -174,6 +174,11 @@ void dispSTAMode() {
   display.clearDisplay();
   display.display();
   showDispSet("Setup");
+  unsigned long last = 0;
+  if (millis() > last + 1000)
+  {
+    // just wait a sec for WiFiManager otherwise 0.0.0.0 will be returend for localIP will be
+  }
   showDispVal(WiFi.localIP().toString());
 #endif
 }

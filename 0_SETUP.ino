@@ -1,7 +1,7 @@
 void setup()
 {
   Serial.begin(115200);
-
+  
   gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
   gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
   gEM.addListener(EventManager::cbpiEventActors, listenerActors);
@@ -39,22 +39,27 @@ void setup()
   // Load configuration
   ESP.wdtFeed();
   loadConfig();
-
+ 
   // Check AP / STA Display Mode
-  cbpiEventSystem(32);  // Check AP
-  cbpiEventSystem(33);  // Check STA
-  while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
-  {
-    gEM.processEvent();
-  }
+  //cbpiEventSystem(32);  // Check AP
+  dispAPMode();
+  
+//  while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
+//  {
+//    gEM.processEvent();
+//  }
 
   // WiFi Manager
   ESP.wdtFeed();
-  WiFiManagerParameter cstm_mqtthost("host", "cbpi ip", mqtthost, 16);
+  WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.addParameter(&cstm_mqtthost);
   wifiManager.autoConnect(mqtt_clientid);
   strcpy(mqtthost, cstm_mqtthost.getValue());
+
+  // Check AP / STA Display Mode
+  //cbpiEventSystem(33);  // Check STA
+  dispSTAMode();
 
   // Save configuration
   ESP.wdtFeed();
@@ -74,30 +79,31 @@ void setup()
   client.setServer(mqtthost, 1883);
   client.setCallback(mqttcallback);
 
-  // FSBrowser initialisieren
-  // list directory
-  server.on("/list", HTTP_GET, handleFileList);
-  // load editor
-  server.on("/edit", HTTP_GET, []() {
-    if (!handleFileRead("/edit.htm")) {
-      server.send(404, "text/plain", "FileNotFound");
-    }
-  });
-  // create file
-  server.on("/edit", HTTP_PUT, handleFileCreate);
-  // delete file
-  server.on("/edit", HTTP_DELETE, handleFileDelete);
-  // first callback is called after the request has ended with all parsed arguments
-  // second callback handles file uploads at that location
-  server.on("/edit", HTTP_POST, []() {
-    server.send(200, "text/plain", "");
-  }, handleFileUpload);
-  server.onNotFound([]() {
-    if (!handleFileRead(server.uri())) {
-      server.send(404, "text/plain", "FileNotFound");
-    }
-  });
-
+  /*
+    // FSBrowser initialisieren
+    // list directory
+    server.on("/list", HTTP_GET, handleFileList);
+    // load editor
+    server.on("/edit", HTTP_GET, []() {
+      if (!handleFileRead("/edit.htm")) {
+        server.send(404, "text/plain", "FileNotFound");
+      }
+    });
+    // create file
+    server.on("/edit", HTTP_PUT, handleFileCreate);
+    // delete file
+    server.on("/edit", HTTP_DELETE, handleFileDelete);
+    // first callback is called after the request has ended with all parsed arguments
+    // second callback handles file uploads at that location
+    server.on("/edit", HTTP_POST, []() {
+      server.send(200, "text/plain", "");
+    }, handleFileUpload);
+    server.onNotFound([]() {
+      if (!handleFileRead(server.uri())) {
+        server.send(404, "text/plain", "FileNotFound");
+      }
+    });
+  */
   // Start Webserver
   ESP.wdtFeed();
   setupServer();
@@ -151,8 +157,28 @@ void setupServer()
   server.on("/reqMiscSet", handleRequestMiscSet);
   server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
   server.on("/setMisc", handleSetMisc);     // Misc ändern
-  
-  server.onNotFound(handleWebRequests); // Sonstiges
+
+  // FSBrowser initialisieren
+  server.on("/list", HTTP_GET, handleFileList);   // list directory
+  server.on("/edit", HTTP_GET, []() {             // load editor
+    if (!handleFileRead("/edit.htm")) {
+      server.send(404, "text/plain", "FileNotFound");
+    }
+  });
+  server.on("/edit", HTTP_PUT, handleFileCreate); // create file
+  server.on("/edit", HTTP_DELETE, handleFileDelete);  // delete file
+  // first callback is called after the request has ended with all parsed arguments
+  // second callback handles file uploads at that location
+  server.on("/edit", HTTP_POST, []() {
+    server.send(200, "text/plain", "");
+  }, handleFileUpload);
+  server.onNotFound([]() {
+    if (!handleFileRead(server.uri())) {
+      server.send(404, "text/plain", "FileNotFound");
+    }
+  });
+
+  // server.onNotFound(handleWebRequests);           // Sonstiges
 
   server.begin();
 }

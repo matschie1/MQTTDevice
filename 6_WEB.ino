@@ -127,7 +127,6 @@ void handleRequestMisc() {
   String message;
   if (request == "MQTTHOST") {
     message = mqtthost;
-    DBG_PRINTLN(message);
     goto SendMessage;
   }
 
@@ -139,19 +138,31 @@ void handleSetMisc() {
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "reset") {
       if (server.arg(i) == "1") {
-          WiFi.disconnect();
-          wifiManager.resetSettings();      } 
+        WiFi.disconnect();
+        wifiManager.resetSettings();
+        unsigned long last = 0;
+        if (millis() > last + 2000)
+        {
+          // just wait for approx 2sec
+        }
+        ESP.reset();
+      }
     }
     if (server.argName(i) == "clear") {
       if (server.arg(i) == "1") {
         SPIFFS.remove("/config.json");
         WiFi.disconnect();
         wifiManager.resetSettings();
-      } 
+        unsigned long last = 0;
+        if (millis() > last + 2000)
+        {
+          // just wait for approx 2sec
+        }
+        ESP.reset();
+      }
     }
     if (server.argName(i) == "MQTTHOST")  {
       server.arg(i).toCharArray(mqtthost, 16);
-      DBG_PRINTLN(mqtthost);
     }
     yield();
   }
