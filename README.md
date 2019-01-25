@@ -62,10 +62,15 @@ Configured are 4 event queues: system, sensors, actors and induction and every q
 - cbpiEventInduction		-> get and send data to induction cooker
 
 In every loop events in all queues are processed. You can manage how often special events should be queued
+
 #define SYS_UPDATE  100		-> System update events should be queued approx. every 100ms
+
 #define SEN_UPDATE  2000	-> Sensor data read should be queued approx. every 2s
+
 #define ACT_UPDATE  5000	-> Actor data read/write should be queued approx. every 5s
+
 #define IND_UPDATE  5000	-> Induction data read/write should be queued approx. every 5s
+
 #define DISP_UPDATE 10000	-> Display screen update queued approx. every 10s
 
 Let's say you want your temperature sensor datas every 5 seconds. Change SEN_UPDATE to 5000 (ms) and every approx 5sec a new event read sensors in generated in th Sensor queue.  
