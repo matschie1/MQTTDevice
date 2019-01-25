@@ -148,6 +148,10 @@ void setupServer()
   server.on("/displayOff", turnDisplayOff); // Turns off display completly until reboot
 #endif
 
+  server.on("/reqMiscSet", handleRequestMiscSet);
+  server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
+  server.on("/setMisc", handleSetMisc);     // Misc ändern
+  
   server.onNotFound(handleWebRequests); // Sonstiges
 
   server.begin();
