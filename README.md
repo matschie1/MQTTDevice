@@ -35,6 +35,10 @@ This Device offers a wireless conntection via the MQTT protocol from CBPi to you
 OLED Display:
 You can use OLED display.
 
+![oled](InnuendoPi.github.com/MQTTDevice/img/oled2.jpg)
+![AP-mode](InnuendoPi.github.com/MQTTDevice/img/AP-Mode.jpg)
+![config](InnuendoPi.github.com/MQTTDevice/img/oled.jpg)
+
 EventManager:
 Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager.
 Change the value onErrorInterval as you prefer.
