@@ -261,9 +261,19 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
 
     void sendCommand(int command[33]) {
       digitalWrite(PIN_YELLOW, HIGH);
-      delay(SIGNAL_START);
+      unsigned long last = 0;
+      if (millis() > last + SIGNAL_START)
+      {
+        // get rid off delay
+      }
+      // delay(SIGNAL_START);
       digitalWrite(PIN_YELLOW, LOW);
-      delay(SIGNAL_WAIT);
+      last = 0;
+      if (millis() > last + SIGNAL_WAIT)
+      {
+        // get rid off delay
+      }
+      //delay(SIGNAL_WAIT);
 
 
       for (int i = 0; i < 33; i++) {

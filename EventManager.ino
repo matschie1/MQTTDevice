@@ -85,7 +85,7 @@ void listenerSystem( int event, int parm )                           // System e
 
     // Loop events comes here
     case EM_WLAN: // check WLAN (20)
-      /*
+      /* WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
         if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
         else if (WiFi.status() == WL_IDLE_STATUS)     DBG_PRINTLN("Wifi Status: WL_IDLE_STATUS");     // connection result 0
         else if (WiFi.status() == WL_NO_SSID_AVAIL)   DBG_PRINTLN("Wifi Status: WL_NO_SSID_AVAIL");   // connection result 1
@@ -100,6 +100,7 @@ void listenerSystem( int event, int parm )                           // System e
         dispAPMode();
         wifiManager.autoConnect(mqtt_clientid);
       }
+      if (WiFi.status() != WL_DISCONNECTED) DBG_PRINTLN("WiFi status disconnected");  // ToDo: Check status disconnected!!!
       if (WiFi.status() != WL_CONNECTION_LOST) cbpiEventSystem(1);
       if (WiFi.status() != WL_CONNECT_FAILED) cbpiEventSystem(1);
       break;
@@ -107,11 +108,12 @@ void listenerSystem( int event, int parm )                           // System e
       ArduinoOTA.handle();
       break;
     case EM_MQTT: // check MQTT (22)
-      if ((numberOfActors + numberOfSensors) || inductionCooker.isEnabled) // subs available?
+      if ((numberOfActors + numberOfSensors) || inductionCooker.isEnabled) // anything to subscribe?
       {
         if (!client.connected()) {
           mqttreconnect();
         }
+        client.loop();
       }
       break;
     case EM_WEB:  // Webserver (23)
