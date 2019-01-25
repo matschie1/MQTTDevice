@@ -129,11 +129,12 @@ File fsUploadFile;                      // a File object to temporarily store th
 
 /*######### EventManager ########*/
 EventManager gEM;                       // Eventmanager
-#define SEN_UPDATE  5000  //  wait this time in ms before a sensor event is raised up - change this value as you need
+#define SEN_UPDATE  2000  //  wait this time in ms before a sensor event is raised up - change this value as you need
 #define ACT_UPDATE  5000  //  actor event
 #define IND_UPDATE  5000  //  induction cooker event
 #define DISP_UPDATE 10000 //  NTP and display update
 #define SYS_UPDATE  100
+#define WAIT_ON_ERROR 30000  
 #define EM_WLAN   20
 #define EM_OTA    21
 #define EM_MQTT   22
@@ -141,8 +142,8 @@ EventManager gEM;                       // Eventmanager
 #define EM_MDNS   24
 #define EM_DISPUP 30
 
-//#define StopActorsOnSensorError       // Uncomment this line, if you want to stop all actors on error after onErrorInterval ms
-#define StopInductionOnSensorError      // Uncomment this line, if you want to stop InductionCooker on error after onErrorInterval ms
+//#define StopActorsOnSensorError       // Uncomment this line, if you want to stop all actors on error after WAIT_ON_ERROR ms
+#define StopInductionOnSensorError      // Uncomment this line, if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
 
 unsigned long lastToggledSys = 0;           // System event delta
 unsigned long lastToggledSen = 0;           // Sensor event delta

@@ -153,7 +153,7 @@ void handleSetDisp() {
 #endif
 
 
-void dispAPMode() {
+void dispAPMode() {             // show screen in AP Mode
 #ifdef DISPLAY
   File configFile = SPIFFS.open("/config.json", "r");
   if (!configFile)
@@ -167,7 +167,7 @@ void dispAPMode() {
 #endif
 }
 
-void dispSTAMode() {
+void dispSTAMode() {          // Start screen in station mode
 #ifdef DISPLAY
   display.begin(SSD1306_SWITCHCAPVCC, DISP_DEF_ADDRESS, true);
   display.ssd1306_command(SSD1306_DISPLAYON);
