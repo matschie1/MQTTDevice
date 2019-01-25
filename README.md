@@ -1,5 +1,7 @@
 # MQTTDevice
 
+This is just a fork for personal dev - please use origin repository https://github.com/matschie1/MQTTDevice
+
 ![Overview Image](/img/Overview.png)
 ## General Introduction
 
@@ -29,6 +31,9 @@ This Device offers a wireless conntection via the MQTT protocol from CBPi to you
 ## Installation
 
 [German Tutorial](https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196)
+
+OLED Display:
+You can use OLED display.
 
 EventManager:
 Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) and unpack into ..\libraries\EventManager.
