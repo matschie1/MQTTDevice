@@ -38,7 +38,7 @@ class TemperatureSensor
         DBG_PRINT(" sensor address: ");
         for (int i = 0; i < 8; i++) {
 #ifdef DEBUG
-          Serial.println(sens_address[i], HEX);
+          Serial.print(sens_address[i], HEX);
 #endif
           DBG_PRINT(" ");
         }
@@ -51,41 +51,22 @@ class TemperatureSensor
 
         if (sens_value == -127.0 || sens_value == 85.0) {
           if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
-
-
             DBG_PRINT(sens_name);
-            DBG_PRINTLN(" is connected and has a valid ID, but temperature is #define DEVICE_DISCONNECTED_C (dallas, -127) -  error, device not found");
-
-#ifdef StopActorsOnSensorError
-            cbpiEventActors(1);
-#endif
-#ifdef StopInductionOnSensorError
-            cbpiEventInduction(1);
-#endif
+            DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
+            cbpiEventSensors(1);
           }
           else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
 
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-
-#ifdef StopActorsOnSensorError
-            cbpiEventActors(1);
-#endif
-#ifdef StopInductionOnSensorError
-            cbpiEventInduction(1);
-#endif
+            
+            cbpiEventSensors(1);
           }
           else {// not connected and unvalid address
-#ifdef StopActorsOnSensorError
-            cbpiEventActors(1);
-#endif
-#ifdef StopInductionOnSensorError
-            cbpiEventInduction(1);
-#endif
+              cbpiEventSensors(1);
           } // sens_isConnected
         } // sens_value -127 || +85
         //else publishmqtt(); // Sensor should be fine
-
         publishmqtt();
         lastCalled = millis();
       } // if millis

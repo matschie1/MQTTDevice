@@ -122,35 +122,32 @@ class induction
       }
     }
 
-    // MQTT Publish
-    void publishmqtt() {
-      if (client.connected()) {
-        StaticJsonBuffer<256> jsonBuffer;
-        JsonObject& json = jsonBuffer.createObject();
-        if (isInduon)
-          json["State"] = "on";
-        else
-          json["State"] = "off";
-        char jsonMessage[100];
-        json.printTo(jsonMessage);
-        client.publish(induction_mqtttopic, jsonMessage);
-        //DBG_PRINT("MQTT pub message: ");
-        //DBG_PRINTLN(jsonMessage);
-      }
-    }
-
+    /*  Not yet ready
+         // MQTT Publish
+        void publishmqtt() {
+          if (client.connected()) {
+            StaticJsonBuffer<256> jsonBuffer;
+            JsonObject& json = jsonBuffer.createObject();
+            if (isInduon)
+              json["State"] = "on";
+            else
+              json["State"] = "off";
+            char jsonMessage[100];
+            json.printTo(jsonMessage);
+            client.publish(induction_mqtttopic, jsonMessage);
+            //DBG_PRINT("MQTT pub message: ");
+            //DBG_PRINTLN(jsonMessage);
+          }
+        }
+    */
     void handlemqtt(char* payload) {
       StaticJsonBuffer<128> jsonBuffer;
       JsonObject& json = jsonBuffer.parseObject(payload);
-
       if (!json.success()) {
         return;
       }
-
       String state = json["state"];
-
       if (state == "off") {
-        newPower = 0;
         return;
       } else {
         newPower = atoi(json["power"]);
@@ -264,16 +261,14 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
       unsigned long last = 0;
       if (millis() > last + SIGNAL_START)
       {
-        // get rid off delay
+        // wait for approx SIGNAL_START ms
       }
-      // delay(SIGNAL_START);
       digitalWrite(PIN_YELLOW, LOW);
       last = 0;
       if (millis() > last + SIGNAL_WAIT)
       {
-        // get rid off delay
+        // wait for approx SIGNAL_WAIT ms
       }
-      //delay(SIGNAL_WAIT);
 
 
       for (int i = 0; i < 33; i++) {

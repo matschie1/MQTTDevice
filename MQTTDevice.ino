@@ -34,7 +34,7 @@
 #include <Timezone.h>
 
 /*############ DEBUG ############*/
-#define DEBUG                 // Uncomment this line for debug output on serial monitor
+//#define DEBUG                 // Uncomment this line for debug output on serial monitor
 
 #ifdef DEBUG
 #define DBG_PRINT(x)     Serial.print (x)
@@ -134,7 +134,7 @@ EventManager gEM;                       // Eventmanager
 #define IND_UPDATE  5000  //  induction cooker event
 #define DISP_UPDATE 10000 //  NTP and display update
 #define SYS_UPDATE  100
-#define WAIT_ON_ERROR 30000  
+#define WAIT_ON_ERROR 30000
 #define EM_WLAN   20
 #define EM_OTA    21
 #define EM_MQTT   22
@@ -150,10 +150,13 @@ unsigned long lastToggledSen = 0;           // Sensor event delta
 unsigned long lastToggledAct = 0;           // Actor event delta
 unsigned long lastToggledInd = 0;           // Induction event delta
 unsigned long lastToggledDisp = 0;
+unsigned long lastSen = 0;           // Sensor event delta
+unsigned long lastAct = 0;           // Actor event delta
+unsigned long lastInd = 0;           // Induction event delta
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
-#define DISPLAY                         // Uncomment this line if you have an OLED display connected
+//#define DISPLAY                         // Uncomment this line if you have an OLED display connected
 #ifdef DISPLAY
 #include <SPI.h>
 #include <Wire.h>

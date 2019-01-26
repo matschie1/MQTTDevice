@@ -83,7 +83,7 @@ bool loadConfig() {
   DBG_PRINTLN(is_enabled_bl);
   DBG_PRINTLN("--------------------");
   
-#ifdef DISPLAY
+  #ifdef DISPLAY
   JsonArray& jsodisplay = json["display"];
   JsonObject& jsdisplay = jsodisplay[0];
   String dispAddress = jsdisplay["ADDRESS"];
@@ -104,7 +104,7 @@ bool loadConfig() {
   DBG_PRINTLN("Config: Display change");
   oledDisplay.change(address, dispEnabled);
   DBG_PRINTLN("--------------------");
-#endif
+  #endif
 
   // General Settings
   String json_mqtthost = json["MQTTHOST"];
