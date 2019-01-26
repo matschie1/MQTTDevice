@@ -89,10 +89,6 @@
             <label for="modal_actor_script">MQTT Topic</label>
             <input type="text" class="form-control" placeholder="" id="modal_actor_script">
           </div>
-          <!--  <div class="form-group">
-            <label for="modal_actor_pin">PIN</label>
-            <input type="text" class="form-control" placeholder="" id="modal_actor_pin">
-          </div>-->
           <div class="form-group">
             <label for="modal_actor_pin">PIN</label>
             <select class="form-control" id="modal_actor_pin">
@@ -196,6 +192,8 @@
           else {
             sensor += element.value + "°C";
           }
+          sensor += " </span> <span class='badge badge-info'> "
+          sensor += element.type;
           sensor += " </span> <span class='badge badge-info'> "
           sensor += element.mqtt;
           sensor += " </span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
