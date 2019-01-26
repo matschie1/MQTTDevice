@@ -34,7 +34,7 @@
 #include <Timezone.h>
 
 /*############ DEBUG ############*/
-//#define DEBUG                 // Uncomment this line for debug output on serial monitor
+// #define DEBUG                 // Uncomment this line for debug output on serial monitor
 
 #ifdef DEBUG
 #define DBG_PRINT(x)     Serial.print (x)
@@ -112,7 +112,6 @@ long mqttconnectlasttry;
 
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];
-bool dispEnabled = 0;                   // Display init default off
 
 /* ## Set up the NTP UDP client ## */
 /* ## Define NTP properties ## */
@@ -134,7 +133,7 @@ EventManager gEM;                       // Eventmanager
 #define IND_UPDATE  5000  //  induction cooker event
 #define DISP_UPDATE 10000 //  NTP and display update
 #define SYS_UPDATE  100
-#define WAIT_ON_ERROR 30000
+#define WAIT_ON_ERROR 60000   // approx in ms
 #define EM_WLAN   20
 #define EM_OTA    21
 #define EM_MQTT   22
@@ -142,22 +141,23 @@ EventManager gEM;                       // Eventmanager
 #define EM_MDNS   24
 #define EM_DISPUP 30
 
-//#define StopActorsOnSensorError       // Uncomment this line, if you want to stop all actors on error after WAIT_ON_ERROR ms
-#define StopInductionOnSensorError      // Uncomment this line, if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
+//#define StopActorsOnError       // Uncomment this line, if you want to stop all actors on error after WAIT_ON_ERROR ms
+#define StopInductionOnError      // Uncomment this line, if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
 
 unsigned long lastToggledSys = 0;           // System event delta
 unsigned long lastToggledSen = 0;           // Sensor event delta
 unsigned long lastToggledAct = 0;           // Actor event delta
 unsigned long lastToggledInd = 0;           // Induction event delta
 unsigned long lastToggledDisp = 0;
-unsigned long lastSen = 0;           // Sensor event delta
-unsigned long lastAct = 0;           // Actor event delta
-unsigned long lastInd = 0;           // Induction event delta
+unsigned long lastSen;
+unsigned long lastSys;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
-//#define DISPLAY                         // Uncomment this line if you have an OLED display connected
-#ifdef DISPLAY
+bool dispEnabled;
+
+#define DISPLAY 0                           // Change DISPLAY 1 to switch on OLED display
+#if (DISPLAY == 1)
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>

@@ -97,7 +97,7 @@ class TemperatureSensor
         for (int i = 0; i < 8; i++) {
           sens_address[i] = octets[i];
 #ifdef DEBUG
-          Serial.println(sens_address[i], HEX);
+          Serial.print(sens_address[i], HEX);
 #endif
         }
         DBG_PRINTLN("");

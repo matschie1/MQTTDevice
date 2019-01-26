@@ -79,35 +79,10 @@ void setup()
   client.setServer(mqtthost, 1883);
   client.setCallback(mqttcallback);
 
-  /*
-    // FSBrowser initialisieren
-    // list directory
-    server.on("/list", HTTP_GET, handleFileList);
-    // load editor
-    server.on("/edit", HTTP_GET, []() {
-      if (!handleFileRead("/edit.htm")) {
-        server.send(404, "text/plain", "FileNotFound");
-      }
-    });
-    // create file
-    server.on("/edit", HTTP_PUT, handleFileCreate);
-    // delete file
-    server.on("/edit", HTTP_DELETE, handleFileDelete);
-    // first callback is called after the request has ended with all parsed arguments
-    // second callback handles file uploads at that location
-    server.on("/edit", HTTP_POST, []() {
-      server.send(200, "text/plain", "");
-    }, handleFileUpload);
-    server.onNotFound([]() {
-      if (!handleFileRead(server.uri())) {
-        server.send(404, "text/plain", "FileNotFound");
-      }
-    });
-  */
   // Start Webserver
   ESP.wdtFeed();
   setupServer();
-
+  
   cbpiEventSystem(EM_MDNS);           // MDNS handle
   cbpiEventSystem(EM_WLAN);           // Check WLAN
   cbpiEventSystem(EM_MQTT);           // Check MQTT
@@ -147,12 +122,10 @@ void setupServer()
   server.on("/reboot", rebootDevice); // reboots the whole Device
   server.on("/mqttOff", turnMqttOff); // Turns off MQTT completly until reboot
 
-#ifdef DISPLAY
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
   server.on("/setDisp", handleSetDisp);     // Display ändern
   server.on("/displayOff", turnDisplayOff); // Turns off display completly until reboot
-#endif
 
   server.on("/reqMiscSet", handleRequestMiscSet);
   server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig

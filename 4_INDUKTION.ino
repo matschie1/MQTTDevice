@@ -122,32 +122,39 @@ class induction
       }
     }
 
-    /*  Not yet ready
-         // MQTT Publish
-        void publishmqtt() {
-          if (client.connected()) {
-            StaticJsonBuffer<256> jsonBuffer;
-            JsonObject& json = jsonBuffer.createObject();
-            if (isInduon)
-              json["State"] = "on";
-            else
-              json["State"] = "off";
-            char jsonMessage[100];
-            json.printTo(jsonMessage);
-            client.publish(induction_mqtttopic, jsonMessage);
-            //DBG_PRINT("MQTT pub message: ");
-            //DBG_PRINTLN(jsonMessage);
-          }
+    //  Not yet ready
+    // MQTT Publish
+    void publishmqtt() {
+      if (client.connected()) {
+        StaticJsonBuffer<256> jsonBuffer;
+        JsonObject& json = jsonBuffer.createObject();
+        if (isInduon) {
+          json["state"] = "on";
+          json["power"] = String(power);
         }
-    */
+        else
+          json["state"] = "off";
+        
+        char jsonMessage[100];
+        json.printTo(jsonMessage);
+        client.publish(induction_mqtttopic, jsonMessage);
+        DBG_PRINT("MQTT pub message: ");
+        DBG_PRINTLN(jsonMessage);
+      }
+    }
+
     void handlemqtt(char* payload) {
       StaticJsonBuffer<128> jsonBuffer;
       JsonObject& json = jsonBuffer.parseObject(payload);
+
       if (!json.success()) {
         return;
       }
+
       String state = json["state"];
+
       if (state == "off") {
+        newPower = 0;
         return;
       } else {
         newPower = atoi(json["power"]);

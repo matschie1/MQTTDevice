@@ -81,21 +81,24 @@ class Actor
 
     }
 
-/*    Not yet ready
- *     void publishmqtt() {
+    //    Not yet ready
+    void publishmqtt() {
       if (client.connected()) {
         StaticJsonBuffer<256> jsonBuffer;
         JsonObject& json = jsonBuffer.createObject();
-        if (isOn)
+        if (isOn) {
           json["State"] = "on";
+          json["power"] = String(power_actor);
+        }
         else
           json["State"] = "off";
+
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(actor_mqtttopic, jsonMessage);
       }
     }
-*/
+
     void mqtt_subscribe() {
       if (client.connected()) {
         char subscribemsg[50];

@@ -63,7 +63,7 @@ bool loadConfig() {
     }
   }
   DBG_PRINTLN("--------------------");
-  
+
   JsonArray& jsinductions = json["induction"];
   JsonObject& jsinduction = jsinductions[0];
   String pin_white = jsinduction["PINWHITE"];
@@ -82,16 +82,13 @@ bool loadConfig() {
   DBG_PRINT("Induction enabled: ");
   DBG_PRINTLN(is_enabled_bl);
   DBG_PRINTLN("--------------------");
-  
-  #ifdef DISPLAY
+
   JsonArray& jsodisplay = json["display"];
   JsonObject& jsdisplay = jsodisplay[0];
   String dispAddress = jsdisplay["ADDRESS"];
-  DBG_PRINT("Display address: ");
-  DBG_PRINTLN(dispAddress);
-  dispAddress.remove(0,2);
+  dispAddress.remove(0, 2);
   char copy[4];
-  dispAddress.toCharArray(copy, 4);     // hier werden mal so richtig schön ressourcen verschwendet 
+  dispAddress.toCharArray(copy, 4);     // hier werden mal so richtig schön ressourcen verschwendet
   int address = strtol(copy, 0, 16);
   String is_enabled_disp = jsdisplay["ENABLED"];
   if (is_enabled_disp == "1") {
@@ -101,10 +98,14 @@ bool loadConfig() {
   {
     dispEnabled = 0;
   }
-  DBG_PRINTLN("Config: Display change");
+#if (DISPLAY == 1)
+  DBG_PRINT("Display address: ");
+  DBG_PRINTLN(dispAddress);
   oledDisplay.change(address, dispEnabled);
+#else
+  DBG_PRINT("Config file else: ");
+#endif
   DBG_PRINTLN("--------------------");
-  #endif
 
   // General Settings
   String json_mqtthost = json["MQTTHOST"];
@@ -121,7 +122,7 @@ void saveConfigCallback () {
 }
 
 
-bool saveConfig() 
+bool saveConfig()
 {
   DBG_PRINTLN("------ saveConfig started ------");
   StaticJsonBuffer<1024> jsonBuffer;
@@ -175,21 +176,23 @@ bool saveConfig()
   DBG_PRINTLN(inductionCooker.isEnabled);
   DBG_PRINTLN("--------------------");
 
-#ifdef DISPLAY
   // Write Display
   JsonArray& jsodisplay = json.createNestedArray("display");
   JsonObject&  jsdisplay = jsodisplay.createNestedObject();
+#if (DISPLAY == 1)
   if (oledDisplay.dispEnabled) {
     jsdisplay["ENABLED"] = "1";
   } else {
     jsdisplay["ENABLED"] = "0";
   }
-
   DBG_PRINT("Display address saved as String: ");
   DBG_PRINTLN(String(decToHex(oledDisplay.address, 2)));
   jsdisplay["ADDRESS"] = String(decToHex(oledDisplay.address, 2));
-  DBG_PRINTLN("--------------------");
+#else
+  jsdisplay["ENABLED"] = "0";
+  jsdisplay["ADDRESS"] = "0";
 #endif
+  DBG_PRINTLN("--------------------");
   // Write General Stuff
   json["MQTTHOST"] = mqtthost;
   json.printTo(configFile);
