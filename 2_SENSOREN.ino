@@ -142,36 +142,10 @@ class PTSensor
       if (millis() > (lastCalled + period))
       {
         value = maxChip.temperature(RNOMINAL, RREF);
-        // fault codes taken from library example
-        uint8_t fault = maxChip.readFault();
-        if (fault)
+        // sensor reads very low temps if disconnected
+        if (maxChip.readFault() || value < -100)
         {
-          Serial.print("Fault 0x");
-          Serial.println(fault, HEX);
-          if (fault & MAX31865_FAULT_HIGHTHRESH)
-          {
-            Serial.println("RTD High Threshold");
-          }
-          if (fault & MAX31865_FAULT_LOWTHRESH)
-          {
-            Serial.println("RTD Low Threshold");
-          }
-          if (fault & MAX31865_FAULT_REFINLOW)
-          {
-            Serial.println("REFIN- > 0.85 x Bias");
-          }
-          if (fault & MAX31865_FAULT_REFINHIGH)
-          {
-            Serial.println("REFIN- < 0.85 x Bias - FORCE- open");
-          }
-          if (fault & MAX31865_FAULT_RTDINLOW)
-          {
-            Serial.println("RTDIN- < 0.85 x Bias - FORCE- open");
-          }
-          if (fault & MAX31865_FAULT_OVUV)
-          {
-            Serial.println("Under/Over voltage");
-          }
+          value = -127.0;
           maxChip.clearFault();
         }
         else
@@ -452,7 +426,16 @@ void handleRequestSensors()
   {
     JsonObject &sensorResponse = jsonBuffer.createObject();
     sensorResponse["name"] = ptSensors[i].name;
-    sensorResponse["value"] = ptSensors[i].getValueString();
+    // While it is technically possible to read this low value with a PT sensor
+    // We reuse "OneWire Error Codes" here for simplicity
+    if (ptSensors[i].value != -127.0)
+    {
+      sensorResponse["value"] = ptSensors[i].getValueString();
+    }
+    else
+    {
+      sensorResponse["value"] = "ERR";
+    }
     sensorResponse["mqtt"] = ptSensors[i].mqttTopic;
     sensorResponse["type"] = "PTSensor";
     sensorsResponse.add(sensorResponse);
