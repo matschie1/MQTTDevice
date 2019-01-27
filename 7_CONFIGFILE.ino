@@ -8,7 +8,7 @@ bool loadConfig()
   }
   else
   {
-    Serial.println("opened config file");
+    Serial.println("Opened config file");
   }
 
   size_t size = configFile.size();
@@ -36,9 +36,9 @@ bool loadConfig()
   Serial.print("Number of actors loaded: ");
   Serial.println(numberOfActors);
 
-  if (numberOfActors > numberOfActorsMax)
+  if (numberOfActors > NUMBER_OF_ACTORS_MAX)
   {
-    numberOfActors = numberOfActorsMax;
+    numberOfActors = NUMBER_OF_ACTORS_MAX;
   }
 
   for (int i = 0; i < numberOfActors; i++)
@@ -57,14 +57,14 @@ bool loadConfig()
   // Read OneWire Sensors
   JsonArray &jsonOneWireSensors = json["OneWireSensors"];
   numberOfOneWireSensors = jsonOneWireSensors.size();
-  if (numberOfOneWireSensors > numberOfSensorsMax)
+  if (numberOfOneWireSensors > NUMBER_OF_SENSORS_MAX)
   {
-    numberOfOneWireSensors = numberOfSensorsMax;
+    numberOfOneWireSensors = NUMBER_OF_SENSORS_MAX;
   }
   Serial.print("Number of OneWire sensors loaded: ");
   Serial.println(numberOfOneWireSensors);
 
-  for (int i = 0; i < numberOfSensorsMax; i++)
+  for (int i = 0; i < NUMBER_OF_SENSORS_MAX; i++)
   {
     if (i < numberOfOneWireSensors)
     {
@@ -83,19 +83,19 @@ bool loadConfig()
   // Read PT100/1000 sensors
   JsonArray &jsonPTSensors = json["PTSensors"];
   numberOfPTSensors = jsonPTSensors.size();
-  if (numberOfPTSensors > numberOfSensorsMax)
+  if (numberOfPTSensors > NUMBER_OF_SENSORS_MAX)
   {
-    numberOfPTSensors = numberOfSensorsMax;
+    numberOfPTSensors = NUMBER_OF_SENSORS_MAX;
   }
   Serial.print("Number of PT100/1000 sensors loaded: ");
   Serial.println(numberOfPTSensors);
 
-  for (int i = 0; i < numberOfSensorsMax; i++)
+  for (int i = 0; i < NUMBER_OF_SENSORS_MAX; i++)
   {
     if (i < numberOfPTSensors)
     {
       JsonObject &jsonPTSensor = jsonPTSensors[i];
-      byte csPin = jsonPTSensor["CSPIN"];
+      String csPin = jsonPTSensor["CSPIN"];
       byte numberOfWires = jsonPTSensor["WIRES"];
       String topic = jsonPTSensor["TOPIC"];
       String name = jsonPTSensor["NAME"];
@@ -103,7 +103,7 @@ bool loadConfig()
     }
     else
     {
-      ptSensors[i].change(NO_PT_SENSOR, NO_PT_SENSOR, "", "");
+      ptSensors[i].change("", 0, "", "");
     }
   }
 
@@ -168,10 +168,10 @@ bool saveConfig()
 
   // Write PT100/1000 sensors
   JsonArray &jsonPTSensors = json.createNestedArray("PTSensors");
-  for (int i = 0; i < numberOfOneWireSensors; i++)
+  for (int i = 0; i < numberOfPTSensors; i++)
   {
     JsonObject &jsonPTSensor = jsonPTSensors.createNestedObject();
-    jsonPTSensor["CSPIN"] = ptSensors[i].csPin;
+    jsonPTSensor["CSPIN"] = PinToString(ptSensors[i].csPin);
     jsonPTSensor["WIRES"] = ptSensors[i].numberOfWires;
     jsonPTSensor["NAME"] = ptSensors[i].name;
     jsonPTSensor["TOPIC"] = ptSensors[i].mqttTopic;

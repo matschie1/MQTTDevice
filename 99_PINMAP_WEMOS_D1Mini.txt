@@ -1,10 +1,10 @@
 /* PINMAP
-0   D3        OnewWire
+0   D3 | DO (PT100) | FIXED
 1 
-2   D4
+2   D4 | CLK (PT100) | FIXED
 3 
-4   D2
-5   D1
+4   D2 | DI (PT100) | FIXED
+5   D1 | CS Default | Port
 6 
 7 
 8 
@@ -13,7 +13,7 @@
 11  
 12  D6
 13  D7
-14  D5
+14  D5 | OneWire | FIXED
 15  D8
 16  D0
  */

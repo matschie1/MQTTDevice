@@ -13,8 +13,6 @@
 */
 
 /*########## INCLUDES ##########*/
-//#include <Wire.h>             // i2C Kommunikation, derzeit ungenutzt
-
 #include <OneWire.h>           // OneWire Bus Kommunikation
 #include <DallasTemperature.h> // Vereinfachte Benutzung der DS18B20 Sensoren
 
@@ -35,19 +33,22 @@
 
 /*########## CONSTANTS #########*/
 
-// Differentiate between the two currently supported sensor types
-#define SENSOR_TYPE_ONE_WIRE 0
-#define SENSOR_TYPE_PT 1
-// OneWire
-// Change this according to your wiring
-#define ONE_WIRE_BUS D6
-// Ranges from 9 to 12, higher is better (and slower!)
+// DEFAULT PINS
+// Change according to your wiring (see also 99_PINMAP_WEMOS_D1Mini)
+
+#define ONE_WIRE_BUS D5
+/*
+  common pins across all PT100/1000 sensors
+  DI, DO, CLK (currently hardwired in code, change here accordingly)
+  When using multiple sensors, reuse these pins and only (re)define
+  the CS PIN, meaning you need one additional pin per sensor
+*/
+const byte PT_PINS[3] = {D4, D3, D2};
+// default pin for the CS of a PT sensor (for initial initialization, can be overwritten)
+const byte DEFAULT_CS_PIN = D1;
+
+// ranges from 9 to 12, higher is better (and slower!)
 #define ONE_WIRE_RESOLUTION 10
-// PT100/1000
-// no sensor was defined, used for array init (leave as is)
-#define NO_PT_SENSOR 255
-// default pin for the CS of a PT100 (for initial initialization, will be overwritten)
-#define DEFAULT_CS_PIN 16
 // 430.0 for PT100 and 4300.0 for PT1000
 #define RREF 430.0
 // 100.0 for PT100, 1000.0 for PT1000
@@ -58,8 +59,11 @@
 #define TELNET_SERVER_PORT 8266
 #define MQTT_SERVER_PORT 1883
 
-const long mqttconnectdelay = 30000;
-const byte mqttnumberoftrys = 3;
+// Differentiate between the two currently supported sensor types
+const String SENSOR_TYPE_ONE_WIRE = "OneWire";
+const String SENSOR_TYPE_PT = "PTSensor";
+const long MQTT_CONNECT_DELAY = 30000;
+const byte MQTT_NUMBER_OF_TRIES = 3;
 
 // Induktion Signallaufzeiten
 const int SIGNAL_HIGH = 5120;
@@ -75,15 +79,15 @@ const int SIGNAL_WAIT_TOL = 5;
 const byte PWR_STEPS[] = {0, 20, 40, 60, 80, 100};
 
 // Error Messages der Induktionsplatte
-const String errorMessages[10] = {"E0", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "EC"};
+const String ERROR_MESSAGES[10] = {"E0", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "EC"};
 
-const byte numberOfPins = 9;
-const byte pins[numberOfPins] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
-const String pin_names[numberOfPins] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
+const byte NUMBER_OF_PINS = 9;
+const byte PINS[NUMBER_OF_PINS] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
+const String PIN_NAMES[NUMBER_OF_PINS] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
-const byte numberOfSensorsMax = 6;            // max number of sensors per sensor type
-const byte numberOfActorsMax = 6;             // max number of actors
-const int defaultSensorUpdateInterval = 5000; // how often should sensors update
+const byte NUMBER_OF_SENSORS_MAX = 6;            // max number of sensors per sensor type
+const byte NUMBER_OF_ACTORS_MAX = 6;             // max number of actors
+const int DEFAULT_SENSOR_UPDATE_INTERVAL = 5000; // how often should sensors update
 
 /*########## VARIABLES #########*/
 
@@ -103,20 +107,13 @@ int CMD[6][33] = {
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}  // P5
 };
 
-bool pins_used[17];
+bool pins_used[17]; // determines which pins currently are in use
 
-/*
-  Common pins across all PT100/1000 sensors: DI, DO, CLK
-  When using multiple sensors, you can reuse these pins
-  and only define the CS PIN. (example: 2 sensors -> 5 pins needed)
-*/
-// current initial values:  D1, D2, D3 of NODEMCU Dev Board
-byte PTPins[3] = {5, 4, 0};
 byte numberOfPTSensors = 0; // current number of PT100 sensors
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature DS18B20(&oneWire);
-byte oneWireAddressesFound[numberOfSensorsMax][8];
+byte oneWireAddressesFound[NUMBER_OF_SENSORS_MAX][8];
 byte numberOfOneWireSensors = 0;      // current number of OneWire sensors
 byte numberOfOneWireSensorsFound = 0; // OneWire sensors found on the bus
 

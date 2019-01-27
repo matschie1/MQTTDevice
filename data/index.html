@@ -10,6 +10,8 @@
 </head>
 
 <body onload="setInterval(refresh, 3000)">
+
+  <!-- Header -->
   <div class="py-2">
     <div class="container">
       <div class="row">
@@ -25,13 +27,22 @@
       </div>
     </div>
   </div>
+
+  <!-- Sensors -->
   <div class="py-2">
     <div class="container">
       <div class="row">
         <div class="col-md-12">
           <div class="card">
-            <div class="card-header"> Sensors <a href="" class="badge badge-warning" data-target="#sensor_modal"
-                data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
+            <div class="card-header">
+              Sensors
+              <div style="float:right">
+                <a href="" class="badge badge-warning" data-target="#sensor_modal" data-toggle="modal" data-id="-1"
+                  data-type="OneWire"> Add OneWire </a>
+                <a href="" class="badge badge-warning" data-target="#sensor_modal" data-toggle="modal" data-id="-1"
+                  data-type="PTSensor"> Add PT Sensor </a>
+              </div>
+            </div>
             <div class="card-body">
               <ul class="list-group" id="listSensors">
               </ul>
@@ -41,13 +52,16 @@
       </div>
     </div>
   </div>
+
+  <!-- Actors -->
   <div class="py-2">
     <div class="container">
       <div class="row">
         <div class="col-md-12">
           <div class="card">
             <div class="card-header"> Actors <a href="" class="badge badge-warning" data-target="#actor_modal"
-                data-toggle="modal" data-value="-1" style="float:right">Add</a></div>
+                data-toggle="modal" data-id="-1" style="float:right">Add</a>
+            </div>
             <div class="card-body">
               <ul class="list-group" id="listActors">
               </ul>
@@ -57,13 +71,15 @@
       </div>
     </div>
   </div>
+
+  <!-- Induction -->
   <div class="py-2">
     <div class="container">
       <div class="row">
         <div class="col-md-12">
           <div class="card">
             <div class="card-header"> Induction Cooker <a href="" class="badge badge-warning" data-target="#induction_modal"
-                data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
+                data-toggle="modal" data-id="-1" style="float:right">Edit</a></div>
             <div class="card-body">
               <ul class="list-group" id="inductionCooker">
               </ul>
@@ -73,6 +89,8 @@
       </div>
     </div>
   </div>
+
+  <!-- Actor Window-->
   <div class="modal fade" actor_id="" draggable="true" id="actor_modal">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -105,7 +123,9 @@
       </div>
     </div>
   </div>
-  <div class="modal fade" id="sensor_modal" sensor_id="">
+
+  <!-- Sensor Window -->
+  <div class="modal fade" id="sensor_modal" sensor_id="" sensor_type="">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -114,20 +134,28 @@
         </div>
         <div class="modal-body">
           <form>
-            <div class="form-group">
-              <label for="modal_sensor_address">Address</label>
+            <label for="modal_sensor_address">Address (OneWire Sensor)</label>
+            <div class="input-group" id="modal_sensor_one_wire_sensor">
               <select class="form-control" id="modal_sensor_address">
-              </select>
-              <button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
+              </select><button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
               </button>
+            </div>
+            <label for="modal_sensor_cs_pin">CS Pin and Number of Wires (PT100/1000 Sensor)</label>
+            <div class="input-group" id="modal_sensor_pt_sensor">
+              <select class="form-control" id="modal_sensor_cs_pin"></select>
+              <select class="form-control" id="modal_sensor_number_of_wires">
+                <option value=2>2</option>
+                <option value=3>3</option>
+                <option value=4>4</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="modal_sensor_name">Name </label>
               <input type="text" class="form-control" placeholder="" id="modal_sensor_name">
             </div>
             <div class="form-group">
-              <label for="modal_sensor_script">MQTT Topic</label>
-              <input type="text" class="form-control" placeholder="" id="modal_sensor_script">
+              <label for="modal_sensor_topic">MQTT Topic</label>
+              <input type="text" class="form-control" placeholder="" id="modal_sensor_topic">
             </div>
           </form>
         </div>
@@ -137,6 +165,8 @@
       </div>
     </div>
   </div>
+
+  <!-- Induction Window -->
   <div class="modal fade" id="induction_modal">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
@@ -175,14 +205,17 @@
       </div>
     </div>
   </div>
+
+  <!-- JavaScript -->
   <script src="jquery-3.2.1.min.js"></script>
   <script src="bootstrap.bundle.js"></script>
   <script type="text/javascript">
 
+    /* updates sensors, called periodically */
     function refresh() {
       $.get("/reqSensors", function (data) {
         let content = "";
-        data.forEach(function (element, index) {
+        data.forEach(function (element) {
           let sensor = "<li class='list-group-item justify-content-between align-items-center d-flex'> ";
           sensor += element.name;
           sensor += "<span class='badge badge-light'> ";
@@ -196,8 +229,10 @@
           sensor += element.type;
           sensor += " </span> <span class='badge badge-info'> "
           sensor += element.mqtt;
-          sensor += " </span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
-          sensor += index;
+          sensor += " </span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-id='";
+          sensor += element.id;
+          sensor += "' data-type='";
+          sensor += element.type;
           sensor += "'> Edit </a> </li>";
           content += sensor;
         });
@@ -222,7 +257,7 @@
           actor += element.mqtt;
           actor += "</span> <span class='badge badge-light'> PIN";
           actor += element.pin;
-          actor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#actor_modal' data-value='";
+          actor += "</span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#actor_modal' data-id='";
           actor += index;
           actor += "'> Edit </a> </li>";
           content += actor;
@@ -252,15 +287,16 @@
       });
     }
 
+    /* click on edit/add actor button */
     $('#actor_modal').on('show.bs.modal', function (event) {
-      var button = $(event.relatedTarget) // Button that triggered the modal
-      var actorid = button.data('value') // Extract info from data-* attributes
+      var button = $(event.relatedTarget);
+      var actorid = button.data('id');
       var actorname;
       var actorscript;
       var actorpin;
       var actorinverted;
       $.ajax({
-        url: '/reqActor?id=' + actorid + '&req=name',
+        url: '/reqActorConfig?id=' + actorid + '&req=name',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -270,7 +306,7 @@
         }
       });
       $.ajax({
-        url: '/reqActor?id=' + actorid + '&req=script',
+        url: '/reqActorConfig?id=' + actorid + '&req=script',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -280,7 +316,7 @@
         }
       });
       $.ajax({
-        url: '/reqActor?id=' + actorid + '&req=inverted',
+        url: '/reqActorConfig?id=' + actorid + '&req=inverted',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -289,27 +325,27 @@
           actorinverted = data;
         }
       });
-      var modal = $(this)
-      modal.attr('actor_id', actorid)
-      modal.find('#modal_actor_name').val(actorname)
-      modal.find('#modal_actor_script').val(actorscript)
-      $('#modal_actor_pin').load('/reqPins?id=' + actorid)
-      //  modal.find('#modal_actor_pin').val(actorpin)
-      if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked", true) }
-      else { modal.find('#modal_actor_inverted').prop("checked", false) }
+      var modal = $(this);
+      modal.attr('actor_id', actorid);
+      modal.find('#modal_actor_name').val(actorname);
+      modal.find('#modal_actor_script').val(actorscript);
+      $('#modal_actor_pin').load('/reqPins?id=' + actorid);
+      if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked", true); }
+      else { modal.find('#modal_actor_inverted').prop("checked", false); }
     })
 
+    /* click on save actor button in edit window */
     $("#modal_actor_btn_save").click(function () {
-      var modal = $('#actor_modal')
-      var actorname = modal.find('#modal_actor_name').val()
-      var actorscript = modal.find('#modal_actor_script').val()
-      var actorpin = modal.find('#modal_actor_pin').val()
+      var modal = $('#actor_modal');
+      var actorname = modal.find('#modal_actor_name').val();
+      var actorscript = modal.find('#modal_actor_script').val();
+      var actorpin = modal.find('#modal_actor_pin').val();
       if (modal.find('#modal_actor_inverted').prop("checked") == true) {
-        var actorinverted = "1"
+        var actorinverted = "1";
       } else {
-        var actorinverted = "0"
+        var actorinverted = "0";
       }
-      var actorid = modal.attr('actor_id')
+      var actorid = modal.attr('actor_id');
       $.ajax({
         url: '/setActor?id=' + actorid + '&name=' + actorname + '&script=' + actorscript + '&pin=' + actorpin + '&inverted=' + actorinverted,
         type: 'POST',
@@ -317,12 +353,13 @@
         async: false,
         cache: false
       });
-      modal.modal('hide')
+      modal.modal('hide');
     });
 
+    /* click on delete actor button in edit window */
     $("#modal_actor_btn_delete").click(function () {
-      var modal = $('#actor_modal')
-      var actorid = modal.attr('actor_id')
+      var modal = $('#actor_modal');
+      var actorid = modal.attr('actor_id');
       $.ajax({
         url: '/delActor?id=' + actorid,
         type: 'POST',
@@ -333,74 +370,115 @@
       modal.modal('hide')
     });
 
+    /* click on add/edit (OneWire/PT Sensor) button */
     $('#sensor_modal').on('show.bs.modal', function (event) {
-      var button = $(event.relatedTarget) // Button that triggered the modal
-      var sensorid = button.data('value') // Extract info from data-* attributes
-      var sensorname;
-      var sensorscript;
-      $.ajax({
-        url: '/reqSensor?id=' + sensorid + '&req=name',
-        type: 'get',
-        dataType: 'html',
-        async: false,
-        cache: false,
-        success: function (data) {
-          sensorname = data;
-        }
-      });
-      $.ajax({
-        url: '/reqSensor?id=' + sensorid + '&req=script',
-        type: 'get',
-        dataType: 'html',
-        async: false,
-        cache: false,
-        success: function (data) {
-          sensorscript = data;
-        }
-      });
-      $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorid);
-      var modal = $(this)
-      modal.find('#modal_sensor_name').val(sensorname)
-      modal.find('#modal_sensor_script').val(sensorscript)
-      modal.attr('sensor_id', sensorid)
-    })
+      // first get infos from button and transfer to window
+      var button = $(event.relatedTarget);
+      var sensorId = button.data('id');
+      var sensorType = button.data('type');
+      var modal = $(this);
+      modal.attr('sensor_id', sensorId);
+      modal.attr('sensor_type', sensorType);
 
+      // Careful here, has to match sketch name! ("OneWire")
+      // TODO: could be improved by fetching and keeping some information on this in frontend
+      if (sensorType == "OneWire") {
+        // get available addresses
+        $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorId);
+        // now check if sensorId valid (-1 determines a "create new sensor" call)
+        if (sensorId != -1) {
+          $.ajax({
+            url: '/reqSensorConfig?id=' + sensorId + '&type=' + sensorType,
+            type: 'get',
+            dataType: 'json',
+            async: false,
+            cache: false,
+            context: this,
+            success: function (data) {
+              var modal = $(this);
+              modal.find('#modal_sensor_name').val(data.name);
+              modal.find('#modal_sensor_topic').val(data.topic);
+            }
+          });
+        }
+      }
+      else if (sensorType == "PTSensor") {
+        // check if sensorId valid (-1 determines a "create new sensor" call)
+        if (sensorId != -1) {
+          $.ajax({
+            url: '/reqSensorConfig?id=' + sensorId + '&type=' + sensorType,
+            type: 'get',
+            dataType: 'json',
+            async: false,
+            cache: false,
+            context: this,
+            success: function (data) {
+              var modal = $(this);
+              modal.find('#modal_sensor_name').val(data.name);
+              modal.find('#modal_sensor_topic').val(data.topic);
+              modal.find('#modal_sensor_cs_pin').val(data.csPin);
+              modal.find('#modal_sensor_number_of_wires').val(data.numberOfWires);
+              // use actor function to retrieve list of available pins
+              $('#modal_sensor_cs_pin').load('/reqPins?id=' + data.csPin);
+            }
+          });
+        }
+      }
+    });
+
+    /* click on save sensor button in edit window */
     $("#modal_sensor_btn_save").click(function () {
-      var modal = $('#sensor_modal')
-      var sensorname = modal.find('#modal_sensor_name').val()
-      var sensorscript = modal.find('#modal_sensor_script').val()
-      var sensorid = modal.attr('sensor_id')
-      var sensoraddress = modal.find('#modal_sensor_address').val()
-      $.ajax({
-        url: '/setSensor?id=' + sensorid + '&name=' + sensorname + '&topic=' + sensorscript + '&address=' + sensoraddress,
-        type: 'POST',
-        dataType: 'html',
-        async: false,
-        cache: false
-      });
-      modal.modal('hide')
+      var modal = $('#sensor_modal');
+      var sensorName = modal.find('#modal_sensor_name').val();
+      var sensorTopic = modal.find('#modal_sensor_topic').val();
+      var sensorId = modal.attr('sensor_id');
+      var sensorType = modal.attr('sensor_type');
+      if (sensorType == "OneWire") {
+        var sensorAddress = modal.find('#modal_sensor_address').val();
+        $.ajax({
+          url: '/setSensor?id=' + sensorId + '&type=' + sensorType + '&name=' + sensorName + '&topic=' + sensorTopic + '&address=' + sensorAddress,
+          type: 'POST',
+          async: false,
+          cache: false
+        });
+      }
+      else if (sensorType == "PTSensor") {
+        var csPin = modal.find('#modal_sensor_cs_pin').val();
+        var numberOfWires = modal.find('#modal_sensor_number_of_wires').val();
+        $.ajax({
+          url: '/setSensor?id=' + sensorId + '&type=' + sensorType + '&name=' + sensorName + '&topic=' + sensorTopic + '&cspin=' + csPin + '&numberOfWires=' + numberOfWires,
+          type: 'POST',
+          async: false,
+          cache: false
+        });
+      }
+      modal.modal('hide');
     });
 
+    /* click on delete sensor button in edit window */
     $("#modal_sensor_btn_delete").click(function () {
-      var modal = $('#sensor_modal')
-      var sensorid = modal.attr('sensor_id')
+      var modal = $('#sensor_modal');
+      var sensorId = modal.attr('sensor_id');
+      var sensorType = modal.attr('sensor_type');
       $.ajax({
-        url: '/delSensor?id=' + sensorid,
+        url: '/delSensor?id=' + sensorId + '&type=' + sensorType,
         type: 'POST',
-        dataType: 'html',
         async: false,
         cache: false
       });
-      modal.modal('hide')
+      modal.modal('hide');
     });
 
+    /* click on update OneWire sensor button in edit window */
     $("#modal_sensor_address_refresh").click(function () {
-      var sensorid = modal.attr('sensor_id')
-      $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensor)
+      var modal = $('#sensor_modal');
+      var sensorId = modal.attr('sensor_id');
+      $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorId);
     });
 
+    /* click on edit induction button */
     $('#induction_modal').on('show.bs.modal', function (event) {
-      var button = $(event.relatedTarget) // Button that triggered the modal
+      var button = $(event.relatedTarget);
       var mqtttopic;
       var isEnabled;
       var pin_white;
@@ -409,7 +487,7 @@
       var delay;
 
       $.ajax({
-        url: '/reqIndu?req=isEnabled',
+        url: '/reqInductionConfig?req=isEnabled',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -419,7 +497,7 @@
         }
       });
       $.ajax({
-        url: '/reqIndu?req=topic',
+        url: '/reqInductionConfig?req=topic',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -429,7 +507,7 @@
         }
       });
       $.ajax({
-        url: '/reqIndu?req=delay',
+        url: '/reqInductionConfig?req=delay',
         type: 'get',
         dataType: 'html',
         async: false,
@@ -439,29 +517,29 @@
         }
       });
 
-      $('#modal_induction_pinwhite').load('/reqIndu?req=pins&id=0')
-      $('#modal_induction_pinyellow').load('/reqIndu?req=pins&id=1')
-      $('#modal_induction_pinblue').load('/reqIndu?req=pins&id=2')
-
-
-      var modal = $(this)
-      modal.find('#modal_induction_script').val(mqtttopic)
-      modal.find('#modal_induction_delay').val(delay)
-      if (isEnabled == "1") { modal.find('#modal_induction_enabled').prop("checked", true) }
-      else { modal.find('#modal_induction_enabled').prop("checked", false) }
+      $('#modal_induction_pinwhite').load('/reqInductionConfig?req=pins&id=0');
+      $('#modal_induction_pinyellow').load('/reqInductionConfig?req=pins&id=1');
+      $('#modal_induction_pinblue').load('/reqInductionConfig?req=pins&id=2');
 
       var modal = $(this)
+      modal.find('#modal_induction_script').val(mqtttopic);
+      modal.find('#modal_induction_delay').val(delay);
+      if (isEnabled == "1") { modal.find('#modal_induction_enabled').prop("checked", true); }
+      else { modal.find('#modal_induction_enabled').prop("checked", false); }
+
+      var modal = $(this);
 
     });
 
+    /* click on save induction button in edit window */
     $("#modal_induction_btn_save").click(function () {
-      var modal = $('#induction_modal')
+      var modal = $('#induction_modal');
 
-      var mqtttopic = modal.find('#modal_induction_script').val()
-      var pin_white = modal.find('#modal_induction_pinwhite').val()
-      var pin_blue = modal.find('#modal_induction_pinblue').val()
-      var pin_yellow = modal.find('#modal_induction_pinyellow').val()
-      var delay = modal.find('#modal_induction_delay').val()
+      var mqtttopic = modal.find('#modal_induction_script').val();
+      var pin_white = modal.find('#modal_induction_pinwhite').val();
+      var pin_blue = modal.find('#modal_induction_pinblue').val();
+      var pin_yellow = modal.find('#modal_induction_pinyellow').val();
+      var delay = modal.find('#modal_induction_delay').val();
 
       if (modal.find('#modal_induction_enabled').prop("checked") == true) {
         var isenabled = "1"
@@ -479,6 +557,7 @@
       modal.modal('hide')
     });
 
+    /* click on reboot button */
     $("#btn_reboot").click(function () {
       $.ajax({
         url: '/reboot',
@@ -491,6 +570,7 @@
       });;
     });
 
+    /* click on Disable MQTT button */
     $("#btn_disable_mqtt").click(function () {
       $.ajax({
         url: '/mqttOff',

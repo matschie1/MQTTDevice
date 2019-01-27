@@ -197,7 +197,7 @@ void handleRequestActors()
   server.send(200, "application/json", response);
 }
 
-void handleRequestActor()
+void handleRequestActorConfig()
 {
   int id = server.arg(0).toInt();
   String request = server.arg(1);
@@ -311,12 +311,12 @@ void handleRequestPins()
     message += PinToString(actors[id].pin_actor);
     message += F("</option><option disabled>──────────</option>");
   }
-  for (int i = 0; i < numberOfPins; i++)
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
   {
-    if (pins_used[pins[i]] == false)
+    if (pins_used[PINS[i]] == false)
     {
       message += F("<option>");
-      message += pin_names[i];
+      message += PIN_NAMES[i];
       message += F("</option>");
     }
     yield();
@@ -326,11 +326,11 @@ void handleRequestPins()
 
 byte StringToPin(String pinstring)
 {
-  for (int i = 0; i < numberOfPins; i++)
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
   {
-    if (pin_names[i] == pinstring)
+    if (PIN_NAMES[i] == pinstring)
     {
-      return pins[i];
+      return PINS[i];
     }
   }
   return 9;
@@ -338,11 +338,11 @@ byte StringToPin(String pinstring)
 
 String PinToString(byte pinbyte)
 {
-  for (int i = 0; i < numberOfPins; i++)
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
   {
-    if (pins[i] == pinbyte)
+    if (PINS[i] == pinbyte)
     {
-      return pin_names[i];
+      return PIN_NAMES[i];
     }
   }
   return "NaN";
@@ -351,9 +351,9 @@ String PinToString(byte pinbyte)
 bool isPin(byte pinbyte)
 {
   bool returnValue = false;
-  for (int i = 0; i < numberOfPins; i++)
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
   {
-    if (pins[i] == pinbyte)
+    if (PINS[i] == pinbyte)
     {
       returnValue = true;
       goto Ende;

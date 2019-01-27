@@ -82,11 +82,11 @@ void mqttreconnect()
   if (!client.connected())
   {
     // Delay prüfen
-    if (millis() > mqttconnectlasttry + mqttconnectdelay)
+    if (millis() > mqttconnectlasttry + MQTT_CONNECT_DELAY)
     {
       Serial.print("MQTT Trying to connect. Name:");
       Serial.print(mqtt_clientid);
-      for (int i = 0; i < mqttnumberoftrys; i++)
+      for (int i = 0; i < MQTT_NUMBER_OF_TRIES; i++)
       {
         Serial.print(".. Try #");
         Serial.print(i + 1);
@@ -99,7 +99,7 @@ void mqttreconnect()
       }
       mqttconnectlasttry = millis();
       Serial.print(".. Failed. Trying again in ");
-      Serial.print(mqttconnectdelay / 1000);
+      Serial.print(MQTT_CONNECT_DELAY / 1000);
       Serial.println(" seconds");
       return;
     }

@@ -2,6 +2,12 @@ void setup()
 {
   Serial.begin(115200);
 
+  // declare OneWire and PT Pins pin as used
+  pins_used[ONE_WIRE_BUS] = true;
+  pins_used[PT_PINS[0]] = true;
+  pins_used[PT_PINS[1]] = true;
+  pins_used[PT_PINS[2]] = true;
+
   // Sensoren Starten
   DS18B20.begin();
 
@@ -44,31 +50,35 @@ void setupServer()
 {
   server.on("/", handleRoot);
 
-  server.on("/setupActor", handleSetActor);   // Einstellen der Aktoren
-  server.on("/setupSensor", handleSetSensor); // Einstellen der Sensoren
-
-  server.on("/reqSensors", handleRequestSensors); // Liste der Sensoren ausgeben
-  server.on("/reqActors", handleRequestActors);   // Liste der Aktoren ausgeben
+  // provides current sensor/actor/induction cooker readings
+  server.on("/reqSensors", handleRequestSensors);
+  server.on("/reqActors", handleRequestActors);
   server.on("/reqInduction", handleRequestInduction);
 
-  // Search for OneWire sensors on the bus
+  // provides information about sensor/actor/induction cooker configuration
+  server.on("/reqSensorConfig", handleRequestSensorConfig);
+  server.on("/reqActorConfig", handleRequestActorConfig);
+  server.on("/reqInductionConfig", handleRequestInductionConfig);
+
+  // search for OneWire sensors on the bus
   server.on("/reqSearchSensorAdresses", handleRequestOneWireSensorAddresses);
+
+  // returns the list of (named) pins on this chip
   server.on("/reqPins", handleRequestPins);
 
-  server.on("/reqSensor", handleRequestSensor); // Infos der Sensoren für WebConfig
-  server.on("/reqActor", handleRequestActor);   // Infos der Aktoren für WebConfig
-  server.on("/reqIndu", handleRequestIndu);     // Infos der Indu für WebConfig
+  // create or update sensor/actor/induction cooker
+  server.on("/setSensor", handleSetSensor);
+  server.on("/setActor", handleSetActor);
+  server.on("/setIndu", handleSetIndu);
 
-  server.on("/setSensor", handleSetSensor); // Sensor ändern
-  server.on("/setActor", handleSetActor);   // Aktor ändern
-  server.on("/setIndu", handleSetIndu);     // Indu ändern
+  // delete sensor/actor
+  server.on("/delSensor", handleDelSensor);
+  server.on("/delActor", handleDelActor);
 
-  server.on("/delSensor", handleDelSensor); // Sensor löschen
-  server.on("/delActor", handleDelActor);   // Aktor löschen
+  server.on("/reboot", rebootDevice); // reboots the device
+  server.on("/mqttOff", turnMqttOff); // turns off MQTT completly until reboot
 
-  server.on("/reboot", rebootDevice);   // Reboots the device
-  server.on("/mqttOff", turnMqttOff);   // Turns off MQTT completly until reboot
-  server.onNotFound(handleWebRequests); // Sonstiges
+  server.onNotFound(handleWebRequests); // fallback
 
   server.begin();
 }
@@ -76,7 +86,7 @@ void setupServer()
 void setupOTA()
 {
   Serial.print("Configuring OTA device...");
-  TelnetServer.begin(); //Necesary to make Arduino Software autodetect OTA device
+  TelnetServer.begin(); // necesary to autodetect OTA device
   ArduinoOTA.onStart([]() {
     Serial.println("OTA starting...");
   });

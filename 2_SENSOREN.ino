@@ -4,8 +4,8 @@
 */
 class OneWireSensor
 {
-    unsigned long lastCalled;                  // Wann wurde der Sensor zuletzt aktualisiert
-    long period = defaultSensorUpdateInterval; // Aktualisierungshäufigkeit
+  private:
+    unsigned long lastCalled; // Wann wurde der Sensor zuletzt aktualisiert
 
   public:
     char sens_mqtttopic[50]; // Für MQTT Kommunikation
@@ -25,7 +25,7 @@ class OneWireSensor
 
     void update()
     {
-      if (millis() > (lastCalled + period))
+      if (millis() > (lastCalled + DEFAULT_SENSOR_UPDATE_INTERVAL))
       {
 
         DS18B20.requestTemperatures();
@@ -119,11 +119,10 @@ class OneWireSensor
 
 class PTSensor
 {
-    unsigned long lastCalled;                  // timestamp
-    long period = defaultSensorUpdateInterval; // update interval
-
+  private:
+    unsigned long lastCalled; // timestamp
     // reference to amplifier board, with initial values (will be overwritten in "constructor")
-    Adafruit_MAX31865 maxChip = Adafruit_MAX31865(DEFAULT_CS_PIN, PTPins[0], PTPins[1], PTPins[2]);
+    Adafruit_MAX31865 maxChip = Adafruit_MAX31865(DEFAULT_CS_PIN, PT_PINS[0], PT_PINS[1], PT_PINS[2]);
 
   public:
     byte csPin;
@@ -132,16 +131,17 @@ class PTSensor
     String name;        // frontend name
     float value;        // current value
 
-    PTSensor(byte csPin, byte numberOfWires, String mqtttopic, String name)
+    PTSensor(String csPin, byte numberOfWires, String mqtttopic, String name)
     {
       change(csPin, numberOfWires, mqtttopic, name);
     }
 
     void update()
     {
-      if (millis() > (lastCalled + period))
+      if (millis() > (lastCalled + DEFAULT_SENSOR_UPDATE_INTERVAL))
       {
         value = maxChip.temperature(RNOMINAL, RREF);
+
         // sensor reads very low temps if disconnected
         if (maxChip.readFault() || value < -100)
         {
@@ -156,35 +156,40 @@ class PTSensor
       }
     }
 
-    void change(byte newCSPin, byte newNumberOfWires, String newMqttTopic, String newName)
+    void change(String newCSPin, byte newNumberOfWires, String newMqttTopic, String newName)
     {
       // check for initial empty array entry initialization
       // (no actual sensor defined in this call)
-      if (newCSPin != NO_PT_SENSOR)
+      if (newCSPin != "")
       {
-        newMqttTopic.toCharArray(mqttTopic, newMqttTopic.length() + 1);
-        csPin = newCSPin;
-        numberOfWires = newNumberOfWires;
-        name = newName;
-        // currently, CS = D0 = 16 (NodeMCU Dev Board) TODO!!
-        csPin = 16;
-        maxChip = Adafruit_MAX31865(newCSPin, PTPins[0], PTPins[1], PTPins[2]);
-        Serial.print("Starting PT100 with ");
-        Serial.print(newNumberOfWires);
-        Serial.print(" wires. CS Pin is ");
-        Serial.println(newCSPin);
+        byte byteNewCSPin = StringToPin(newCSPin);
+        // if this pin fits the bill, go for it..
+        if (isPin(byteNewCSPin))
+        {
+          pins_used[csPin] = false;
+          csPin = byteNewCSPin;
+          pins_used[csPin] = true;
+          newMqttTopic.toCharArray(mqttTopic, newMqttTopic.length() + 1);
+          numberOfWires = newNumberOfWires;
+          name = newName;
+          maxChip = Adafruit_MAX31865(csPin, PT_PINS[0], PT_PINS[1], PT_PINS[2]);
+          Serial.print("Starting PT100 with ");
+          Serial.print(newNumberOfWires);
+          Serial.print(" wires. CS Pin is ");
+          Serial.println(csPin);
 
-        if (newNumberOfWires == 4)
-        {
-          maxChip.begin(MAX31865_4WIRE);
-        }
-        else if (newNumberOfWires == 3)
-        {
-          maxChip.begin(MAX31865_3WIRE);
-        }
-        else
-        {
-          maxChip.begin(MAX31865_2WIRE); // set to 2 wires as default
+          if (newNumberOfWires == 4)
+          {
+            maxChip.begin(MAX31865_4WIRE);
+          }
+          else if (newNumberOfWires == 3)
+          {
+            maxChip.begin(MAX31865_3WIRE);
+          }
+          else
+          {
+            maxChip.begin(MAX31865_2WIRE); // set to 2 wires as default
+          }
         }
       }
     }
@@ -216,10 +221,10 @@ class PTSensor
 };
 
 /*
-  Initializing Arrays
-  Please mind: max sensor capacity currently is interpreted as max of each type
+  Initializing Sensor Arrays
+  please mind: max sensor capacity is interpreted as max for each type
 */
-OneWireSensor oneWireSensors[numberOfSensorsMax] = {
+OneWireSensor oneWireSensors[NUMBER_OF_SENSORS_MAX] = {
   OneWireSensor("", "", ""),
   OneWireSensor("", "", ""),
   OneWireSensor("", "", ""),
@@ -228,13 +233,13 @@ OneWireSensor oneWireSensors[numberOfSensorsMax] = {
   OneWireSensor("", "", "")
 };
 
-PTSensor ptSensors[numberOfSensorsMax] = {
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
-  PTSensor(NO_PT_SENSOR, NO_PT_SENSOR, "", ""),
+PTSensor ptSensors[NUMBER_OF_SENSORS_MAX] = {
+  PTSensor("", 0, "", ""),
+  PTSensor("", 0, "", ""),
+  PTSensor("", 0, "", ""),
+  PTSensor("", 0, "", ""),
+  PTSensor("", 0, "", ""),
+  PTSensor("", 0, "", ""),
 };
 
 /* Called in loop() */
@@ -286,47 +291,40 @@ String OneWireAddressToString(byte addr[8])
 void handleSetSensor()
 {
   int id = server.arg(0).toInt();
-  int type = server.arg(1).toInt();
+  String type = server.arg(1);
 
   if (type == SENSOR_TYPE_ONE_WIRE)
   {
+    // means: create new sensor request
     if (id == -1)
     {
-      // means: create new sensor request
       id = numberOfOneWireSensors;
       numberOfOneWireSensors += 1;
     }
-    // Copy old values (TODO: needed?)
-    String new_mqtttopic = oneWireSensors[id].sens_mqtttopic;
-    String new_name = oneWireSensors[id].sens_name;
-    String new_address = oneWireSensors[id].getSens_address_string();
-    // TODO: server arguments should be ordered, no need to loop
-    for (int i = 0; i < server.args(); i++)
-    {
-      if (server.argName(i) == "name")
-      {
-        new_name = server.arg(i);
-      }
-      if (server.argName(i) == "topic")
-      {
-        new_mqtttopic = server.arg(i);
-      }
-      if (server.argName(i) == "address")
-      {
-        new_address = server.arg(i);
-      }
-      yield();
-    }
-    oneWireSensors[id].change(new_address, new_mqtttopic, new_name);
+    String newName = server.arg(2);
+    String newTopic = server.arg(3);
+    String newAddress = server.arg(4);
+    oneWireSensors[id].change(newAddress, newTopic, newName);
   }
   else if (type == SENSOR_TYPE_PT)
   {
-    server.send(400, "text/plain", "Not Yet Implemented :-(");
+    // means: create new sensor request
+    if (id == -1)
+    {
+      id = numberOfPTSensors;
+      numberOfPTSensors += 1;
+    }
+    String newName = server.arg(2);
+    String newTopic = server.arg(3);
+    String newCsPin = server.arg(4);
+    byte newNumberOfWires = server.arg(5).toInt();
+    ptSensors[id].change(newCsPin, newNumberOfWires, newTopic, newName);
   }
   // unknown type
   else
   {
     server.send(400, "text/plain", "Unknown Sensor Type");
+    return;
   }
   // all done, save and exit
   saveConfig();
@@ -337,7 +335,7 @@ void handleSetSensor()
 void handleDelSensor()
 {
   int id = server.arg(0).toInt();
-  int type = server.arg(1).toInt();
+  String type = server.arg(1);
   // OneWire
   if (type == SENSOR_TYPE_ONE_WIRE)
   {
@@ -353,12 +351,24 @@ void handleDelSensor()
   }
   else if (type == SENSOR_TYPE_PT)
   {
-    server.send(400, "text/plain", "Not Yet Implemented :-(");
+    // first declare the pin unused
+    pins_used[ptSensors[id].csPin] = false;
+    // move all sensors following the given id one to the front of array,
+    // effectively overwriting the sensor to be deleted..
+    for (int i = id; i < numberOfPTSensors; i++)
+    {
+      String csPinString = String(ptSensors[i + 1].csPin); // yeah, not very nice or efficient..
+      ptSensors[i].change(csPinString, ptSensors[i + 1].numberOfWires, ptSensors[i + 1].mqttTopic, ptSensors[i + 1].name);
+      yield();
+    }
+    // ..and declare the array's content to one sensor less
+    numberOfPTSensors -= 1;
   }
   // unknown type
   else
   {
     server.send(400, "text/plain", "Unknown Sensor Type");
+    return;
   }
   // all done, save and exit
   saveConfig();
@@ -366,14 +376,14 @@ void handleDelSensor()
 }
 
 /* Provides search results of OneWire bus search */
-// TODO: Refactor, own id rendering etc should be done in frontend
 void handleRequestOneWireSensorAddresses()
 {
   numberOfOneWireSensorsFound = searchOneWireSensors();
   int id = server.arg(0).toInt();
   String message = "";
-  // If id given, render this sensor's address first
-  if (id != -1)
+  // if id given, render this sensor's address first
+  // and check if id is valid (client could send nonsense for id..)
+  if (id != -1 && id < numberOfOneWireSensors)
   {
     message += F("<option>");
     message += oneWireSensors[id].getSens_address_string();
@@ -382,7 +392,6 @@ void handleRequestOneWireSensorAddresses()
   // Now render all found addresses, except the one already assigned to the sensor
   for (int i = 0; i < numberOfOneWireSensorsFound; i++)
   {
-
     String foundAddress = OneWireAddressToString(oneWireAddressesFound[i]);
     if (id == -1 || !(oneWireSensors[id].getSens_address_string() == foundAddress))
     {
@@ -396,8 +405,7 @@ void handleRequestOneWireSensorAddresses()
 }
 
 /*
-  Returns a JSON Array with the current sensor data
-  (name, value, mqttTopic, type) of all sensors.
+  Returns a JSON Array with the current sensor data of all sensors.
 */
 void handleRequestSensors()
 {
@@ -418,7 +426,8 @@ void handleRequestSensors()
       sensorResponse["value"] = "ERR";
     }
     sensorResponse["mqtt"] = oneWireSensors[i].sens_mqtttopic;
-    sensorResponse["type"] = "OneWire";
+    sensorResponse["type"] = SENSOR_TYPE_ONE_WIRE;
+    sensorResponse["id"] = i;
     sensorsResponse.add(sensorResponse);
     yield();
   }
@@ -437,7 +446,8 @@ void handleRequestSensors()
       sensorResponse["value"] = "ERR";
     }
     sensorResponse["mqtt"] = ptSensors[i].mqttTopic;
-    sensorResponse["type"] = "PTSensor";
+    sensorResponse["type"] = SENSOR_TYPE_PT;
+    sensorResponse["id"] = i;
     sensorsResponse.add(sensorResponse);
     yield();
   }
@@ -447,35 +457,57 @@ void handleRequestSensors()
 }
 
 /* Returns information for one specific sensor (for update / delete menu in frontend) */
-void handleRequestSensor()
+void handleRequestSensorConfig()
 {
   int id = server.arg(0).toInt();
-  String type = server.arg(2);
-  String request = server.arg(1);
+  String type = server.arg(1);
+  String request = server.arg(2);
+  String response;
 
-  String message;
-
-  if (id == -1)
+  if (type == SENSOR_TYPE_ONE_WIRE)
   {
-    message = "not found";
-    server.send(200, "text/plain", message);
+    if (id == -1 || id > numberOfOneWireSensors)
+    {
+      response = "not found";
+      server.send(404, "text/plain", response);
+      return;
+    }
+    else
+    {
+      StaticJsonBuffer<256> jsonBuffer;
+      JsonObject &sensorJson = jsonBuffer.createObject();
+      sensorJson["name"] = oneWireSensors[id].sens_name;
+      sensorJson["topic"] = oneWireSensors[id].sens_mqtttopic;
+      sensorJson.printTo(response);
+      server.send(200, "application/json", response);
+      return;
+    }
   }
-  else
+  else if (type == SENSOR_TYPE_PT)
   {
-    if (request == "name")
+    if (id == -1 || id > numberOfPTSensors)
     {
-      message = oneWireSensors[id].sens_name;
-      server.send(200, "text/plain", message);
+      response = "not found";
+      server.send(404, "text/plain", response);
+      return;
     }
-    if (request == "script")
+    else
     {
-      message = oneWireSensors[id].sens_mqtttopic;
-      server.send(200, "text/plain", message);
+      StaticJsonBuffer<256> jsonBuffer;
+      JsonObject &sensorJson = jsonBuffer.createObject();
+      sensorJson["name"] = ptSensors[id].name;
+      sensorJson["topic"] = ptSensors[id].mqttTopic;
+      sensorJson["csPin"] = ptSensors[id].csPin;
+      sensorJson["numberOfWires"] = ptSensors[id].numberOfWires;
+      sensorJson.printTo(response);
+      server.send(200, "application/json", response);
+      return;
     }
-    message = "not found";
   }
-  saveConfig();
-  server.send(200, "text/plain", message);
+  response = "unknown type: ";
+  response += type;
+  server.send(406, "text/plain", response);
+  return;
 }
 
 byte convertCharToHex(char ch)
