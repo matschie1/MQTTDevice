@@ -122,7 +122,7 @@ class induction
       }
     }
 
-    //  Not yet ready
+/*    //  Not yet ready
     // MQTT Publish
     void publishmqtt() {
       if (client.connected()) {
@@ -142,6 +142,7 @@ class induction
         DBG_PRINTLN(jsonMessage);
       }
     }
+*/
 
     void handlemqtt(char* payload) {
       StaticJsonBuffer<128> jsonBuffer;

@@ -1,11 +1,15 @@
 void setup()
 {
   Serial.begin(115200);
-  
+
   gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
   gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
   gEM.addListener(EventManager::cbpiEventActors, listenerActors);
   gEM.addListener(EventManager::cbpiEventInduction, listenerInduction);
+
+  // Set device name
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
+  WiFi.hostname(mqtt_clientid);
 
   // Start sensors
   DS18B20.begin();
@@ -14,7 +18,7 @@ void setup()
   ESP.wdtFeed();
   if (!SPIFFS.begin())
   {
-    cbpiEventSystem(26);
+    DBG_PRINT("SPIFFS Mount failed");
   }
   else
   {
@@ -31,23 +35,12 @@ void setup()
     }
   }
 
-  // Set device name
-  ESP.wdtFeed();
-  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  WiFi.hostname(mqtt_clientid);
-
   // Load configuration
   ESP.wdtFeed();
-  loadConfig();
- 
-  // Check AP / STA Display Mode
-  //cbpiEventSystem(32);  // Check AP
-  dispAPMode();
-  
-//  while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
-//  {
-//    gEM.processEvent();
-//  }
+  if (SPIFFS.exists("/config.json")) 
+  {
+    loadConfig();
+  }
 
   // WiFi Manager
   ESP.wdtFeed();
@@ -57,22 +50,23 @@ void setup()
   wifiManager.autoConnect(mqtt_clientid);
   strcpy(mqtthost, cstm_mqtthost.getValue());
 
-  // Check AP / STA Display Mode
-  //cbpiEventSystem(33);  // Check STA
-  dispSTAMode();
-
   // Save configuration
   ESP.wdtFeed();
   saveConfig();
+
+  // Display Start Screen
+  ESP.wdtFeed();
+  dispStartScreen();
 
   // Load mDNS
   ESP.wdtFeed();
   if (!MDNS.begin(mqtt_clientid))
   {
-    cbpiEventSystem(26);
+    cbpiEventSystem(EM_MDNSER);
   }
 
   // Init Arduino Over The Air
+  ESP.wdtFeed();
   setupOTA();
 
   // Start MQTT
@@ -82,11 +76,12 @@ void setup()
   // Start Webserver
   ESP.wdtFeed();
   setupServer();
-  
+
+  ESP.wdtFeed();
   cbpiEventSystem(EM_MDNS);           // MDNS handle
   cbpiEventSystem(EM_WLAN);           // Check WLAN
   cbpiEventSystem(EM_MQTT);           // Check MQTT
-  cbpiEventSystem(EM_DISPUP);         // Display Update
+
   while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
   {
     gEM.processEvent();
@@ -95,38 +90,28 @@ void setup()
 
 void setupServer()
 {
-
   server.on("/", handleRoot);
-
   server.on("/setupActor", handleSetActor);   // Einstellen der Aktoren
   server.on("/setupSensor", handleSetSensor); // Einstellen der Sensoren
-
   server.on("/reqSensors", handleRequestSensors); // Liste der Sensoren ausgeben
   server.on("/reqActors", handleRequestActors);   // Liste der Aktoren ausgeben
   server.on("/reqInduction", handleRequestInduction);
-
   server.on("/reqSearchSensorAdresses", handleRequestSensorAddresses);
   server.on("/reqPins", handlereqPins);
-
   server.on("/reqSensor", handleRequestSensor); // Infos der Sensoren für WebConfig
   server.on("/reqActor", handleRequestActor);   // Infos der Aktoren für WebConfig
   server.on("/reqIndu", handleRequestIndu);     // Infos der Indu für WebConfig
-
   server.on("/setSensor", handleSetSensor); // Sensor ändern
   server.on("/setActor", handleSetActor);   // Aktor ändern
   server.on("/setIndu", handleSetIndu);     // Indu ändern
-
   server.on("/delSensor", handleDelSensor); // Sensor löschen
   server.on("/delActor", handleDelActor);   // Aktor löschen
-
   server.on("/reboot", rebootDevice); // reboots the whole Device
   server.on("/mqttOff", turnMqttOff); // Turns off MQTT completly until reboot
-
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
   server.on("/setDisp", handleSetDisp);     // Display ändern
   server.on("/displayOff", turnDisplayOff); // Turns off display completly until reboot
-
   server.on("/reqMiscSet", handleRequestMiscSet);
   server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
   server.on("/setMisc", handleSetMisc);     // Misc ändern
@@ -140,23 +125,15 @@ void setupServer()
   });
   server.on("/edit", HTTP_PUT, handleFileCreate); // create file
   server.on("/edit", HTTP_DELETE, handleFileDelete);  // delete file
-  // first callback is called after the request has ended with all parsed arguments
-  // second callback handles file uploads at that location
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
   }, handleFileUpload);
-  server.onNotFound([]() {
-    if (!handleFileRead(server.uri())) {
-      server.send(404, "text/plain", "FileNotFound");
-    }
-  });
-
-  // server.onNotFound(handleWebRequests);           // Sonstiges
-
+  server.onNotFound(handleWebRequests);           // Sonstiges
   server.begin();
 }
 
-void setupOTA() {
+void setupOTA()
+{
   ArduinoOTA.onStart([]() {
     DBG_PRINTLN("OTA starting...");
   });
@@ -168,7 +145,8 @@ void setupOTA() {
     DBG_PRINTLN((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
+    DBG_PRINT("Error: ");
+    DBG_PRINTLN(error);
     if (error == OTA_AUTH_ERROR) DBG_PRINTLN("Auth Failed");
     else if (error == OTA_BEGIN_ERROR) DBG_PRINTLN("Begin Failed");
     else if (error == OTA_CONNECT_ERROR) DBG_PRINTLN("Connect Failed");

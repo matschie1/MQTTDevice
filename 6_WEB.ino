@@ -52,8 +52,6 @@ bool loadFromSpiffs(String path) {
 void mqttreconnect() {
   // 10 Tries for reconnect
   // Wenn Client nicht verbunden, Verbindung herstellen
-
-  // Delay prüfen - mqttreconnect hängt wenn es keine subscribes gibt
   if (!client.connected()) {
     if (millis() > mqttconnectlasttry + MQTT_DELAY) {
       DBG_PRINT("MQTT Trying to connect. Device name: ");
@@ -70,9 +68,7 @@ void mqttreconnect() {
           //wait approx. 1 sec
         }
       }
-
-      // Event MQTT
-      cbpiEventSystem(2);
+      cbpiEventSystem(2);   // Event MQTT
       mqttconnectlasttry = millis();
       DBG_PRINTLN("");
       DBG_PRINT("MQTT connect failed. Try again in ");
@@ -125,8 +121,44 @@ void handleRequestMiscSet() {
 void handleRequestMisc() {
   String request = server.arg(0);
   String message;
+      
   if (request == "MQTTHOST") {
     message = mqtthost;
+    goto SendMessage;
+  }
+  if (request == "enable_actors") {
+    if (StopActorsOnError) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "enable_induction") {
+    if (StopInductionOnError) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "delay_actors") {
+    message = wait_on_error_actors / 1000;
+    goto SendMessage;
+  }
+  if (request == "delay_induction") {
+    message = wait_on_error_induction / 1000;
+    goto SendMessage;
+  }
+  if (request == "debug") {
+    if (setDEBUG) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
     goto SendMessage;
   }
 
@@ -163,6 +195,33 @@ void handleSetMisc() {
     }
     if (server.argName(i) == "MQTTHOST")  {
       server.arg(i).toCharArray(mqtthost, 16);
+    }
+    if (server.argName(i) == "enable_actors")  {
+      if (server.arg(i) == "1") {
+        StopActorsOnError = true;
+      } else {
+        StopActorsOnError = false;
+      }
+    }
+    if (server.argName(i) == "delay_actors")  {
+      wait_on_error_actors = server.arg(i).toInt() * 1000;
+    }
+    if (server.argName(i) == "enable_induction")  {
+      if (server.arg(i) == "1") {
+        StopInductionOnError = true;
+      } else {
+        StopInductionOnError = false;
+      }
+    }
+    if (server.argName(i) == "delay_induction")  {
+      wait_on_error_induction = server.arg(i).toInt() * 1000;
+    }
+    if (server.argName(i) == "debug")  {
+      if (server.arg(i) == "1") {
+        setDEBUG = true;
+      } else {
+        setDEBUG = false;
+      }
     }
     yield();
   }

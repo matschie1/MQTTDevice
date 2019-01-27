@@ -34,15 +34,7 @@
 #include <Timezone.h>
 
 /*############ DEBUG ############*/
-// #define DEBUG                 // Uncomment this line for debug output on serial monitor
-
-#ifdef DEBUG
-#define DBG_PRINT(x)     Serial.print (x)
-#define DBG_PRINTLN(x)  Serial.println (x)
-#else
-#define DBG_PRINT(x)
-#define DBG_PRINTLN(x)
-#endif
+bool setDEBUG = false;
 /*############ DEBUG ############*/
 
 /*########## KONSTANTEN #########*/
@@ -110,10 +102,10 @@ long mqttconnectlasttry;
 #define MQTT_DELAY 10000
 #define MQTT_NUM_TRY 3
 
+// Set device name
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];
 
-/* ## Set up the NTP UDP client ## */
 /* ## Define NTP properties ## */
 #define NTP_OFFSET   60 * 60            // OTA: in seconds
 #define NTP_INTERVAL 60 * 1000          // OTA: in miliseconds
@@ -127,37 +119,38 @@ File fsUploadFile;                      // a File object to temporarily store th
 /*######### FileBrowser #########*/
 
 /*######### EventManager ########*/
-EventManager gEM;                       // Eventmanager
-#define SEN_UPDATE  2000  //  wait this time in ms before a sensor event is raised up - change this value as you need
-#define ACT_UPDATE  5000  //  actor event
-#define IND_UPDATE  5000  //  induction cooker event
-#define DISP_UPDATE 10000 //  NTP and display update
+EventManager gEM;                   // Eventmanager
+#define SEN_UPDATE  2000            //  wait this time in ms before a sensor event is raised up - change this value as you need
+#define ACT_UPDATE  5000            //  actor event
+#define IND_UPDATE  5000            //  induction cooker event
+#define DISP_UPDATE 10000           //  NTP and display update
 #define SYS_UPDATE  100
-#define WAIT_ON_ERROR 60000   // approx in ms
 #define EM_WLAN   20
 #define EM_OTA    21
 #define EM_MQTT   22
 #define EM_WEB    23
 #define EM_MDNS   24
+#define EM_SPIFFS 6
+#define EM_MDNSER 7
 #define EM_DISPUP 30
 
-//#define StopActorsOnError       // Uncomment this line, if you want to stop all actors on error after WAIT_ON_ERROR ms
-#define StopInductionOnError      // Uncomment this line, if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
+bool StopActorsOnError = false;             // Use webif to configure: switch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
+bool StopInductionOnError = false;          // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
+long wait_on_error_actors = 60000;          // approx in ms - use webif to configure
+long wait_on_error_induction = 60000;       // approx in ms - use webif to configure
 
 unsigned long lastToggledSys = 0;           // System event delta
 unsigned long lastToggledSen = 0;           // Sensor event delta
 unsigned long lastToggledAct = 0;           // Actor event delta
 unsigned long lastToggledInd = 0;           // Induction event delta
 unsigned long lastToggledDisp = 0;
-unsigned long lastSen;
-unsigned long lastSys;
+unsigned long lastSenAct;
+unsigned long lastSenInd;
+unsigned long lastSysAct;
+unsigned long lastSysInd;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
-bool dispEnabled;
-
-#define DISPLAY 0                           // Change DISPLAY 1 to switch on OLED display
-#if (DISPLAY == 1)
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -167,4 +160,3 @@ bool dispEnabled;
 #define DISP_DEF_ADDRESS 0x3c           // Only used on init setup!
 Adafruit_SSD1306 display(-1);
 #include "icons.h"
-#endif

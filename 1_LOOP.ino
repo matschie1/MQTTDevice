@@ -23,7 +23,6 @@ void loop()
   {
     cbpiEventSystem(EM_WLAN);             // Check WLAN
     cbpiEventSystem(EM_MDNS);             // MDNS handle
-    //cbpiEventSystem(EM_MQTT);             // Check MQTT
     cbpiEventSystem(EM_OTA);              // OTA handle
     lastToggledSys = millis();
   }

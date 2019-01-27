@@ -1,7 +1,7 @@
 bool loadConfig() {
   File configFile = SPIFFS.open("/config.json", "r");
   if (!configFile) {
-    Serial.println("Failed to open config file");
+    DBG_PRINTLN("Failed to open config file");
     return false;
   }
   else {
@@ -88,24 +88,65 @@ bool loadConfig() {
   String dispAddress = jsdisplay["ADDRESS"];
   dispAddress.remove(0, 2);
   char copy[4];
-  dispAddress.toCharArray(copy, 4);     // hier werden mal so richtig schön ressourcen verschwendet
+  dispAddress.toCharArray(copy, 4);
   int address = strtol(copy, 0, 16);
-  String is_enabled_disp = jsdisplay["ENABLED"];
-  if (is_enabled_disp == "1") {
-    dispEnabled = 1;
+  String dispStatus = jsdisplay["ENABLED"];
+  if (dispStatus == "1") {
+    oledDisplay.dispEnabled = 1;
   }
-  else
-  {
-    dispEnabled = 0;
+  else {
+    oledDisplay.dispEnabled = 0;
   }
-#if (DISPLAY == 1)
   DBG_PRINT("Display address: ");
   DBG_PRINTLN(dispAddress);
-  oledDisplay.change(address, dispEnabled);
-#else
-  DBG_PRINT("Config file else: ");
-#endif
+  oledDisplay.change(address, oledDisplay.dispEnabled);
   DBG_PRINTLN("--------------------");
+
+  // Misc Settings
+  JsonArray& jsomisc = json["misc"];
+  JsonObject& jsmisc = jsomisc[0];
+  String str_act = jsmisc["enable_actors"];
+  String str_act_del = jsmisc["delay_actors"];
+  DBG_PRINT("Actoren: ");
+  DBG_PRINT(str_act);
+  DBG_PRINT("nach: ");
+  DBG_PRINT(str_act_del);
+  DBG_PRINTLN("sec");
+  wait_on_error_actors = atol(jsmisc["delay_actors"]);
+  DBG_PRINT("Switch off all actors on error: ");
+  if (str_act == "1") {
+    StopActorsOnError = true;
+    DBG_PRINT(" ON after ");
+    DBG_PRINT(wait_on_error_induction);
+    DBG_PRINTLN("ms");
+  }
+  else {
+    StopActorsOnError = false;
+    DBG_PRINTLN(" OFF ");
+  }
+
+  String str_ind = jsmisc["enable_induction"];
+  wait_on_error_induction = atol(jsmisc["delay_induction"]);
+  DBG_PRINT("Switch off induction on error: ");
+  if (str_ind == "1") {
+    StopInductionOnError = true;
+    DBG_PRINT(" ON after ");
+    DBG_PRINT(wait_on_error_induction);
+    DBG_PRINTLN("ms");
+  }
+  else {
+    StopInductionOnError = false;
+    DBG_PRINTLN(" OFF ");
+  }
+  String str_debug = jsmisc["debug"];
+  if (str_debug == "1") {
+    setDEBUG = true;
+    DBG_PRINTLN("1 DEBUG ein");
+  }
+  else {
+    setDEBUG = false;
+    DBG_PRINTLN("1 DEBUG aus");
+  }
 
   // General Settings
   String json_mqtthost = json["MQTTHOST"];
@@ -179,20 +220,51 @@ bool saveConfig()
   // Write Display
   JsonArray& jsodisplay = json.createNestedArray("display");
   JsonObject&  jsdisplay = jsodisplay.createNestedObject();
-#if (DISPLAY == 1)
+  jsdisplay["ENABLED"] = "0";
+  jsdisplay["ADDRESS"] = "0";
   if (oledDisplay.dispEnabled) {
     jsdisplay["ENABLED"] = "1";
   } else {
     jsdisplay["ENABLED"] = "0";
   }
+
   DBG_PRINT("Display address saved as String: ");
   DBG_PRINTLN(String(decToHex(oledDisplay.address, 2)));
   jsdisplay["ADDRESS"] = String(decToHex(oledDisplay.address, 2));
-#else
-  jsdisplay["ENABLED"] = "0";
-  jsdisplay["ADDRESS"] = "0";
-#endif
   DBG_PRINTLN("--------------------");
+
+  // Write Misc Stuff
+  JsonArray& jsomisc = json.createNestedArray("misc");
+  JsonObject&  jsmisc = jsomisc.createNestedObject();
+
+  if (StopActorsOnError) {
+    jsmisc["enable_actors"] = "1";
+  } else {
+    jsmisc["enable_actors"] = "0";
+  }
+  jsmisc["delay_actors"] = wait_on_error_actors;
+  DBG_PRINT("Swtich off actors on error: ");
+  DBG_PRINT(StopActorsOnError);
+  DBG_PRINT(" after: ");
+  DBG_PRINT(wait_on_error_actors);
+  DBG_PRINTLN("ms");
+  if (StopInductionOnError) {
+    jsmisc["enable_induction"] = "1";
+  } else {
+    jsmisc["enable_induction"] = "0";
+  }
+  jsmisc["delay_induction"] = wait_on_error_induction;
+  DBG_PRINT("Swtich off induction on error: ");
+  DBG_PRINT(StopActorsOnError);
+  DBG_PRINT(" after: ");
+  DBG_PRINT(wait_on_error_induction);
+  DBG_PRINTLN("ms");
+  if (setDEBUG) {
+    jsmisc["debug"] = "1";
+  } else {
+    jsmisc["debug"] = "0";
+  }
+
   // Write General Stuff
   json["MQTTHOST"] = mqtthost;
   json.printTo(configFile);

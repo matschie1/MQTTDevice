@@ -81,7 +81,7 @@ class Actor
 
     }
 
-    //    Not yet ready
+/*    //    Not yet ready
     void publishmqtt() {
       if (client.connected()) {
         StaticJsonBuffer<256> jsonBuffer;
@@ -98,7 +98,7 @@ class Actor
         client.publish(actor_mqtttopic, jsonMessage);
       }
     }
-
+*/
     void mqtt_subscribe() {
       if (client.connected()) {
         char subscribemsg[50];

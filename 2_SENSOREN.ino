@@ -37,9 +37,7 @@ class TemperatureSensor
         DBG_PRINT(sens_isConnected);
         DBG_PRINT(" sensor address: ");
         for (int i = 0; i < 8; i++) {
-#ifdef DEBUG
-          Serial.print(sens_address[i], HEX);
-#endif
+          DBG_PRINTHEX(sens_address[i]);
           DBG_PRINT(" ");
         }
         DBG_PRINT(" sensor value: ");
@@ -59,11 +57,11 @@ class TemperatureSensor
 
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-            
+
             cbpiEventSensors(1);
           }
           else {// not connected and unvalid address
-              cbpiEventSensors(1);
+            cbpiEventSensors(1);
           } // sens_isConnected
         } // sens_value -127 || +85
         //else publishmqtt(); // Sensor should be fine
@@ -96,9 +94,7 @@ class TemperatureSensor
         }
         for (int i = 0; i < 8; i++) {
           sens_address[i] = octets[i];
-#ifdef DEBUG
-          Serial.print(sens_address[i], HEX);
-#endif
+          DBG_PRINTHEX(sens_address[i]);
         }
         DBG_PRINTLN("");
       }
@@ -161,9 +157,8 @@ byte searchSensors() {
       DBG_PRINT("Sensor found:");
       for ( i = 0; i < 8; i++) {
         addressesFound[n][i] = addr[i];
-#ifdef DEBUG
-        Serial.println(addr[i], HEX);
-#endif
+        DBG_PRINTHEX(addr[i]);
+        DBG_PRINT(" ");
       }
       DBG_PRINTLN("");
       n += 1;
