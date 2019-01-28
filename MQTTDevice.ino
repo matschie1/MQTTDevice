@@ -94,13 +94,8 @@ byte numberOfSensors = 0;              // Gesamtzahl der Sensoren
 const byte numberOfSensorsMax = 10;    // Maximale Gesamtzahl Sensoren
 byte addressesFound[numberOfSensorsMax][8];
 byte numberOfSensorsFound = 0;
-
 byte numberOfActors = 0;                // Gesamtzahl der Aktoren
-
 char mqtthost[16] = "192.168.100.30";  // Default Value für MQTT Server
-long mqttconnectlasttry;
-#define MQTT_DELAY 10000
-#define MQTT_NUM_TRY 3
 
 // Set device name
 int mqtt_chip_key = ESP.getChipId();
@@ -120,11 +115,12 @@ File fsUploadFile;                      // a File object to temporarily store th
 
 /*######### EventManager ########*/
 EventManager gEM;                   // Eventmanager
-#define SEN_UPDATE  2000            //  wait this time in ms before a sensor event is raised up - change this value as you need
-#define ACT_UPDATE  5000            //  actor event
-#define IND_UPDATE  5000            //  induction cooker event
+#define SEN_UPDATE  5000            //  wait this time in ms before a sensor event is raised up - change this value as you need
+#define ACT_UPDATE  10000           //  actor event
+#define IND_UPDATE  10000           //  induction cooker event
 #define DISP_UPDATE 10000           //  NTP and display update
 #define SYS_UPDATE  100
+#define MQTT_DELAY  30000           // MQTT reconnect
 #define EM_WLAN   20
 #define EM_OTA    21
 #define EM_MQTT   22
@@ -137,17 +133,22 @@ EventManager gEM;                   // Eventmanager
 bool StopActorsOnError = false;             // Use webif to configure: switch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
 bool StopInductionOnError = false;          // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
 long wait_on_error_actors = 60000;          // approx in ms - use webif to configure
-long wait_on_error_induction = 60000;       // approx in ms - use webif to configure
+long wait_on_error_induction = 30000;       // approx in ms - use webif to configure
 
 unsigned long lastToggledSys = 0;           // System event delta
 unsigned long lastToggledSen = 0;           // Sensor event delta
 unsigned long lastToggledAct = 0;           // Actor event delta
 unsigned long lastToggledInd = 0;           // Induction event delta
 unsigned long lastToggledDisp = 0;
+unsigned long mqttconnectlasttry = 0;
 unsigned long lastSenAct;
 unsigned long lastSenInd;
 unsigned long lastSysAct;
 unsigned long lastSysInd;
+
+byte sensorsStatus = 0;
+byte actorsStatus = 0;
+byte inductionStatus = 0;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/

@@ -1,14 +1,18 @@
 class oled
 {
     String t;
+    unsigned long lastNTPupdate = 0;
 
   public:
     bool dispEnabled = 0;
     int address;
 
-    bool senOK = 0;
-    bool actOK = 0;
-    bool indOK = 0;
+    bool senOK = true;
+    bool actOK = true;
+    bool indOK = true;
+    bool wlanOK = true;
+    bool mqttOK = true;
+    bool otaOK = true;
 
     oled() {
     }
@@ -47,28 +51,32 @@ class oled
     void digClock()
     {
       t = ""; // clear value for display
+      time_t local, utc;
+      if (lastNTPupdate == 0) timeClient.update();  // init time first loop
 
-      // update the NTP client and get the UNIX UTC timestamp
-      if (!timeClient.update())
+      if (millis() > (lastNTPupdate + NTP_INTERVAL))
       {
-        //delay(100);           // if network is up and running just wait a second for NTP
-        unsigned long pause = millis();
-        while (millis() < pause + 100) {
-          //wait approx. [period] ms
+        //timeClient.update();
+        // update the NTP client and get the UNIX UTC timestamp
+        if (!timeClient.update())
+        {
+          unsigned long pause = millis(); // if network is up and running just wait a second for NTP
+          while (millis() < pause + 2000) {
+            //wait approx. 1sec
+          }
+          timeClient.update();
         }
-        timeClient.update();
+        lastNTPupdate = millis();
       }
       unsigned long epochTime =  timeClient.getEpochTime();
-
       // convert received time stamp to time_t object
-      time_t local, utc;
+      // time_t local, utc;
       utc = epochTime;
       TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 0};     //Central European Summer Time
       TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 0};       //Central European Standard Time
       Timezone CE(CEST, CET );
       local = CE.toLocal(utc);
       setTime(local);
-
       t += hour(local);
       t += ":";
       if (minute(local) < 10) // add a zero if minute is under 10
@@ -194,16 +202,70 @@ void showDispVal(int value)       // Display a Int value
 
 void showDispWlan()               // Show WLAN icon
 {
-  if (WiFi.status() == WL_CONNECTED) {
+  if (oledDisplay.wlanOK) {
     display.drawBitmap(77, 3, wlan_logo, 20, 20, WHITE);
   }
 }
 void showDispMqtt()               // SHow MQTT icon
 {
-  if (client.connected()) {
+  if (oledDisplay.mqttOK) {
     display.drawBitmap(102, 3, mqtt_logo, 20, 20, WHITE);
   }
 }
+
+void showDispOTA(unsigned int progress, unsigned int total)               // Show OTA icon
+{
+  int otaStatus = progress / (total / 100);
+  bool up = false;
+  switch (otaStatus) {
+    case 0:
+    case 20:
+    case 40:
+    case 60:
+    case 80:
+    case 100:
+      up = true;
+      break;
+    default:
+      up = false;
+      break;
+  }
+  if (up) {
+    display.clearDisplay();
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(5, 5);
+    display.print("OTA Update: ");
+    display.print(otaStatus);
+    int xoffset = 5;
+    display.drawRect( xoffset, 25, otaStatus + xoffset, 2, WHITE);
+    display.fillRect( xoffset, 25, otaStatus + xoffset, 2, WHITE);
+    if (otaStatus > 80) {
+      display.setCursor(5, 40);
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.print("OTA Update finished");
+      display.setCursor(50, 50);
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.print("... reboot");
+    }
+    display.display();
+  }
+}
+
+void showDispOTAEr(String value)
+{
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(5, 5);
+  display.print("OTA Update Error: ");
+  display.print(value);
+  display.display();
+}
+
+
 void showDispCbpi()               // SHow CBPI icon
 {
   display.clearDisplay();
@@ -222,20 +284,30 @@ void showDispSen()                // Show Sensor status on the left
   display.setTextSize(1);
   display.setCursor(3, 55);
   display.setTextColor(WHITE);
-  oledDisplay.senOK ? display.print("Sen:Er") : display.print("Sen:ok");
+  //oledDisplay.senOK ? display.print("Sen:ok") : display.print("Sen:Er");
+  if (sensorsStatus == 0) {
+    display.print("Sen: ");
+    display.print(numberOfSensors);
+  }
+  else display.print("Sen:Er");
 }
 void showDispAct()                // Show actor status in the mid
 {
   display.setCursor(45, 55);
   display.setTextColor(WHITE);
-  oledDisplay.actOK ? display.print("Act:Er") : display.print("Act:ok");
+  if (actorsStatus == 0) {
+    display.print("Act: ");
+    display.print(numberOfActors);
+  }
+  else display.print("Act:Er");
 }
 void showDispInd()                // Show InductionCooker status on the right
 {
   display.setTextSize(1);
   display.setCursor(87, 55);
   display.setTextColor(WHITE);
-  oledDisplay.indOK ? display.print("Ind:Er") : display.print("Ind:ok");
+  if (inductionStatus == 0) display.print("Ind:ok");
+  else display.print("Ind:Er");
 }
 
 void showDispTime(String value)   // Show time value in the upper left with fontsize 2

@@ -1,25 +1,25 @@
 void loop()
 {
   cbpiEventSystem(EM_WEB);              // Webserver handle
-  cbpiEventSystem(EM_MQTT);             // Check MQTT
+  cbpiEventSystem(EM_MQTT);             // Loop or Check MQTT
   
-  if (millis() > lastToggledSen + SEN_UPDATE)
+  if (millis() > (lastToggledSen + SEN_UPDATE))
   {
-    cbpiEventSensors(0);                // Sensor handle
+    cbpiEventSensors(sensorsStatus);                // Sensor handle
     lastToggledSen = millis();
   }
-  if (millis() > lastToggledAct + ACT_UPDATE)
+  if (millis() > (lastToggledAct + ACT_UPDATE))
   {
-    cbpiEventActors(0);                 // Actor handle
+    cbpiEventActors(actorsStatus);                 // Actor handle
     lastToggledAct = millis();
   }
-  if (millis() > lastToggledInd + IND_UPDATE)
+  if (millis() > (lastToggledInd + IND_UPDATE))
   {
-    cbpiEventInduction(0);              // Induction handle
+    cbpiEventInduction(inductionStatus);              // Induction handle
     lastToggledInd = millis();
   }
 
-  if (millis() > lastToggledSys + SYS_UPDATE)
+  if (millis() > (lastToggledSys + SYS_UPDATE))
   {
     cbpiEventSystem(EM_WLAN);             // Check WLAN
     cbpiEventSystem(EM_MDNS);             // MDNS handle
@@ -27,7 +27,7 @@ void loop()
     lastToggledSys = millis();
   }
   
-  if (millis() > lastToggledDisp + DISP_UPDATE)
+  if (millis() > (lastToggledDisp + DISP_UPDATE))
   {
     cbpiEventSystem(EM_DISPUP);         // Display Update
     lastToggledDisp = millis();
@@ -37,5 +37,4 @@ void loop()
   {
     gEM.processEvent();
   }
-  //delay(100);  // get rid off delay
 }

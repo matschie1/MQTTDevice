@@ -134,17 +134,21 @@ void setupServer()
 
 void setupOTA()
 {
+  ArduinoOTA.setHostname(mqtt_clientid);
   ArduinoOTA.onStart([]() {
+    showDispOTA(0, 100);
     DBG_PRINTLN("OTA starting...");
   });
   ArduinoOTA.onEnd([]() {
     DBG_PRINTLN("OTA update finished!");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    showDispOTA(progress, total);
     DBG_PRINT("OTA in progress: ");
     DBG_PRINTLN((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
+    showDispOTAEr(String(error));
     DBG_PRINT("Error: ");
     DBG_PRINTLN(error);
     if (error == OTA_AUTH_ERROR) DBG_PRINTLN("Auth Failed");

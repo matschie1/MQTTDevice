@@ -4,8 +4,8 @@ void listenerSystem( int event, int parm )                           // System e
   {
     case 0:       //
       break;
-
     case 1:       // WLAN error
+      oledDisplay.wlanOK = false;
       // Stop actors
       if (StopActorsOnError && lastSysAct == 0) {
         lastSysAct = millis();       // Timestamp on error
@@ -67,6 +67,7 @@ void listenerSystem( int event, int parm )                           // System e
       break;
 
     case 2:       // MQTT Error
+      oledDisplay.mqttOK = false;
       // Stop actors
       if (StopActorsOnError && lastSysAct == 0) {
         lastSysAct = millis();       // Timestamp on error
@@ -134,7 +135,6 @@ void listenerSystem( int event, int parm )                           // System e
     case 8:       // Webserver error
       DBG_PRINT("Webserver failed");
       break;
-
     case 10:      // Disable MQTT - this event is called manuell. Do not use WAIT_ON_ERROR before switch off
       // Stop actors
       showDispSet("MQTT error");
@@ -192,6 +192,7 @@ void listenerSystem( int event, int parm )                           // System e
     case EM_WLAN:       // check WLAN (20)
       // ToDo: Check WLAN status
       if (WiFi.status() != WL_CONNECTED) cbpiEventSystem(1);
+      else oledDisplay.wlanOK = true;
 
       //         WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
       //        if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
@@ -208,15 +209,34 @@ void listenerSystem( int event, int parm )                           // System e
 
       break;
     case EM_OTA:        // check OTA (21)
+      oledDisplay.otaOK = true;
       ArduinoOTA.handle();
       break;
     case EM_MQTT:       // check MQTT (22)
-      if ((numberOfActors + numberOfSensors) || inductionCooker.isEnabled) // anything to subscribe?
+      if ((numberOfActors + numberOfSensors > 0) || inductionCooker.isEnabled) // anything to subscribe?
       {
-        if (!client.connected()) {
-          mqttreconnect();
+        yield();
+        if (!client.connected())
+        {
+          oledDisplay.mqttOK = false;
+          if (millis() > (mqttconnectlasttry + MQTT_DELAY)) {
+            DBG_PRINT("MQTT Trying to connect. Device name: ");
+            DBG_PRINTLN(mqtt_clientid);
+            oledDisplay.mqttOK = false;
+            if (client.connect(mqtt_clientid)) {
+              DBG_PRINTLN("MQTT connect successful. Subscribing.");
+              for (int i = 0; i < numberOfActors; i++) {
+                actors[i].mqtt_subscribe();
+              }
+              inductionCooker.mqtt_subscribe();
+            }
+            mqttconnectlasttry = millis();
+          }
         }
-        client.loop();
+        else {
+          oledDisplay.mqttOK = true;
+          client.loop();
+        }
       }
       break;
     case EM_WEB:  // Webserver (23)
@@ -241,8 +261,21 @@ void listenerSensors( int event, int parm )                           // Sensor 
   // 1:= Sensor on Err
   switch (parm) {
     case 0:
+      //DBG_PRINTLN("EM: sensors event ok");
+      // all sensors ok
       break;
     case 1:
+      // Sensor CRC ceck failed
+      DBG_PRINTLN("EM: received event sensor crc check failed");
+    case 2:
+      // -127°C device error
+      DBG_PRINTLN("EM: received event sensor data error (-127°C)");
+    case 3:
+      // sensor unpluged
+      DBG_PRINTLN("EM: received event sensor not connected");
+    //break;  // uncomment this line, if you don't want to stop actors when sensor is unpluged (share device)
+    case 4:
+      // all other errors
       // Stop actors
       if (StopActorsOnError && lastSenAct == 0) {
         lastSenAct = millis();       // Timestamp on error
@@ -308,6 +341,7 @@ void listenerActors( int event, int parm )                           // Actor ev
 {
   switch (parm) {
     case 0:
+      //DBG_PRINTLN("EM: actors event ok");
       break;
     case 1:
       if (StopActorsOnError) {
@@ -330,6 +364,7 @@ void listenerInduction( int event, int parm )                           // Induc
 {
   switch (parm) {
     case 0:
+      //DBG_PRINTLN("EM: induction event ok");
       break;
     case 1:
       if (inductionCooker.isInduon && StopInductionOnError) {

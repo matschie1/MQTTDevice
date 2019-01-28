@@ -1,14 +1,12 @@
 class TemperatureSensor
 {
-    unsigned long lastCalled;     // Wann wurde der Sensor zuletzt aktualisiert
-    long period = 5000;           // Aktualisierungshäufigkeit
-
   public:
     char sens_mqtttopic[50];      // Für MQTT Kommunikation
     byte sens_address[8];         // 1-Wire Adresse
     String sens_name;             // Name für Anzeige auf Website
     float sens_value = -127.0;    // Aktueller Wert
     bool sens_isConnected;        // check if Sensor is connected
+
 
     String getSens_adress_string() {
       return SensorAddressToString(sens_address);
@@ -19,18 +17,16 @@ class TemperatureSensor
     }
 
     void Update() {
-      if (millis() > (lastCalled + period)) {
         DS18B20.requestTemperatures(); // new conversion to get recent temperatures
         if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
           unsigned long pause = millis();
           while (millis() < pause + 750) {
-            //wait approx. [period] ms
+            //wait approx. 750ms
           }
           DS18B20.requestTemperatures();
         }
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
         sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
-
 
         DBG_PRINT(sens_name);
         DBG_PRINT(" is connected: ");
@@ -44,30 +40,27 @@ class TemperatureSensor
         DBG_PRINT(sens_value);
         if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
           DBG_PRINTLN(" CRC check failed");
+          sensorsStatus = 1;
         }
-        else DBG_PRINTLN(" CRC check ok");
-
-        if (sens_value == -127.0 || sens_value == 85.0) {
+        //else DBG_PRINTLN(" CRC check ok");
+        //if (sens_value == -127.0 || sens_value == 85.0) {
+        else if (sens_value == -127.0 || sens_value == 85.0) {
           if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
-            cbpiEventSensors(1);
+            sensorsStatus = 2;
           }
           else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
-
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-
-            cbpiEventSensors(1);
+            sensorsStatus = 3;
           }
           else {// not connected and unvalid address
-            cbpiEventSensors(1);
+            sensorsStatus = 4;
           } // sens_isConnected
         } // sens_value -127 || +85
-        //else publishmqtt(); // Sensor should be fine
+        else sensorsStatus = 0;
         publishmqtt();
-        lastCalled = millis();
-      } // if millis
     } // void Update
 
     void change(String new_address, String new_mqtttopic, String new_name) {

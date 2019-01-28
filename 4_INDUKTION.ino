@@ -33,8 +33,8 @@ class induction
     boolean isEnabled = false;
     long delayAfteroff = 120000;
 
-    // MQTT Publish
-    char induction_mqtttopic[50];      // Für MQTT Kommunikation
+    // MQTT Publish - not yet ready
+    // char induction_mqtttopic[50];      // Für MQTT Kommunikation
 
     induction() {
       setupCommands();
@@ -71,7 +71,9 @@ class induction
 
       mqtttopic = topic;
       delayAfteroff = delayoff;
-      mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
+      
+      // MQTT Publish - not yet ready
+      //mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
 
       isEnabled = is_enabled;
 

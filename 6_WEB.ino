@@ -49,7 +49,30 @@ bool loadFromSpiffs(String path) {
   return true;
 }
 
+/*
 void mqttreconnect() {
+  if (millis() > mqttconnectlasttry + MQTT_DELAY) {
+    DBG_PRINT("MQTT Trying to connect. Device name: ");
+    DBG_PRINT(mqtt_clientid);
+    if (client.connect(mqtt_clientid)) {
+      DBG_PRINT("MQTT connect successful. Subscribing.");
+      goto Subscribe;
+    }
+  }
+  mqttconnectlasttry = millis();
+  return;
+
+Subscribe:
+  
+  for (int i = 0; i < numberOfActors; i++) {
+    actors[i].mqtt_subscribe();
+    yield();
+  }
+  inductionCooker.mqtt_subscribe();
+}
+
+
+  void mqttreconnect() {
   // 10 Tries for reconnect
   // Wenn Client nicht verbunden, Verbindung herstellen
   if (!client.connected()) {
@@ -68,7 +91,6 @@ void mqttreconnect() {
           //wait approx. 1 sec
         }
       }
-      cbpiEventSystem(2);   // Event MQTT
       mqttconnectlasttry = millis();
       DBG_PRINTLN("");
       DBG_PRINT("MQTT connect failed. Try again in ");
@@ -78,13 +100,15 @@ void mqttreconnect() {
     }
   }
 
-Subscribe:
+  Subscribe:
   for (int i = 0; i < numberOfActors; i++) {
     actors[i].mqtt_subscribe();
     yield();
   }
   inductionCooker.mqtt_subscribe();
-}
+  }
+
+*/
 
 void mqttcallback(char* topic, byte* payload, unsigned int length) {
 
@@ -121,7 +145,7 @@ void handleRequestMiscSet() {
 void handleRequestMisc() {
   String request = server.arg(0);
   String message;
-      
+
   if (request == "MQTTHOST") {
     message = mqtthost;
     goto SendMessage;

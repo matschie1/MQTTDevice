@@ -64,8 +64,9 @@ class Actor
         mqtt_unsubscribe();
         argument_actor = argument;
         mqtt_subscribe();
-        // MQTT Publish
-        argument.toCharArray(actor_mqtttopic, argument.length() + 1);
+        
+        // MQTT Publish - not yet ready
+        // argument.toCharArray(actor_mqtttopic, argument.length() + 1);
       }
 
       if (ainverted == "1") {
