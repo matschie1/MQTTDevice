@@ -18,6 +18,7 @@
         </div>
         <div class="col-md-auto">
 			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
+			<button type="button" class="btn btn-outline-danger" id="btn_ota">Start OTA</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_disable_mqtt">Disable MQTT</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_disable_display">Display on/off</button>
@@ -94,7 +95,7 @@
       <div class="row">
         <div class="col-md-12">
           <div class="card">
-            <div class="card-header"> Misc <a href="" class="badge badge-warning" data-target="#misc_modal"
+            <div class="card-header"> Misc settings <a href="" class="badge badge-warning" data-target="#misc_modal"
                 data-toggle="modal" data-value="-1" style="float:right">Edit</a></div>
             <div class="card-body">
               <ul class="list-group" id="miscSettings">
@@ -227,6 +228,10 @@
             <label for="modal_display_address">OLED address (0x3C or 0x3D) </label>
             <input type="text" class="form-control" placeholder="" id="modal_display_address">
           </div>
+		  <div class="form-group">
+            <label for="modal_display_update">Display update interval (in sec) </label>
+            <input type="text" class="form-control" placeholder="" id="modal_display_update">
+          </div>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_display_btn_save">Save
             changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
@@ -245,12 +250,24 @@
             <label for="modal_misc_address">IP address MQTT broker (CBPI) </label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_address">
           </div>
+		  <div class="form-group">
+            <label for="modal_misc_upsen">Sensors update interval (in sec) </label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_upsen">
+          </div>
+		  <div class="form-group">
+            <label for="modal_misc_upact">Actors update interval (in sec) </label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_upact">
+          </div>
+		  <div class="form-group">
+            <label for="modal_misc_upind">Induction update interval (in sec) </label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_upind">
+          </div>
 		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_onErrorActors">
             <label class="form-check-label" for="modal_misc_onErrorActors">Switch off all actors on sensor error </label>
           </div>
           <div class="form-group">
-            <label for="modal_misc_address">Swtich off all actors delay in sec on sensor error </label>
+            <label for="modal_misc_delay_actors">Switch off all actors delay in sec on sensor error </label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_delay_actors">
           </div>
 		  <div class="form-check">
@@ -258,8 +275,16 @@
             <label class="form-check-label" for="modal_misc_onErrorInduction">Switch off induction on sensor error </label>
           </div>
           <div class="form-group">
-            <label for="modal_misc_address">Swtich off induction delay in sec on sensor error </label>
+            <label for="modal_misc_delay_induction">Switch off induction delay in sec on sensor error </label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_delay_induction">
+          </div>
+		  <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_misc_mdns">
+            <label class="form-check-label" for="modal_misc_mdns">Activate multicast DNS (mDNS) </label>
+          </div>
+          <div class="form-group">
+            <label for="modal_misc_mdns_name">Enter a mDNS name (e.g. brew01)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_mdns_name">
           </div>
 		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_reset">
@@ -365,15 +390,39 @@
           }
         }
         else {
-          displayRender += "Display disabled </li>";
+          displayRender += "Display disabled ";
         }
+		displayRender += " </span> </li>";
         $('#oledDisplay').html(displayRender);
       });
-	  
-	  
+	  	  
 	  $.get("/reqMiscSet", function (data) {
-        let displayRender = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
-        $('#miscSettings').html(displayRender);
+        let miscRender = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
+		miscRender += " MQTT broker IP <span class='badge'>";
+        miscRender += data.MQTTHOST;
+		miscRender += "</span></li> <li class='list-group-item d-flex justify-content-between align-items-center'> Switch off actors on error <span class='badge";
+        if (data.enable_actors) {
+          miscRender += " badge-success'> ON";
+         }
+        else {
+          miscRender += " badge-danger'> OFF";
+        }
+		miscRender += "</span></li> <li class='list-group-item d-flex justify-content-between align-items-center'> Switch off induction on error <span class='badge ";
+        if (data.enable_induction) {
+          miscRender += " badge-success'> ON";
+        }
+        else {
+          miscRender += " badge-danger'> OFF";
+        }
+		miscRender += "</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Debug output serial monitor <span class='badge ";
+        if (data.debug) {
+          miscRender += " badge-success'> ON";
+        }
+        else {
+          miscRender += " badge-danger'> OFF";
+        }
+		miscRender += " </span> </li>";
+		$('#miscSettings').html(miscRender);
       });
     }
 
@@ -608,6 +657,7 @@
       var button = $(event.relatedTarget) // Button that triggered the modal
       var isEnabled;
 	  var address;
+	  var updisp;
 
       $.ajax({
         url: '/reqDisp?req=isEnabled',
@@ -629,9 +679,20 @@
           address = data;
         }
       });
+	  $.ajax({
+        url: '/reqDisp?req=updisp',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          updisp = data;
+        }
+      });
       
       var modal = $(this)
 	  modal.find('#modal_display_address').val(address)
+	  modal.find('#modal_display_update').val(updisp)
       if (isEnabled == "1") { modal.find('#modal_display_enabled').prop("checked", true) }
       else { modal.find('#modal_display_enabled').prop("checked", false) }
 
@@ -641,6 +702,7 @@
 	$("#modal_display_btn_save").click(function () {
       var modal = $('#display_modal')
 	  var address = modal.find('#modal_display_address').val()
+	  var updisp = modal.find('#modal_display_update').val()
 	  
       if (modal.find('#modal_display_enabled').prop("checked") == true) {
         var isenabled = "1"
@@ -649,7 +711,7 @@
       }
 
       $.ajax({
-        url: '/setDisp?enabled=' + isenabled + '&address=' + address,
+        url: '/setDisp?enabled=' + isenabled + '&address=' + address + '&updisp=' + updisp,
         type: 'POST',
         dataType: 'html',
         async: false,
@@ -661,6 +723,8 @@
 	$('#misc_modal').on('show.bs.modal', function (event) {
       var button = $(event.relatedTarget) // Button that triggered the modal
 	  var mqttaddress;
+	  var mdns;
+	  var mdns_name;
 	  var reset;
 	  var clear;
 	  var enable_actors;
@@ -668,6 +732,9 @@
 	  var enable_induction;
 	  var delay_induction;
 	  var debug;
+	  var upsen;
+	  var upact;
+	  var upind;
 
 	  $.ajax({
         url: '/reqMisc?req=MQTTHOST',
@@ -677,6 +744,25 @@
         cache: false,
         success: function (data) {
           mqttaddress = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=mdns',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          mdns = data;
+        }
+      });$.ajax({
+        url: '/reqMisc?req=mdns_name',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          mdns_name = data;
         }
       });
 	  $.ajax({
@@ -729,10 +815,42 @@
           debug = data;
         }
       });
+	  $.ajax({
+        url: '/reqMisc?req=upsen',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          upsen = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=upact',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          upact = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=upind',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          upind = data;
+        }
+      });
       
       var modal = $(this)
 	  modal.find('#modal_misc_address').val(mqttaddress)
-	  
+	  modal.find('#modal_misc_mdns_name').val(mdns_name)
+	  if (mdns == "1") { modal.find('#modal_misc_mdns').prop("checked", true) }
+      else { modal.find('#modal_misc_mdns').prop("checked", false) }
 	  if (enable_actors == "1") { modal.find('#modal_misc_onErrorActors').prop("checked", true) }
       else { modal.find('#modal_misc_onErrorActors').prop("checked", false) }
 	  if (enable_induction == "1") { modal.find('#modal_misc_onErrorInduction').prop("checked", true) }
@@ -743,6 +861,9 @@
 	  modal.find('#modal_misc_delay_induction').val(delay_induction)
       modal.find('#modal_misc_reset').prop("checked", false)
 	  modal.find('#modal_misc_clear').prop("checked", false)
+	  modal.find('#modal_misc_upsen').val(upsen)
+	  modal.find('#modal_misc_upact').val(upact)
+	  modal.find('#modal_misc_upind').val(upind)
 	  
       var modal = $(this)
 	});
@@ -750,6 +871,8 @@
 	$("#modal_misc_btn_save").click(function () {
       var modal = $('#misc_modal')
 	  var mqttaddress = modal.find('#modal_misc_address').val()
+	  var mdns_name = modal.find('#modal_misc_mdns_name').val()
+	  var mdns = modal.find('#modal_misc_mdns').val()
 	  var enable_actors = modal.find('#modal_misc_onErrorActors').val()
 	  var delay_actors = modal.find('#modal_misc_delay_actors').val()
 	  var enable_induction = modal.find('#modal_misc_onErrorInduction').val()
@@ -757,7 +880,15 @@
 	  var reset = modal.find('#modal_misc_reset').val()
 	  var clear = modal.find('#modal_misc_clear').val()
 	  var debug = modal.find('#modal_misc_debug').val()
+	  var upsen = modal.find('#modal_misc_upsen').val()
+	  var upact = modal.find('#modal_misc_upact').val()
+	  var upind = modal.find('#modal_misc_upind').val()
 	  
+	  if (modal.find('#modal_misc_mdns').prop("checked") == true) {
+        var mdns = "1"
+      } else {
+        var mdns = "0"
+      }
 	  if (modal.find('#modal_misc_onErrorActors').prop("checked") == true) {
         var enable_actors = "1"
       } else {
@@ -785,7 +916,7 @@
       }
 
       $.ajax({
-        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_actors=' + enable_actors + '&delay_actors=' + delay_actors + '&enable_induction=' + enable_induction + '&delay_induction=' + delay_induction +'&debug=' + debug,
+        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_actors=' + enable_actors + '&delay_actors=' + delay_actors + '&enable_induction=' + enable_induction + '&delay_induction=' + delay_induction + '&debug=' + debug + '&mdns=' + mdns + '&mdns_name=' + mdns_name + '&upsen=' + upsen + '&upact=' + upact + '&upind=' + upind,
         type: 'POST',
         dataType: 'html',
         async: false,
@@ -818,6 +949,14 @@
 	$("#btn_disable_display").click(function () {
       $.ajax({
         url: '/displayOff',
+        type: 'POST',
+        async: true,
+        cache: false
+      });
+    });
+	$("#btn_ota").click(function () {
+      $.ajax({
+        url: '/OTA',
         type: 'POST',
         async: true,
         cache: false

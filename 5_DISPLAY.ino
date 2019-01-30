@@ -11,8 +11,7 @@ class oled
     bool actOK = true;
     bool indOK = true;
     bool wlanOK = true;
-    bool mqttOK = true;
-    bool otaOK = true;
+    bool mqttOK = false;
 
     oled() {
     }
@@ -52,20 +51,9 @@ class oled
     {
       t = ""; // clear value for display
       time_t local, utc;
-      if (lastNTPupdate == 0) timeClient.update();  // init time first loop
-
       if (millis() > (lastNTPupdate + NTP_INTERVAL))
       {
-        //timeClient.update();
-        // update the NTP client and get the UNIX UTC timestamp
-        if (!timeClient.update())
-        {
-          unsigned long pause = millis(); // if network is up and running just wait a second for NTP
-          while (millis() < pause + 2000) {
-            //wait approx. 1sec
-          }
-          timeClient.update();
-        }
+        cbpiEventSystem(EM_NTP);
         lastNTPupdate = millis();
       }
       unsigned long epochTime =  timeClient.getEpochTime();
@@ -86,7 +74,6 @@ class oled
 }
 
 oledDisplay = oled();
-
 
 void turnDisplayOff() {
   if (oledDisplay.dispEnabled) {
@@ -109,6 +96,7 @@ void handleRequestDisplay() {
   displayResponse["enabled"] = 0;
   displayResponse["displayOn"] = 0;
   displayResponse["enabled"] = oledDisplay.dispEnabled;
+  displayResponse["updisp"] = DISP_UPDATE;
   if (oledDisplay.dispEnabled == 1) {
     displayResponse["displayOn"] = 1;
   }
@@ -129,12 +117,15 @@ void handleRequestDisp() {
     if (oledDisplay.dispEnabled) {
       message = "1";
     }
-
     goto SendMessage;
   }
   if (request == "address") {
     message = "0";
     message = String(decToHex(oledDisplay.address, 2));
+    goto SendMessage;
+  }
+  if (request == "updisp") {
+    message = DISP_UPDATE / 1000;
     goto SendMessage;
   }
 SendMessage:
@@ -160,6 +151,12 @@ void handleSetDisp() {
       char copy[4];
       dispAddress.toCharArray(copy, 4);
       address = strtol(copy, 0, 16);
+    }
+    if (server.argName(i) == "updisp")  {
+      int newdup = server.arg(i).toInt();
+      if (newdup > 0) {
+        DISP_UPDATE = newdup * 1000;
+      }
     }
     yield();
   }
@@ -336,7 +333,7 @@ void showDispSet(String value)    // Show current station mode
   display.display();
 }
 
-void showDispSet()    // Show current station mode
+void showDispSet()                // Show current station mode
 {
   display.setTextSize(1);
   display.setTextColor(WHITE);

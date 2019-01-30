@@ -2,34 +2,23 @@ void listenerSystem( int event, int parm )                           // System e
 {
   switch (parm)
   {
-    case 0:       //
+    case EM_OK:       // Normal mode
       break;
-    case 1:       // WLAN error
+    // 1 - 9 Error events
+    case EM_WLANER:       // WLAN error
       oledDisplay.wlanOK = false;
       // Stop actors
       if (StopActorsOnError && lastSysAct == 0) {
         lastSysAct = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on WLAN error: ");
-        DBG_PRINT((lastSysAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysAct / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSysAct % 60);
+        DBG_PRINTLNTS(lastSysAct);
         DBG_PRINT("Wait on error actors: ");
         DBG_PRINTLN(wait_on_error_actors);
       }
       if (StopInductionOnError && lastSysInd == 0) {
         lastSysInd = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on WLAN error: ");
-        DBG_PRINT((lastSysInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysInd / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSysInd % 60);
+        DBG_PRINTLNTS(lastSysInd);
         DBG_PRINT("Wait on error induction: ");
         DBG_PRINTLN(wait_on_error_induction);
       }
@@ -37,18 +26,8 @@ void listenerSystem( int event, int parm )                           // System e
       if (millis() > lastSysAct + wait_on_error_actors)      // Wait for approx WAIT_ON_ERROR/1000 seconds before switch off all actors
       {
         if (StopActorsOnError) {
-          for (int i = 0; i < numberOfActors; i++)
-          {
-            if (actors[i].isOn) {
-              DBG_PRINT("Set actor ");
-              DBG_PRINT(i);
-              DBG_PRINTLN(" to off due to WLAN error");
-              actors[i].isOn = false;
-              actors[i].Update();
-              //actors[i].publishmqtt(); // Not yet ready
-
-            }
-          }
+          DBG_PRINTLN("Switch actors off due to WLAN error");
+          cbpiEventActors(EM_ACTER);
           lastSysAct = 0;
         }
       }
@@ -58,140 +37,104 @@ void listenerSystem( int event, int parm )                           // System e
         if (inductionCooker.isInduon && StopInductionOnError)
         {
           DBG_PRINTLN("Set induction off due to WLAN error");
-          inductionCooker.isInduon = false;
-          inductionCooker.Update();
-          //inductionCooker.publishmqtt(); // Not yet ready
-          lastSysInd = 0;                              // Delete Timestamp after event
+          cbpiEventInduction(EM_INDER);
+          lastSysInd = 0;                                       // Delete Timestamp after event
         }
       }
       break;
-
-    case 2:       // MQTT Error
+    case EM_MQTTER:       // MQTT Error
       oledDisplay.mqttOK = false;
       // Stop actors
       if (StopActorsOnError && lastSysAct == 0) {
         lastSysAct = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on MQTT error: ");
-        DBG_PRINT((lastSysAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysAct / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSysAct % 60);
+        DBG_PRINTLNTS(lastSysAct);
         DBG_PRINT("Wait on error actors: ");
         DBG_PRINTLN(wait_on_error_actors);
       }
       if (StopInductionOnError && lastSysInd == 0) {
         lastSysInd = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on MQTT error: ");
-        DBG_PRINT((lastSysInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSysInd / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSysInd % 60);
+        DBG_PRINTLNTS(lastSysInd);
         DBG_PRINT("Wait on error induction: ");
         DBG_PRINTLN(wait_on_error_induction);
       }
       if (millis() > lastSysAct + wait_on_error_actors)      // Wait for approx WAIT_ON_ERROR/1000 seconds before switch off all actors
       {
         if (StopActorsOnError) {
-          for (int i = 0; i < numberOfActors; i++)
-          {
-            if (actors[i].isOn) {
-              DBG_PRINT("Set actor ");
-              DBG_PRINT(i);
-              DBG_PRINTLN(" to off due to MQTT error");
-              actors[i].isOn = false;
-              actors[i].Update();
-              //actors[i].publishmqtt(); // Not yet ready
-            }
-          }
+          DBG_PRINTLN("Switch actors off due to MQTT error");
+          cbpiEventActors(EM_ACTER);
           lastSysAct = 0;
         }
       }
-      if (millis() > lastSysInd + wait_on_error_induction)     // Wait for approx WAIT_ON_ERROR/1000 seconds before switch off all actors
+      if (millis() > lastSysInd + wait_on_error_induction)    // Wait for approx WAIT_ON_ERROR/1000 seconds before switch off all actors
       {
         // Stop induction
         if (inductionCooker.isInduon && StopInductionOnError)
         {
           DBG_PRINTLN("Set induction off due to MQTT error");
-          inductionCooker.isInduon = false;
-          inductionCooker.Update();
-          //inductionCooker.publishmqtt(); // Not yet ready
-          lastSysInd = 0;                              // Delete Timestamp after event
+          cbpiEventInduction(EM_INDER);
+          lastSysInd = 0;                                     // Delete Timestamp after event
         }
       }
       break;
-
-    case 6:       // SPIFFS error
+    case EM_SPIFFS:       // SPIFFS error (6)
       DBG_PRINT("SPIFFS Mount failed");
+      cbpiEventActors(EM_ACTER);
+      cbpiEventInduction(EM_INDER);
       break;
-    case 7:       // MDNS error
-      DBG_PRINT("MDNS failed");
-      break;
-    case 8:       // Webserver error
+
+    case EM_WEBER:       // Webserver error (7) - not yet ready
       DBG_PRINT("Webserver failed");
+      cbpiEventActors(EM_ACTER);
+      cbpiEventInduction(EM_INDER);
       break;
-    case 10:      // Disable MQTT - this event is called manuell. Do not use WAIT_ON_ERROR before switch off
+
+    // 10-19 System triggered events
+    case EM_MQTTDIS:      // Disable MQTT (10) - manual task
       // Stop actors
-      showDispSet("MQTT error");
       if (StopActorsOnError) {
-        for (int i = 0; i < numberOfActors; i++)
-        {
-          if (actors[i].isOn) {
-            DBG_PRINT("Set actor ");
-            DBG_PRINT(i);
-            DBG_PRINTLN(" to off due to WLAN error");
-            actors[i].isOn = false;
-            actors[i].Update();
-            //actors[i].publishmqtt();
-          }
-        }
+        DBG_PRINTLN("Switch actors off due to MQTT disabled");
+        cbpiEventActors(EM_ACTER);
       }
       // Stop induction
       if (inductionCooker.isInduon && StopInductionOnError)
       {
         DBG_PRINTLN("Set induction off due to MQTT disabled");
-        inductionCooker.isInduon = false;
-        inductionCooker.Update();
-        //inductionCooker.publishmqtt();
+        cbpiEventInduction(EM_INDER);
       }
-      //mqttCommunication = false;
       server.send(200, "text/plain", "CAUTION! I don't work yet: turned off, please reboot to turn on again...");
       break;
-
-    case 11:  // Reboot ESP - this event is called manuell. Do not use WAIT_ON_ERROR before switch off
-      //showDispSet("Reboot device");
+    case EM_REBOOT:  // Reboot ESP (11) - manual task
       // Stop actors
-      for (int i = 0; i < numberOfActors; i++)
-      {
-        if (actors[i].isOn) {
-          DBG_PRINT("Set actor ");
-          DBG_PRINT(i);
-          DBG_PRINTLN(" to off due to WLAN error");
-          actors[i].isOn = false;
-          actors[i].Update();
-          //actors[i].publishmqtt();
-        }
-      }
+      DBG_PRINTLN("Switch actors off due to reboot");
+      cbpiEventActors(EM_ACTER);
       // Stop induction
       if (inductionCooker.isInduon) {
         DBG_PRINTLN("Set induction off due to reboot");
-        inductionCooker.isInduon = false;
-        inductionCooker.Update();
-        //inductionCooker.publishmqtt();
+        cbpiEventInduction(EM_INDER);
       }
+//      unsigned long last;
+//      last = millis();
+//      int wait = max(IND_UPDATE, ACT_UPDATE);
+//      while (millis() < last + wait + PAUSE1SEC)
+//      {
+//        // wait for 
+//      }
       server.send(200, "text/plain", "rebooting...");
-      //showDispClear();
+      SPIFFS.end(); // unmount SPIFFS
       ESP.restart();
       break;
+    case EM_OTASET:       // Setup OTA Service (12)
+      DBG_PRINT("Start OTA");
+      startOTA = true;
+      setupOTA();
+      break;
 
+    // System run & set events
     case EM_WLAN:       // check WLAN (20)
       // ToDo: Check WLAN status
-      if (WiFi.status() != WL_CONNECTED) cbpiEventSystem(1);
+      if (WiFi.status() != WL_CONNECTED) cbpiEventSystem(EM_WLANER);
       else oledDisplay.wlanOK = true;
 
       //         WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
@@ -209,20 +152,21 @@ void listenerSystem( int event, int parm )                           // System e
 
       break;
     case EM_OTA:        // check OTA (21)
-      oledDisplay.otaOK = true;
-      ArduinoOTA.handle();
+      if (startOTA) {
+        ArduinoOTA.handle();
+      }
       break;
     case EM_MQTT:       // check MQTT (22)
       if ((numberOfActors + numberOfSensors > 0) || inductionCooker.isEnabled) // anything to subscribe?
       {
-        yield();
         if (!client.connected())
         {
           oledDisplay.mqttOK = false;
+          cbpiEventSystem(EM_MQTTER);
           if (millis() > (mqttconnectlasttry + MQTT_DELAY)) {
             DBG_PRINT("MQTT Trying to connect. Device name: ");
             DBG_PRINTLN(mqtt_clientid);
-            oledDisplay.mqttOK = false;
+            //oledDisplay.mqttOK = false;
             if (client.connect(mqtt_clientid)) {
               DBG_PRINTLN("MQTT connect successful. Subscribing.");
               for (int i = 0; i < numberOfActors; i++) {
@@ -238,12 +182,32 @@ void listenerSystem( int event, int parm )                           // System e
           client.loop();
         }
       }
+      else {
+        oledDisplay.mqttOK = false;
+      }
       break;
     case EM_WEB:  // Webserver (23)
       server.handleClient();
       break;
     case EM_MDNS: // check MDSN (24)
-      MDNS.update();
+      if (startMDNS) mdns.update();
+      break;
+    case EM_NTP:       // NTP Update (25)
+      timeClient.update();
+    case EM_MDNSET:       // MDNS setup (26)
+      if (startMDNS && nameMDNS[0] != '\0' && WiFi.status() != WL_CONNECTED) {
+        if (!mdns.begin(nameMDNS, WiFi.localIP())) {
+          DBG_PRINT("EM: MDNS failed");
+          startMDNS = false;
+        }
+        else {
+          DBG_PRINT("EM MDNS started: ");
+          DBG_PRINT(nameMDNS);
+          DBG_PRINT(" to: ");
+          IPAddress ip = WiFi.localIP();
+          DBG_PRINTLN(ip);
+        }
+      }
       break;
     case EM_DISPUP:      // Display screen output update (30)
       if (oledDisplay.dispEnabled) {
@@ -260,62 +224,42 @@ void listenerSensors( int event, int parm )                           // Sensor 
 {
   // 1:= Sensor on Err
   switch (parm) {
-    case 0:
+    case EM_OK:
       //DBG_PRINTLN("EM: sensors event ok");
       // all sensors ok
       break;
-    case 1:
+    case EM_CRCER:
       // Sensor CRC ceck failed
       DBG_PRINTLN("EM: received event sensor crc check failed");
-    case 2:
+    case EM_DEVER:
       // -127°C device error
       DBG_PRINTLN("EM: received event sensor data error (-127°C)");
-    case 3:
+    case EM_UNPL:
       // sensor unpluged
       DBG_PRINTLN("EM: received event sensor not connected");
     //break;  // uncomment this line, if you don't want to stop actors when sensor is unpluged (share device)
-    case 4:
+    case EM_SENER:
       // all other errors
       // Stop actors
       if (StopActorsOnError && lastSenAct == 0) {
         lastSenAct = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on sensor error: ");
-        DBG_PRINT((lastSenAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSenAct / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSenAct / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSenAct % 60);
+        DBG_PRINTLNTS(lastSenAct);
         DBG_PRINT("Wait on error actors: ");
         DBG_PRINTLN(wait_on_error_actors);
       }
       if (StopInductionOnError && lastSenInd == 0) {
         lastSenInd = millis();       // Timestamp on error
         DBG_PRINT("Create Timestamp on sensor error: ");
-        DBG_PRINT((lastSenInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSenInd / 3600) % 24);
-        DBG_PRINT(":");
-        DBG_PRINT((lastSenInd / 60) % 60);
-        DBG_PRINT(":");
-        DBG_PRINTLN(lastSenInd % 60);
+        DBG_PRINTLNTS(lastSenInd);
         DBG_PRINT("Wait on error induction: ");
         DBG_PRINTLN(wait_on_error_induction);
       }
       if (millis() > lastSenAct + wait_on_error_actors)      // Wait for approx WAIT_ON_ERROR/1000 seconds before switch off all actors
       {
         if (StopActorsOnError) {
-          for (int i = 0; i < numberOfActors; i++) {
-            if (actors[i].isOn) {
-              DBG_PRINT("Set actor ");
-              DBG_PRINT(i);
-              DBG_PRINTLN(" to off due to Sensor error");
-              actors[i].isOn = false;
-              actors[i].Update();
-              //actors[i].publishmqtt();
-            }
-          }
+          DBG_PRINTLN("Switch actors off due to Sensor error");
+          cbpiEventActors(EM_ACTER);
           lastSenAct = 0;                              // Delete Timestamp after event
         }
       }
@@ -324,9 +268,7 @@ void listenerSensors( int event, int parm )                           // Sensor 
         // Stop Induction
         if (inductionCooker.isInduon && StopInductionOnError) {
           DBG_PRINTLN("Set induction off due to sensor error");
-          inductionCooker.isInduon = false;
-          inductionCooker.Update();
-          //inductionCooker.publishmqtt();
+          cbpiEventInduction(EM_INDER);
           lastSenInd = 0;                              // Delete Timestamp after event
         }
       }
@@ -340,19 +282,15 @@ void listenerSensors( int event, int parm )                           // Sensor 
 void listenerActors( int event, int parm )                           // Actor event listener
 {
   switch (parm) {
-    case 0:
+    case EM_OK:
       //DBG_PRINTLN("EM: actors event ok");
       break;
-    case 1:
-      if (StopActorsOnError) {
-        for (int i = 0; i < numberOfActors; i++) {
-          DBG_PRINT("Set actor ");
-          DBG_PRINT(i);
-          DBG_PRINTLN(" to off due to Actor error");
-          actors[i].isOn = false;
-          actors[i].Update();
-          //actors[i].publishmqtt();
-        }
+    case EM_ACTER:
+      DBG_PRINTLN("EM_ACTER called");
+      for (int i = 0; i < numberOfActors; i++) {
+        actors[i].isOn = false;
+        actors[i].Update();
+        //actors[i].publishmqtt(); // not yet ready
       }
       break;
     default:
@@ -366,55 +304,18 @@ void listenerInduction( int event, int parm )                           // Induc
     case 0:
       //DBG_PRINTLN("EM: induction event ok");
       break;
-    case 1:
-      if (inductionCooker.isInduon && StopInductionOnError) {
-        DBG_PRINTLN("Set induction off due to induction error");
+    case EM_INDER:
+      DBG_PRINTLN("EM_INDER called");
+      if (inductionCooker.isInduon) {
         inductionCooker.isInduon = false;
         inductionCooker.Update();
-        //inductionCooker.publishmqtt();
+        //inductionCooker.publishmqtt(); // not yet ready
       }
       break;
     default:
       break;
   }
   handleInduction();
-}
-
-// Some helper functions WebIf
-void rebootDevice()
-{
-  cbpiEventSystem(11);
-}
-
-// TODO: Implement
-void turnMqttOff()
-{
-  cbpiEventSystem(10);
-}
-
-void DBG_PRINT(String value)
-{
-  if (setDEBUG) Serial.print(value);
-}
-void DBG_PRINT(int value)
-{
-  if (setDEBUG) Serial.print(value);
-}
-void DBG_PRINTHEX(int value)
-{
-  if (setDEBUG) Serial.print(value, HEX);
-}
-void DBG_PRINTLN(String value)
-{
-  if (setDEBUG) Serial.println(value);
-}
-void DBG_PRINTLN(int value)
-{
-  if (setDEBUG) Serial.println(value);
-}
-void DBG_PRINTLNHEX(int value)
-{
-  if (setDEBUG) Serial.println(value, HEX);
 }
 
 // EventManer Queues

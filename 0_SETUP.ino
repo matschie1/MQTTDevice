@@ -36,9 +36,9 @@ void setup()
   }
 
   // Load configuration
-  ESP.wdtFeed();
   if (SPIFFS.exists("/config.json")) 
   {
+    ESP.wdtFeed();
     loadConfig();
   }
 
@@ -59,15 +59,16 @@ void setup()
   dispStartScreen();
 
   // Load mDNS
-  ESP.wdtFeed();
-  if (!MDNS.begin(mqtt_clientid))
-  {
-    cbpiEventSystem(EM_MDNSER);
+  if (startMDNS) {
+    ESP.wdtFeed();
+    cbpiEventSystem(EM_MDNSET);
   }
 
   // Init Arduino Over The Air
-  ESP.wdtFeed();
-  setupOTA();
+  if (startOTA) {
+    ESP.wdtFeed();
+    setupOTA(); 
+  }
 
   // Start MQTT
   client.setServer(mqtthost, 1883);
@@ -78,10 +79,12 @@ void setup()
   setupServer();
 
   ESP.wdtFeed();
+  cbpiEventSystem(EM_NTP);            // NTP handle
   cbpiEventSystem(EM_MDNS);           // MDNS handle
   cbpiEventSystem(EM_WLAN);           // Check WLAN
   cbpiEventSystem(EM_MQTT);           // Check MQTT
-
+  cbpiEventSystem(EM_DISPUP);         // Update display
+  
   while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
   {
     gEM.processEvent();
@@ -107,6 +110,7 @@ void setupServer()
   server.on("/delSensor", handleDelSensor); // Sensor löschen
   server.on("/delActor", handleDelActor);   // Aktor löschen
   server.on("/reboot", rebootDevice); // reboots the whole Device
+  server.on("/OTA", OTA);
   server.on("/mqttOff", turnMqttOff); // Turns off MQTT completly until reboot
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
@@ -136,8 +140,16 @@ void setupOTA()
 {
   ArduinoOTA.setHostname(mqtt_clientid);
   ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+      DBG_PRINTLN("OTA starting - updateing sketch");
+    } else { // U_SPIFFS
+      type = "filesystem";
+      DBG_PRINTLN("OTA starting - updateing SPIFFS");
+      //SPIFFS.end();
+    }
     showDispOTA(0, 100);
-    DBG_PRINTLN("OTA starting...");
   });
   ArduinoOTA.onEnd([]() {
     DBG_PRINTLN("OTA update finished!");

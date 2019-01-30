@@ -49,67 +49,6 @@ bool loadFromSpiffs(String path) {
   return true;
 }
 
-/*
-void mqttreconnect() {
-  if (millis() > mqttconnectlasttry + MQTT_DELAY) {
-    DBG_PRINT("MQTT Trying to connect. Device name: ");
-    DBG_PRINT(mqtt_clientid);
-    if (client.connect(mqtt_clientid)) {
-      DBG_PRINT("MQTT connect successful. Subscribing.");
-      goto Subscribe;
-    }
-  }
-  mqttconnectlasttry = millis();
-  return;
-
-Subscribe:
-  
-  for (int i = 0; i < numberOfActors; i++) {
-    actors[i].mqtt_subscribe();
-    yield();
-  }
-  inductionCooker.mqtt_subscribe();
-}
-
-
-  void mqttreconnect() {
-  // 10 Tries for reconnect
-  // Wenn Client nicht verbunden, Verbindung herstellen
-  if (!client.connected()) {
-    if (millis() > mqttconnectlasttry + MQTT_DELAY) {
-      DBG_PRINT("MQTT Trying to connect. Device name: ");
-      DBG_PRINT(mqtt_clientid);
-      for (int i = 0; i < MQTT_NUM_TRY; i++) {
-        DBG_PRINT(".. Try #");
-        DBG_PRINTLN(i + 1);
-        if (client.connect(mqtt_clientid)) {
-          DBG_PRINT("MQTT connect successful. Subscribing.");
-          goto Subscribe;
-        }
-        unsigned long pause = millis();
-        while (millis() < pause + 1000) {
-          //wait approx. 1 sec
-        }
-      }
-      mqttconnectlasttry = millis();
-      DBG_PRINTLN("");
-      DBG_PRINT("MQTT connect failed. Try again in ");
-      DBG_PRINT(MQTT_DELAY / 1000);
-      DBG_PRINTLN(" seconds");
-      return;
-    }
-  }
-
-  Subscribe:
-  for (int i = 0; i < numberOfActors; i++) {
-    actors[i].mqtt_subscribe();
-    yield();
-  }
-  inductionCooker.mqtt_subscribe();
-  }
-
-*/
-
 void mqttcallback(char* topic, byte* payload, unsigned int length) {
 
   DBG_PRINTLN("Received MQTT");
@@ -139,7 +78,18 @@ void mqttcallback(char* topic, byte* payload, unsigned int length) {
 }
 
 void handleRequestMiscSet() {
-  server.send(200, "application/json", "");
+  StaticJsonBuffer<1024> jsonBuffer;
+  JsonObject& miscResponse = jsonBuffer.createObject();
+  miscResponse["MQTTHOST"] = mqtthost;
+  miscResponse["enable_actors"] = StopActorsOnError;
+  miscResponse["enable_induction"] = StopInductionOnError;
+  miscResponse["delay_actors"] = wait_on_error_actors / 1000;
+  miscResponse["delay_induction"] = wait_on_error_induction / 1000;
+  miscResponse["debug"] = setDEBUG;
+  
+  String response;
+  miscResponse.printTo(response);
+  server.send(200, "application/json", response);
 }
 
 void handleRequestMisc() {
@@ -148,6 +98,19 @@ void handleRequestMisc() {
 
   if (request == "MQTTHOST") {
     message = mqtthost;
+    goto SendMessage;
+  }
+  if (request == "mdns_name") {
+    message = nameMDNS;
+    goto SendMessage;
+  }
+  if (request == "mdns") {
+    if (startMDNS) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
     goto SendMessage;
   }
   if (request == "enable_actors") {
@@ -185,6 +148,18 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
+  if (request == "upsen") {
+    message = SEN_UPDATE / 1000;
+    goto SendMessage;
+  }
+  if (request == "upact") {
+    message = ACT_UPDATE / 1000;
+    goto SendMessage;
+  }
+  if (request == "upind") {
+    message = IND_UPDATE / 1000;
+    goto SendMessage;
+  }
 
 SendMessage:
   server.send(200, "text/plain", message);
@@ -196,8 +171,9 @@ void handleSetMisc() {
       if (server.arg(i) == "1") {
         WiFi.disconnect();
         wifiManager.resetSettings();
-        unsigned long last = 0;
-        if (millis() > last + 2000)
+        
+        unsigned long last = millis();
+        while (millis() < last + PAUSE2SEC)
         {
           // just wait for approx 2sec
         }
@@ -209,8 +185,9 @@ void handleSetMisc() {
         SPIFFS.remove("/config.json");
         WiFi.disconnect();
         wifiManager.resetSettings();
-        unsigned long last = 0;
-        if (millis() > last + 2000)
+        
+        unsigned long last = millis();
+        while (millis() < last + PAUSE2SEC)
         {
           // just wait for approx 2sec
         }
@@ -219,6 +196,16 @@ void handleSetMisc() {
     }
     if (server.argName(i) == "MQTTHOST")  {
       server.arg(i).toCharArray(mqtthost, 16);
+    }
+    if (server.argName(i) == "mdns_name")  {
+      server.arg(i).toCharArray(nameMDNS, 16);
+    }
+    if (server.argName(i) == "mdns")  {
+      if (server.arg(i) == "1") {
+        startMDNS = true;
+      } else {
+        startMDNS = false;
+      }
     }
     if (server.argName(i) == "enable_actors")  {
       if (server.arg(i) == "1") {
@@ -247,7 +234,41 @@ void handleSetMisc() {
         setDEBUG = false;
       }
     }
+    if (server.argName(i) == "upsen")  {
+      int newsup = server.arg(i).toInt();
+      if (newsup > 0 ) {
+        SEN_UPDATE = newsup * 1000;
+      }
+    }
+    if (server.argName(i) == "upact")  {
+      int newaup = server.arg(i).toInt();
+      if (newaup > 0 ) {
+        ACT_UPDATE = newaup * 1000;
+      }
+    }
+    if (server.argName(i) == "upind")  {
+      int newiup = server.arg(i).toInt();
+      if (newiup > 0 ) {
+        IND_UPDATE = newiup * 1000;
+      }
+    }
     yield();
   }
   saveConfig();
+}
+
+// Some helper functions WebIf
+void rebootDevice()
+{
+  cbpiEventSystem(11);
+}
+
+void turnMqttOff()
+{
+  cbpiEventSystem(10);
+}
+
+void OTA()
+{
+  cbpiEventSystem(9);
 }
