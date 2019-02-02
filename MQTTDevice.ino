@@ -195,7 +195,3 @@ byte inductionStatus = 0;
 #define DISP_DEF_ADDRESS 0x3c           // Only used on init setup!
 Adafruit_SSD1306 display(-1);
 #include "icons.h"
-
-//const char* serverIndex = "<form method='POST' action='/firmware' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
-//#include <ESP8266HTTPClient.h>
-//#include <ESP8266httpUpdate.h>

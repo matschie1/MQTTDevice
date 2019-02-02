@@ -1,6 +1,5 @@
 class induction
 {
-
     unsigned long timeTurnedoff;
 
     long timeOutCommand = 5000;      // TimeOut für Seriellen Befehl
