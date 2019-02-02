@@ -16,6 +16,8 @@
 
 #include <ESP8266WiFi.h>        // Generelle WiFi Funktionalität
 #include <ESP8266WebServer.h>   // Unterstützung Webserver
+#include <ESP8266HTTPUpdateServer.h>
+
 #include <WiFiManager.h>        // WiFiManager zur Einrichtung
 #include <DNSServer.h>          // Benötigt für WiFiManager
 #include <PubSubClient.h>       // MQTT Kommunikation
@@ -49,6 +51,7 @@ WiFiManager wifiManager;
 WiFiClient espClient;
 PubSubClient client(espClient);
 MDNSResponder mdns;
+ESP8266HTTPUpdateServer httpUpdate;
 // Induktion
 /*  Signallaufzeiten */
 const int SIGNAL_HIGH = 5120;
@@ -159,7 +162,7 @@ long DISP_UPDATE = 10000;           //  NTP and display update
 #define PAUSE2SEC 2000
 
 bool startOTA = false;
-bool startMDNS = false;
+bool startMDNS = true;
 char nameMDNS[16];
 bool StopActorsOnError = false;             // Use webif to configure: switch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
 bool StopInductionOnError = false;          // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
@@ -192,3 +195,7 @@ byte inductionStatus = 0;
 #define DISP_DEF_ADDRESS 0x3c           // Only used on init setup!
 Adafruit_SSD1306 display(-1);
 #include "icons.h"
+
+//const char* serverIndex = "<form method='POST' action='/firmware' enctype='multipart/form-data'><input type='file' name='update'><input type='submit' value='Update'></form>";
+//#include <ESP8266HTTPClient.h>
+//#include <ESP8266httpUpdate.h>

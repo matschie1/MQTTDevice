@@ -268,7 +268,6 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
 
     void sendCommand(int command[33]) {
       digitalWrite(PIN_YELLOW, HIGH);
-      
       unsigned long last = millis();
       while (millis() < last + SIGNAL_START)
       {

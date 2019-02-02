@@ -201,6 +201,7 @@ void listenerSystem( int event, int parm )                           // System e
           startMDNS = false;
         }
         else {
+          mdns.begin(nameMDNS);
           DBG_PRINT("EM MDNS started: ");
           DBG_PRINT(nameMDNS);
           DBG_PRINT(" to: ");
