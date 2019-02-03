@@ -1,19 +1,38 @@
 /* PINMAP
-0   D3 | DO (PT100) | FIXED
-1 
-2   D4 | CLK (PT100) | FIXED
-3 
-4   D2 | DI (PT100) | FIXED
-5   D1 | CS Default | Port
-6 
-7 
-8 
-9   UNUSED
-10  
-11  
-12  D6
-13  D7
-14  D5 | OneWire | FIXED
-15  D8
-16  D0
+Arduino | Wemos D1 Mini | Usage | Configurable in Interface?
+0 | D3 | DO (PT100) | No
+1 | TX |            | No
+2 | D4 | CLK (PT100)| No
+3 | RX |            | No
+4 | D2 | DI (PT100) | No
+5 | D1 |            | Yes
+6    NOT_EXISTING
+7    NOT_EXISTING
+8    NOT_EXISTING
+9    NOT_EXISTING
+10   NOT_EXISTING
+11   NOT_EXISTING
+12 |D6 |            | Yes
+13 |D7 |            | Yes
+14 |D5 | OneWire    | No
+15 |D8 |            | Yes
+16 |D0 | CS Default | Yes
  */
+
+0
+0
+1
+0
+1
+0
+0
+0
+0
+0
+0
+0
+0
+1
+1
+0
+1

@@ -45,7 +45,7 @@
 */
 const byte PT_PINS[3] = {D4, D3, D2};
 // default pin for the CS of a PT sensor (for initial initialization, can be overwritten)
-const byte DEFAULT_CS_PIN = D1;
+const byte DEFAULT_CS_PIN = D0;
 
 // ranges from 9 to 12, higher is better (and slower!)
 #define ONE_WIRE_RESOLUTION 10
@@ -107,6 +107,7 @@ int CMD[6][33] = {
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}  // P5
 };
 
+// careful here, these are not the wemos-numbered GIPO (D0-D8) but all of them!
 bool pins_used[17]; // determines which pins currently are in use
 
 byte numberOfPTSensors = 0; // current number of PT100 sensors

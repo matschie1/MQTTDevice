@@ -125,7 +125,7 @@ class PTSensor
     Adafruit_MAX31865 maxChip = Adafruit_MAX31865(DEFAULT_CS_PIN, PT_PINS[0], PT_PINS[1], PT_PINS[2]);
 
   public:
-    byte csPin;
+    byte csPin = DEFAULT_CS_PIN; // set to default, otherwise would be "D3" (-> Arduino 0)
     byte numberOfWires;
     char mqttTopic[50]; // topic for mqtt sending
     String name;        // frontend name
@@ -176,8 +176,7 @@ class PTSensor
           Serial.print("Starting PT100 with ");
           Serial.print(newNumberOfWires);
           Serial.print(" wires. CS Pin is ");
-          Serial.println(csPin);
-
+          Serial.println(PinToString(csPin));
           if (newNumberOfWires == 4)
           {
             maxChip.begin(MAX31865_4WIRE);
@@ -497,7 +496,7 @@ void handleRequestSensorConfig()
       JsonObject &sensorJson = jsonBuffer.createObject();
       sensorJson["name"] = ptSensors[id].name;
       sensorJson["topic"] = ptSensors[id].mqttTopic;
-      sensorJson["csPin"] = ptSensors[id].csPin;
+      sensorJson["csPin"] = PinToString(ptSensors[id].csPin);
       sensorJson["numberOfWires"] = ptSensors[id].numberOfWires;
       sensorJson.printTo(response);
       server.send(200, "application/json", response);
