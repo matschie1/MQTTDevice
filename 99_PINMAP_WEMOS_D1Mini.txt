@@ -18,21 +18,4 @@ Arduino | Wemos D1 Mini | Usage | Configurable in Interface?
 15 |D8 |            | Yes
 16 |D0 | CS Default | Yes
  */
-
-0
-0
-1
-0
-1
-0
-0
-0
-0
-0
-0
-0
-0
-1
-1
-0
-1
+ 
