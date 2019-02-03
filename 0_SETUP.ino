@@ -7,8 +7,6 @@ void setup()
   pins_used[PT_PINS[0]] = true;
   pins_used[PT_PINS[1]] = true;
   pins_used[PT_PINS[2]] = true;
-  Serial.println(PT_PINS[1]);
-  Serial.println(pins_used[PT_PINS[1]]);
 
   // Sensoren Starten
   DS18B20.begin();
