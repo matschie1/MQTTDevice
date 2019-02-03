@@ -38,7 +38,8 @@ bool loadConfig() {
       String script = jsonactor["SCRIPT"];
       String aname = jsonactor["NAME"];
       String ainverted = jsonactor["INVERTED"];
-      actors[i].change(pin, script, aname, ainverted);
+      String aswitchable = jsonactor["SWITCHABLE"];
+      actors[i].change(pin, script, aname, ainverted, aswitchable);
       DBG_PRINT("Actor ");
       DBG_PRINT(aname);
       DBG_PRINT(" SCRIPT ");
@@ -46,7 +47,9 @@ bool loadConfig() {
       DBG_PRINT(" PIN ");
       DBG_PRINT(pin);
       DBG_PRINT(" inverted ");
-      DBG_PRINTLN(ainverted);
+      DBG_PRINT(ainverted);
+      DBG_PRINT(" switchable ");
+      DBG_PRINTLN(aswitchable);
     }
   }
 
@@ -247,6 +250,16 @@ bool saveConfig()
     jsactor["NAME"] = actors[i].name_actor;
     jsactor["SCRIPT"] = actors[i].argument_actor;
     jsactor["INVERTED"] = actors[i].getInverted();
+    jsactor["SWITCHABLE"] = actors[i].getSwitchable();
+    DBG_PRINT("Actor ");
+    DBG_PRINT(actors[i].name_actor);
+    DBG_PRINT(" Argument ");
+    DBG_PRINT(actors[i].argument_actor);
+    DBG_PRINT(" inverted ");
+    DBG_PRINT(actors[i].getInverted());
+    DBG_PRINT(" switchable ");
+    DBG_PRINT(actors[i].getSwitchable());
+    DBG_PRINTLN(" saved");
   }
   DBG_PRINT("Number of Actors saved: ");
   DBG_PRINTLN(numberOfActors);
@@ -259,6 +272,11 @@ bool saveConfig()
     jssensor["ADDRESS"] = sensors[i].getSens_adress_string();
     jssensor["NAME"] = sensors[i].sens_name;
     jssensor["SCRIPT"] = sensors[i].sens_mqtttopic;
+    DBG_PRINT("Sensor ");
+    DBG_PRINT(sensors[i].sens_name);
+    DBG_PRINT(" address ");
+    DBG_PRINT(sensors[i].getSens_adress_string());
+    DBG_PRINTLN(" saved");
   }
   DBG_PRINT("Number of Sensors saved: ");
   DBG_PRINTLN(numberOfSensors);
@@ -401,13 +419,13 @@ void DBG_PRINTLNHEX(int value)
 
 void DBG_PRINTLNTS(unsigned long value) // Timestamp
 {
-  value = value/1000;
+  value = value / 1000;
   if (setDEBUG) {
-    Serial.print((value/3600)%24); // Stunden
+    Serial.print((value / 3600) % 24); // Stunden
     Serial.print(":");
-    Serial.print((value/60)%60); // Minuten
+    Serial.print((value / 60) % 60); // Minuten
     Serial.print(":");
-    Serial.println(value%60); // Sekunden
+    Serial.println(value % 60); // Sekunden
   }
 }
 

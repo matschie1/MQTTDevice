@@ -12,13 +12,14 @@ class Actor
     String name_actor;
     byte power_actor;
     bool isOn;
+    bool switchable;
 
     // MQTT Publish
     char actor_mqtttopic[50];      // Für MQTT Kommunikation
 
-    Actor(String pin, String argument, String aname, String ainverted)
+    Actor(String pin, String argument, String aname, String ainverted, String aswitchable)
     {
-      change(pin, argument, aname, ainverted);
+      change(pin, argument, aname, ainverted, aswitchable);
     }
 
     void Update() {
@@ -38,7 +39,7 @@ class Actor
       }
     }
 
-    void change(String pin, String argument, String aname, String ainverted) {
+    void change(String pin, String argument, String aname, String ainverted, String aswitchable) {
       // Set PIN
       if (isPin(pin_actor)) {
         digitalWrite(pin_actor, HIGH);
@@ -64,7 +65,7 @@ class Actor
         mqtt_unsubscribe();
         argument_actor = argument;
         mqtt_subscribe();
-        
+
         // MQTT Publish - not yet ready
         // argument.toCharArray(actor_mqtttopic, argument.length() + 1);
       }
@@ -79,27 +80,31 @@ class Actor
         ON = LOW;
         OFF = HIGH;
       }
-
-    }
-
-/*    //    Not yet ready
-    void publishmqtt() {
-      if (client.connected()) {
-        StaticJsonBuffer<256> jsonBuffer;
-        JsonObject& json = jsonBuffer.createObject();
-        if (isOn) {
-          json["State"] = "on";
-          json["power"] = String(power_actor);
-        }
-        else
-          json["State"] = "off";
-
-        char jsonMessage[100];
-        json.printTo(jsonMessage);
-        client.publish(actor_mqtttopic, jsonMessage);
+      if (aswitchable == "1") {
+        switchable = true;
+      } else {
+        switchable = false;
       }
     }
-*/
+
+    /*    //    Not yet ready
+        void publishmqtt() {
+          if (client.connected()) {
+            StaticJsonBuffer<256> jsonBuffer;
+            JsonObject& json = jsonBuffer.createObject();
+            if (isOn) {
+              json["State"] = "on";
+              json["power"] = String(power_actor);
+            }
+            else
+              json["State"] = "off";
+
+            char jsonMessage[100];
+            json.printTo(jsonMessage);
+            client.publish(actor_mqtttopic, jsonMessage);
+          }
+        }
+    */
     void mqtt_subscribe() {
       if (client.connected()) {
         char subscribemsg[50];
@@ -155,17 +160,24 @@ class Actor
         return "0";
       }
     };
-
+    String getSwitchable() {
+      if (switchable) {
+        return "1";
+      }
+      else {
+        return "0";
+      }
+    }
 };
 
 /* Initialisierung des Arrays */
 Actor actors[6] = {
-  Actor("", "", "", ""),
-  Actor("", "", "", ""),
-  Actor("", "", "", ""),
-  Actor("", "", "", ""),
-  Actor("", "", "", ""),
-  Actor("", "", "", "")
+  Actor("", "", "", "", ""),
+  Actor("", "", "", "", ""),
+  Actor("", "", "", "", ""),
+  Actor("", "", "", "", ""),
+  Actor("", "", "", "", ""),
+  Actor("", "", "", "", "")
 };
 
 /* Funktionen für Loop */
@@ -222,6 +234,10 @@ void handleRequestActor() {
       message = actors[id].getInverted();
       goto SendMessage;
     }
+    if (request == "switchable") {
+      message = actors[id].getSwitchable();
+      goto SendMessage;
+    }
     message = "not found";
   }
   saveConfig();
@@ -241,6 +257,7 @@ void handleSetActor() {
   String ac_argument = actors[id].argument_actor;
   String ac_name = actors[id].name_actor;
   String ac_isinverted = actors[id].getInverted();
+  String ac_switchable = actors[id].getSwitchable();
 
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "name") {
@@ -255,10 +272,13 @@ void handleSetActor() {
     if (server.argName(i) == "inverted")  {
       ac_isinverted = server.arg(i);
     }
+    if (server.argName(i) == "switchable") {
+      ac_switchable = server.arg(i);
+    }
     yield();
   }
 
-  actors[id].change(ac_pin, ac_argument, ac_name, ac_isinverted);
+  actors[id].change(ac_pin, ac_argument, ac_name, ac_isinverted, ac_switchable);
 
   saveConfig();
   server.send(201, "text/plain", "created");
@@ -270,9 +290,9 @@ void handleDelActor() {
 
   for (int i = id; i < numberOfActors; i++) {
     if (i == 5) {
-      actors[i].change("", "", "", "");
+      actors[i].change("", "", "", "", "");
     } else {
-      actors[i].change(PinToString(actors[i + 1].pin_actor), actors[i + 1].argument_actor, actors[i + 1].name_actor, actors[i + 1].getInverted());
+      actors[i].change(PinToString(actors[i + 1].pin_actor), actors[i + 1].argument_actor, actors[i + 1].name_actor, actors[i + 1].getInverted(), actors[i + 1].getSwitchable());
     }
   }
 

@@ -135,6 +135,10 @@
             <input class="form-check-input" type="checkbox" value="" id="modal_actor_inverted">
             <label class="form-check-label" for="modal_actor_inverted"> Inverted GPIO </label>
           </div>
+		  <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_actor_switchable">
+            <label class="form-check-label" for="modal_actor_switchable"> Switch actor off on error event </label>
+          </div>
         </div>
         <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_actor_btn_save">Save changes</button>
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> <button type="button"
@@ -264,18 +268,18 @@
           </div>
 		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_onErrorActors">
-            <label class="form-check-label" for="modal_misc_onErrorActors">Switch off all actors on sensor error </label>
+            <label class="form-check-label" for="modal_misc_onErrorActors">Switch off selected actors on error event </label>
           </div>
           <div class="form-group">
-            <label for="modal_misc_delay_actors">Switch off all actors delay in sec on sensor error </label>
+            <label for="modal_misc_delay_actors">Switch off selected actors delay in sec </label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_delay_actors">
           </div>
 		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_onErrorInduction">
-            <label class="form-check-label" for="modal_misc_onErrorInduction">Switch off induction on sensor error </label>
+            <label class="form-check-label" for="modal_misc_onErrorInduction">Switch off induction on error event </label>
           </div>
           <div class="form-group">
-            <label for="modal_misc_delay_induction">Switch off induction delay in sec on sensor error </label>
+            <label for="modal_misc_delay_induction">Switch off induction delay in sec </label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_delay_induction">
           </div>
 		  <div class="form-check">
@@ -400,7 +404,7 @@
         let miscRender = "<li class='list-group-item d-flex justify-content-between align-items-center'> ";
 		miscRender += " MQTT broker IP <span class='badge'>";
         miscRender += data.MQTTHOST;
-		miscRender += "</span></li> <li class='list-group-item d-flex justify-content-between align-items-center'> Switch off actors on error <span class='badge";
+		miscRender += "</span></li> <li class='list-group-item d-flex justify-content-between align-items-center'> Switch off selected actors on error <span class='badge";
         if (data.enable_actors) {
           miscRender += " badge-success'> ON";
          }
@@ -433,6 +437,7 @@
       var actorscript;
       var actorpin;
       var actorinverted;
+	  var actorswitchable;
       $.ajax({
         url: '/reqActor?id=' + actorid + '&req=name',
         type: 'get',
@@ -463,6 +468,16 @@
           actorinverted = data;
         }
       });
+	  $.ajax({
+        url: '/reqActor?id=' + actorid + '&req=switchable',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          actorswitchable = data;
+        }
+      });
       var modal = $(this)
       modal.attr('actor_id', actorid)
       modal.find('#modal_actor_name').val(actorname)
@@ -471,6 +486,8 @@
       //  modal.find('#modal_actor_pin').val(actorpin)
       if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked", true) }
       else { modal.find('#modal_actor_inverted').prop("checked", false) }
+	  if (actorswitchable == "1") { modal.find('#modal_actor_switchable').prop("checked", true) }
+      else { modal.find('#modal_actor_switchable').prop("checked", false) }
     })
 
     $("#modal_actor_btn_save").click(function () {
@@ -483,9 +500,14 @@
       } else {
         var actorinverted = "0"
       }
+	  if (modal.find('#modal_actor_switchable').prop("checked") == true) {
+        var actorswitchable = "1"
+      } else {
+        var actorswitchable = "0"
+      }
       var actorid = modal.attr('actor_id')
       $.ajax({
-        url: '/setActor?id=' + actorid + '&name=' + actorname + '&script=' + actorscript + '&pin=' + actorpin + '&inverted=' + actorinverted,
+        url: '/setActor?id=' + actorid + '&name=' + actorname + '&script=' + actorscript + '&pin=' + actorpin + '&inverted=' + actorinverted + '&switchable=' + actorswitchable,
         type: 'POST',
         dataType: 'html',
         async: false,

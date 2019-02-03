@@ -135,7 +135,7 @@ void setupServer()
   
   server.onNotFound(handleWebRequests);           // Sonstiges
 
-  httpUpdate.setup(&server);
+  httpUpdate.setup(&server);  // ESP8266HTTPUpdateServer.cpp https://github.com/esp8266/Arduino/pull/3732/files
   server.begin();
 }
 

@@ -114,13 +114,13 @@ void listenerSystem( int event, int parm )                           // System e
         DBG_PRINTLN("Set induction off due to reboot");
         cbpiEventInduction(EM_INDER);
       }
-//      unsigned long last;
-//      last = millis();
-//      int wait = max(IND_UPDATE, ACT_UPDATE);
-//      while (millis() < last + wait + PAUSE1SEC)
-//      {
-//        // wait for 
-//      }
+      //      unsigned long last;
+      //      last = millis();
+      //      int wait = max(IND_UPDATE, ACT_UPDATE);
+      //      while (millis() < last + wait + PAUSE1SEC)
+      //      {
+      //        // wait for
+      //      }
       server.send(200, "text/plain", "rebooting...");
       SPIFFS.end(); // unmount SPIFFS
       ESP.restart();
@@ -289,9 +289,11 @@ void listenerActors( int event, int parm )                           // Actor ev
     case EM_ACTER:
       DBG_PRINTLN("EM_ACTER called");
       for (int i = 0; i < numberOfActors; i++) {
-        actors[i].isOn = false;
-        actors[i].Update();
-        //actors[i].publishmqtt(); // not yet ready
+        if (actors[i].switchable) {
+          actors[i].isOn = false;
+          actors[i].Update();
+          //actors[i].publishmqtt(); // not yet ready
+        }
       }
       break;
     default:
