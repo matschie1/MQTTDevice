@@ -403,6 +403,31 @@ void handleRequestOneWireSensorAddresses()
   server.send(200, "text/html", message);
 }
 
+/* Similar as the actor pin request function, but this time for PT sensors */
+void handleRequestPtSensorPins()
+{
+  int id = server.arg(0).toInt();
+  String message;
+
+  if (id != -1)
+  {
+    message += F("<option>");
+    message += PinToString(ptSensors[id].csPin);
+    message += F("</option><option disabled>──────────</option>");
+  }
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
+  {
+    if (pins_used[PINS[i]] == false)
+    {
+      message += F("<option>");
+      message += PIN_NAMES[i];
+      message += F("</option>");
+    }
+    yield();
+  }
+  server.send(200, "text/plain", message);
+}
+
 /*
   Returns a JSON Array with the current sensor data of all sensors.
 */

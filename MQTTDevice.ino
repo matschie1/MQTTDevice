@@ -54,10 +54,15 @@ const byte DEFAULT_CS_PIN = D0;
 // 100.0 for PT100, 1000.0 for PT1000
 #define RNOMINAL 100.0
 
-// WiFi und MQTT
+// WiFi and MQTT
 #define WEB_SERVER_PORT 80
 #define TELNET_SERVER_PORT 8266
 #define MQTT_SERVER_PORT 1883
+
+// how often should the system update it's state (wifi, ota, mqtt)
+#define SYS_UPDATE 100
+// how often should sensors', actors' and indu update routine be called
+#define UPDATE 1000
 
 // Differentiate between the two currently supported sensor types
 const String SENSOR_TYPE_ONE_WIRE = "OneWire";
@@ -124,4 +129,10 @@ char mqtthost[16] = "192.168.178.234"; // default value of MQTT Server
 long mqttconnectlasttry;
 // if false, no mqtt communcation is send or received
 // (security feature to turn on when leaving the brewery)
-bool mqttCommunication = true; // TODO: Not yet implemented!
+bool mqttCommunication = true;       // TODO: Not yet implemented!
+int mqtt_chip_key = ESP.getChipId(); // chip id for distinguishind multiple devices in a network
+char mqtt_clientid[25];              // client id name
+
+// system update global variables
+unsigned long lastToggledSys = 0;
+unsigned long lastToggled = 0;

@@ -11,19 +11,23 @@ void setup()
   // Sensoren Starten
   DS18B20.begin();
 
-  // Dateisystem laden
+  // Load spif file system laden
   ESP.wdtFeed();
   if (!SPIFFS.begin())
   {
     Serial.println("SPIFFS Mount failed");
   }
 
-  // Einstellungen laden
+  // Set device name
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
+
+  // Load settings
   ESP.wdtFeed();
   loadConfig();
 
   // WiFi Manager
   ESP.wdtFeed();
+  WiFi.hostname(mqtt_clientid);
   WiFiManagerParameter cstm_mqtthost("host", "cbpi ip", mqtthost, 16);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.addParameter(&cstm_mqtthost);
@@ -63,8 +67,10 @@ void setupServer()
   // search for OneWire sensors on the bus
   server.on("/reqSearchSensorAdresses", handleRequestOneWireSensorAddresses);
 
-  // returns the list of (named) pins on this chip
-  server.on("/reqPins", handleRequestPins);
+  // returns the list of (named) currently free pins on this chip (takes a pt sensor id)
+  server.on("/reqSensorPins", handleRequestPtSensorPins);
+  // returns the list of (named) currently free pins on this chip (takes an actor id)
+  server.on("/reqActorPins", handleRequestPins);
 
   // create or update sensor/actor/induction cooker
   server.on("/setSensor", handleSetSensor);
@@ -95,7 +101,8 @@ void setupOTA()
     Serial.println("Rebooting...");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("OTA in progress: %u%%\r\n", (progress / (total / 100)));
+    Serial.print("OTA in progress: ");
+    Serial.println((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);

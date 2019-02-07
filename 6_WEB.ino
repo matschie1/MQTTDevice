@@ -1,6 +1,6 @@
 void handleRoot()
 {
-  server.sendHeader("Location", "/index.html", true); //Redirect to our html web page
+  server.sendHeader("Location", "/index.html", true); // redirect to our html web page
   server.send(302, "text/plain", "");
 }
 
@@ -72,12 +72,6 @@ bool loadFromSpiffs(String path)
 
 void mqttreconnect()
 {
-  // Create MQTT Name from Chip ID
-  int mqtt_chip_key = ESP.getChipId();
-  char mqtt_clientid[25];
-  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  // 10 Tries for reconnect
-
   // Wenn Client nicht verbunden, Verbindung herstellen
   if (!client.connected())
   {

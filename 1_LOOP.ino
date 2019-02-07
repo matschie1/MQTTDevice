@@ -1,29 +1,38 @@
-void loop() {
-  // WiFi Status prüfen, ggf. Reconnecten
-  if (WiFi.status() != WL_CONNECTED) {
-    wifiManager.autoConnect("MQTTDevice");
-  }
-
-  // OTA
-  ArduinoOTA.handle();
-
-  // MQTT Status prüfen
-  if (!client.connected()) {
-    mqttreconnect();
-  }
-  client.loop();
+void loop()
+{
 
   // Webserver prüfen
   server.handleClient();
 
-  // Sensoren aktualisieren
-  handleSensors();
+  // Sys Update
+  if (millis() > lastToggledSys + SYS_UPDATE)
+  {
+    // WiFi Status prüfen, ggf. Reconnecten
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      wifiManager.autoConnect("MQTTDevice");
+    }
 
-  // Aktoren aktualisieren
-  handleActors();
+    // OTA
+    ArduinoOTA.handle();
 
-  // Induktionskochfeld
-  handleInduction();
+    // MQTT Status prüfen
+    if (!client.connected())
+    {
+      mqttreconnect();
+    }
+    client.loop();
+    lastToggledSys = millis();
+  }
 
-  delay(100);
+  if (millis() > lastToggled + UPDATE)
+  {
+    // Sensoren aktualisieren
+    handleSensors();
+    // Aktoren aktualisieren
+    handleActors();
+    // Induktionskochfeld
+    handleInduction();
+    lastToggled = millis();
+  }
 }

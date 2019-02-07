@@ -134,20 +134,24 @@
         </div>
         <div class="modal-body">
           <form>
-            <label for="modal_sensor_address">Address (OneWire Sensor)</label>
-            <div class="input-group" id="modal_sensor_one_wire_sensor">
-              <select class="form-control" id="modal_sensor_address">
-              </select><button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
-              </button>
+            <div id="modal_sensor_one_wire_sensor">
+              <label for="modal_sensor_address">Address</label>
+              <div class="input-group">
+                <select class="form-control" id="modal_sensor_address">
+                </select><button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
+                </button>
+              </div>
             </div>
-            <label for="modal_sensor_cs_pin">CS Pin and Number of Wires (PT100/1000 Sensor)</label>
-            <div class="input-group" id="modal_sensor_pt_sensor">
-              <select class="form-control" id="modal_sensor_cs_pin"></select>
-              <select class="form-control" id="modal_sensor_number_of_wires">
-                <option value=2>2</option>
-                <option value=3>3</option>
-                <option value=4>4</option>
-              </select>
+            <div id="modal_sensor_pt_sensor">
+              <label for="modal_sensor_cs_pin">CS Pin and Number of Wires</label>
+              <div class="input-group">
+                <select class="form-control" id="modal_sensor_cs_pin"></select>
+                <select class="form-control" id="modal_sensor_number_of_wires">
+                  <option value=2>2</option>
+                  <option value=3>3</option>
+                  <option value=4>4</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
               <label for="modal_sensor_name">Name </label>
@@ -329,7 +333,7 @@
       modal.attr('actor_id', actorid);
       modal.find('#modal_actor_name').val(actorname);
       modal.find('#modal_actor_script').val(actorscript);
-      $('#modal_actor_pin').load('/reqPins?id=' + actorid);
+      $('#modal_actor_pin').load('/reqActorPins?id=' + actorid);
       if (actorinverted == "1") { modal.find('#modal_actor_inverted').prop("checked", true); }
       else { modal.find('#modal_actor_inverted').prop("checked", false); }
     })
@@ -380,12 +384,14 @@
       modal.attr('sensor_id', sensorId);
       modal.attr('sensor_type', sensorType);
 
-      // Careful here, has to match sketch name! ("OneWire")
-      // TODO: could be improved by fetching and keeping some information on this in frontend
+      // Careful here, has to match name in sketch! ("OneWire")
       if (sensorType == "OneWire") {
+        // ui adjustments
+        $("#modal_sensor_one_wire_sensor").show();
+        $("#modal_sensor_pt_sensor").hide();
         // get available addresses
         $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorId);
-        // now check if sensorId valid (-1 determines a "create new sensor" call)
+        // check if sensorId is valid (-1 determines a "create new sensor" call)
         if (sensorId != -1) {
           $.ajax({
             url: '/reqSensorConfig?id=' + sensorId + '&type=' + sensorType,
@@ -403,7 +409,11 @@
         }
       }
       else if (sensorType == "PTSensor") {
-        // check if sensorId valid (-1 determines a "create new sensor" call)
+        // ui adjustments
+        $("#modal_sensor_one_wire_sensor").hide();
+        $("#modal_sensor_pt_sensor").show();
+        $('#modal_sensor_cs_pin').load('/reqSensorPins?id=' + sensorId);
+        // check if sensorId is valid (-1 determines a "create new sensor" call)
         if (sensorId != -1) {
           $.ajax({
             url: '/reqSensorConfig?id=' + sensorId + '&type=' + sensorType,
@@ -418,8 +428,6 @@
               modal.find('#modal_sensor_topic').val(data.topic);
               modal.find('#modal_sensor_cs_pin').val(data.csPin);
               modal.find('#modal_sensor_number_of_wires').val(data.numberOfWires);
-              // use actor function to retrieve list of available pins
-              $('#modal_sensor_cs_pin').load('/reqPins?id=' + data.csPin);
             }
           });
         }
