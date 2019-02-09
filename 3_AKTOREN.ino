@@ -47,6 +47,7 @@ class Actor
         unsigned long pause = millis();
         while (millis() < pause + 10) {
           //wait approx. [period] ms
+          delay(0);
         }
       }
 

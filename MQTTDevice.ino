@@ -31,7 +31,7 @@
 #include <EventManager.h>       // Eventmanager
 
 #include <NTPClient.h>          // NTP
-#include <Time.h>
+//#include <Time.h>
 #include <TimeLib.h>
 #include <Timezone.h>
 
@@ -108,7 +108,6 @@ char mqtt_clientid[25];
 #define NTP_OFFSET   60 * 60            // NTP in seconds
 #define NTP_INTERVAL 60 * 1000          // NTP in miliseconds
 #define NTP_ADDRESS  "pool.ntp.org"     // NTP change this to whatever pool is closest (see ntp.org)
-//#define NTP_ADDRESS  "172.22.10.11"
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 /*########## VARIABLEN #########*/

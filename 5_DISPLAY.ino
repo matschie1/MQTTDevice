@@ -75,6 +75,7 @@ class oled
 
 oledDisplay = oled();
 
+#if DISPLAY == 1
 void turnDisplayOff() {
   if (oledDisplay.dispEnabled) {
     DBG_PRINTLN("Switch OLED display off");
@@ -352,3 +353,4 @@ void showDispSTA()               // Show AP mode
   display.print(WiFi.localIP().toString());
   display.display();
 }
+#endif
