@@ -3,3 +3,12 @@
 .vscode/arduino.json
 spiffs.image
 /data/config.json
+/build/core
+/build/preproc
+/build/sketch
+/build/libraries
+/build/arduino.ar
+/build/build.options.json
+/build/MQTTDevice.ino.elf
+/build/MQTTDevice.ino.map
+/build/includes.cache

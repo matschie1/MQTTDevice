@@ -18,6 +18,7 @@ class oled
 
     void dispUpdate() {
       if (dispEnabled == 1) {
+        DBG_PRINTLN("UPDATE: Display");
         showDispClear();
         showDispTime(t);
         showDispIP(WiFi.localIP().toString());
@@ -33,8 +34,14 @@ class oled
 
     void change(int dispAddress, bool is_enabled) {
       if (is_enabled == 1 && dispAddress != 0) {
+        DBG_PRINT("CHANGE: Display switched on: ");
+        DBG_PRINTLN(dispAddress);
         address = dispAddress;
-        display.begin(SSD1306_SWITCHCAPVCC, address, true);
+        //display.begin(SSD1306_SWITCHCAPVCC, address, true);
+        //display.begin(SSD1306_SWITCHCAPVCC, DISP_DEF_ADDRESS);
+        if (!display.begin(SSD1306_SWITCHCAPVCC, address)){
+          DBG_PRINTLN("CHANGE: Error Display init");
+        }
         display.ssd1306_command(SSD1306_DISPLAYON);
         display.clearDisplay();
         display.display();
@@ -75,7 +82,6 @@ class oled
 
 oledDisplay = oled();
 
-#if DISPLAY == 1
 void turnDisplayOff() {
   if (oledDisplay.dispEnabled) {
     DBG_PRINTLN("Switch OLED display off");
@@ -353,4 +359,3 @@ void showDispSTA()               // Show AP mode
   display.print(WiFi.localIP().toString());
   display.display();
 }
-#endif
