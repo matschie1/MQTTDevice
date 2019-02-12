@@ -57,15 +57,17 @@ void setup()
   // Display Start Screen
   ESP.wdtFeed();
   dispStartScreen();
-  
+
   // Load mDNS
-  if (startMDNS) {
+  if (startMDNS)
+  {
     ESP.wdtFeed();
     cbpiEventSystem(EM_MDNSET);
   }
 
   // Init Arduino Over The Air
-  if (startOTA) {
+  if (startOTA)
+  {
     ESP.wdtFeed();
     setupOTA();
   }
@@ -79,13 +81,13 @@ void setup()
   setupServer();
 
   ESP.wdtFeed();
-  cbpiEventSystem(EM_NTP);            // NTP handle
-  cbpiEventSystem(EM_MDNS);           // MDNS handle
-  cbpiEventSystem(EM_WLAN);           // Check WLAN
-  cbpiEventSystem(EM_MQTT);           // Check MQTT
-  cbpiEventSystem(EM_DISPUP);         // Update display
+  cbpiEventSystem(EM_NTP);    // NTP handle
+  cbpiEventSystem(EM_MDNS);   // MDNS handle
+  cbpiEventSystem(EM_WLAN);   // Check WLAN
+  cbpiEventSystem(EM_MQTT);   // Check MQTT
+  cbpiEventSystem(EM_DISPUP); // Update display
 
-  while (gEM.getNumEventsInQueue())     // Eventmanager process all queued events
+  while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
   {
     gEM.processEvent();
   }
@@ -94,8 +96,8 @@ void setup()
 void setupServer()
 {
   server.on("/", handleRoot);
-  server.on("/setupActor", handleSetActor);   // Einstellen der Aktoren
-  server.on("/setupSensor", handleSetSensor); // Einstellen der Sensoren
+  server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
+  server.on("/setupSensor", handleSetSensor);     // Einstellen der Sensoren
   server.on("/reqSensors", handleRequestSensors); // Liste der Sensoren ausgeben
   server.on("/reqActors", handleRequestActors);   // Liste der Aktoren ausgeben
   server.on("/reqInduction", handleRequestInduction);
@@ -104,12 +106,12 @@ void setupServer()
   server.on("/reqSensor", handleRequestSensor); // Infos der Sensoren für WebConfig
   server.on("/reqActor", handleRequestActor);   // Infos der Aktoren für WebConfig
   server.on("/reqIndu", handleRequestIndu);     // Infos der Indu für WebConfig
-  server.on("/setSensor", handleSetSensor); // Sensor ändern
-  server.on("/setActor", handleSetActor);   // Aktor ändern
-  server.on("/setIndu", handleSetIndu);     // Indu ändern
-  server.on("/delSensor", handleDelSensor); // Sensor löschen
-  server.on("/delActor", handleDelActor);   // Aktor löschen
-  server.on("/reboot", rebootDevice); // reboots the whole Device
+  server.on("/setSensor", handleSetSensor);     // Sensor ändern
+  server.on("/setActor", handleSetActor);       // Aktor ändern
+  server.on("/setIndu", handleSetIndu);         // Indu ändern
+  server.on("/delSensor", handleDelSensor);     // Sensor löschen
+  server.on("/delActor", handleDelActor);       // Aktor löschen
+  server.on("/reboot", rebootDevice);           // reboots the whole Device
   server.on("/OTA", OTA);
   server.on("/mqttOff", turnMqttOff); // Turns off MQTT completly until reboot
   server.on("/reqDisplay", handleRequestDisplay);
@@ -121,22 +123,28 @@ void setupServer()
   server.on("/setMisc", handleSetMisc);     // Misc ändern
 
   // FSBrowser initialisieren
-  server.on("/list", HTTP_GET, handleFileList);   // list directory
-  server.on("/edit", HTTP_GET, []() {             // load editor
-    if (!handleFileRead("/edit.htm")) {
+  server.on("/list", HTTP_GET, handleFileList); // list directory
+  server.on("/edit", HTTP_GET, []() {           // load editor
+    if (!handleFileRead("/edit.htm"))
+    {
       server.send(404, "text/plain", "FileNotFound");
     }
   });
-  server.on("/edit", HTTP_PUT, handleFileCreate); // create file
-  server.on("/edit", HTTP_DELETE, handleFileDelete);  // delete file
+  server.on("/edit", HTTP_PUT, handleFileCreate);    // create file
+  server.on("/edit", HTTP_DELETE, handleFileDelete); // delete file
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
-  }, handleFileUpload);
-  
-  server.onNotFound(handleWebRequests);           // Sonstiges
+  },
+            handleFileUpload);
 
-  httpUpdate.setup(&server);  // ESP8266HTTPUpdateServer.cpp https://github.com/esp8266/Arduino/pull/3732/files
+  server.onNotFound(handleWebRequests); // Sonstiges
+
+  httpUpdate.setup(&server); // ESP8266HTTPUpdateServer.cpp https://github.com/esp8266/Arduino/pull/3732/files
   server.begin();
+  if (startMDNS)
+  {
+    mdns.addService("http", "tcp", 80);
+  }
 }
 
 void setupOTA()
@@ -144,10 +152,13 @@ void setupOTA()
   ArduinoOTA.setHostname(mqtt_clientid);
   ArduinoOTA.onStart([]() {
     String type;
-    if (ArduinoOTA.getCommand() == U_FLASH) {
+    if (ArduinoOTA.getCommand() == U_FLASH)
+    {
       type = "sketch";
       DBG_PRINTLN("OTA starting - updateing sketch");
-    } else { // U_SPIFFS
+    }
+    else
+    { // U_SPIFFS
       type = "filesystem";
       DBG_PRINTLN("OTA starting - updateing SPIFFS");
       //SPIFFS.end();
@@ -166,11 +177,16 @@ void setupOTA()
     showDispOTAEr(String(error));
     DBG_PRINT("Error: ");
     DBG_PRINTLN(error);
-    if (error == OTA_AUTH_ERROR) DBG_PRINTLN("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) DBG_PRINTLN("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) DBG_PRINTLN("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) DBG_PRINTLN("Receive Failed");
-    else if (error == OTA_END_ERROR) DBG_PRINTLN("End Failed");
+    if (error == OTA_AUTH_ERROR)
+      DBG_PRINTLN("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      DBG_PRINTLN("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      DBG_PRINTLN("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      DBG_PRINTLN("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      DBG_PRINTLN("End Failed");
   });
   ArduinoOTA.begin();
 }
