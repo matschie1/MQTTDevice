@@ -1,51 +1,62 @@
 class Actor
 {
-    unsigned long powerLast;          // Zeitmessung für High oder Low
+    unsigned long powerLast; // Zeitmessung für High oder Low
     bool isInverted = false;
     int dutycycle_actor = 5000;
     byte OFF;
     byte ON;
 
   public:
-    byte pin_actor = 9;      // the number of the LED pin
+    byte pin_actor = 9; // the number of the LED pin
     String argument_actor;
     String name_actor;
     byte power_actor;
     bool isOn;
 
-
-    Actor(String pin, String argument, String aname, String ainverted)
+    Actor(String pin, String argument, String name, String inverted)
     {
-      change(pin, argument, aname, ainverted);
+      change(pin, argument, name, inverted);
     }
 
-    void Update() {
-      if (isPin(pin_actor)) {
-        if (isOn && power_actor > 0) {
-          if (millis() > powerLast + dutycycle_actor) {
+    void Update()
+    {
+      if (isPin(pin_actor))
+      {
+        if (isOn && power_actor > 0)
+        {
+          if (millis() > powerLast + dutycycle_actor)
+          {
             powerLast = millis();
           }
-          if (millis() > powerLast + (dutycycle_actor * power_actor / 100L)) {
+          if (millis() > powerLast + (dutycycle_actor * power_actor / 100L))
+          {
             digitalWrite(pin_actor, OFF);
-          } else {
+          }
+          else
+          {
             digitalWrite(pin_actor, ON);
           }
-        } else {
+        }
+        else
+        {
           digitalWrite(pin_actor, OFF);
         }
       }
     }
 
-    void change(String pin, String argument, String aname, String ainverted) {
+    void change(String pin, String argument, String name, String inverted)
+    {
       // Set PIN
-      if (isPin(pin_actor)) {
+      if (isPin(pin_actor))
+      {
         digitalWrite(pin_actor, HIGH);
         pins_used[pin_actor] = false;
         delay(5);
       }
 
       pin_actor = StringToPin(pin);
-      if (isPin(pin_actor)) {
+      if (isPin(pin_actor))
+      {
         pinMode(pin_actor, OUTPUT);
         digitalWrite(pin_actor, HIGH);
         pins_used[pin_actor] = true;
@@ -53,66 +64,74 @@ class Actor
 
       isOn = false;
 
-      name_actor = aname;
+      name_actor = name;
 
-      if (argument_actor != argument) {
+      if (argument_actor != argument)
+      {
         mqtt_unsubscribe();
         argument_actor = argument;
         mqtt_subscribe();
       }
 
-      if (ainverted == "1") {
+      if (inverted == "1")
+      {
         isInverted = true;
         ON = HIGH;
         OFF = LOW;
       }
-      if (ainverted == "0") {
+      if (inverted == "0")
+      {
         isInverted = false;
         ON = LOW;
         OFF = HIGH;
       }
-
     }
 
-    void mqtt_subscribe() {
-      if (client.connected()) {
+    void mqtt_subscribe()
+    {
+      if (client.connected())
+      {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
         Serial.print("Subscribing to ");
         Serial.println(subscribemsg);
-        client.subscribe(subscribemsg);      
+        client.subscribe(subscribemsg);
       }
-
     }
 
-    void mqtt_unsubscribe() {
-     if (client.connected()) {
+    void mqtt_unsubscribe()
+    {
+      if (client.connected())
+      {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
         Serial.print("Unsubscribing from ");
         Serial.println(subscribemsg);
-        client.unsubscribe(subscribemsg);      
+        client.unsubscribe(subscribemsg);
       }
     }
 
-    void handlemqtt(char* payload) {
+    void handlemqtt(char *payload)
+    {
       StaticJsonBuffer<128> jsonBuffer;
-      JsonObject& json = jsonBuffer.parseObject(payload);
+      JsonObject &json = jsonBuffer.parseObject(payload);
 
-      if (!json.success()) {
+      if (!json.success())
+      {
         return;
       }
 
       String state = json["state"];
 
-
-      if (state == "off") {
+      if (state == "off")
+      {
         isOn = false;
         power_actor = 0;
         return;
       }
 
-      if (state == "on") {
+      if (state == "on")
+      {
         int newpower = atoi(json["power"]);
         isOn = true;
         power_actor = min(100, newpower);
@@ -121,15 +140,17 @@ class Actor
       }
     }
 
-    String getInverted() {
-      if (isInverted) {
+    String getInverted()
+    {
+      if (isInverted)
+      {
         return "1";
       }
-      else {
+      else
+      {
         return "0";
       }
     };
-
 };
 
 /* Initialisierung des Arrays */
@@ -143,20 +164,25 @@ Actor actors[6] = {
 };
 
 /* Funktionen für Loop */
-void handleActors() {
-  for (int i = 0; i < numberOfActors; i++) {
+void handleActors()
+{
+  for (int i = 0; i < numberOfActors; i++)
+  {
     actors[i].Update();
     yield();
   }
 }
 
 /* Funktionen für Web */
-void handleRequestActors() {
+void handleRequestActors()
+{
   StaticJsonBuffer<1024> jsonBuffer;
-  JsonArray& actorsResponse = jsonBuffer.createArray();
-  
-  for (int i = 0; i < numberOfActors; i++) {
-    JsonObject& actorResponse = jsonBuffer.createObject();;
+  JsonArray &actorsResponse = jsonBuffer.createArray();
+
+  for (int i = 0; i < numberOfActors; i++)
+  {
+    JsonObject &actorResponse = jsonBuffer.createObject();
+    ;
     actorResponse["name"] = actors[i].name_actor;
     actorResponse["status"] = actors[i].isOn;
     actorResponse["power"] = actors[i].power_actor;
@@ -165,34 +191,42 @@ void handleRequestActors() {
     actorsResponse.add(actorResponse);
     yield();
   }
-  
+
   String response;
   actorsResponse.printTo(response);
   server.send(200, "application/json", response);
 }
 
-void handleRequestActor() {
+void handleRequestActorConfig()
+{
   int id = server.arg(0).toInt();
   String request = server.arg(1);
   String message;
 
-  if (id == -1) {
+  if (id == -1)
+  {
     message = "";
     goto SendMessage;
-  } else {
-    if (request == "name") {
+  }
+  else
+  {
+    if (request == "name")
+    {
       message = actors[id].name_actor;
       goto SendMessage;
     }
-    if (request == "script") {
+    if (request == "script")
+    {
       message = actors[id].argument_actor;
       goto SendMessage;
     }
-    if (request == "pin") {
+    if (request == "pin")
+    {
       message = PinToString(actors[id].pin_actor);
       goto SendMessage;
     }
-    if (request == "inverted") {
+    if (request == "inverted")
+    {
       message = actors[id].getInverted();
       goto SendMessage;
     }
@@ -203,10 +237,12 @@ SendMessage:
   server.send(200, "text/plain", message);
 }
 
-void handleSetActor() {
+void handleSetActor()
+{
   int id = server.arg(0).toInt();
 
-  if (id == -1) {
+  if (id == -1)
+  {
     id = numberOfActors;
     numberOfActors += 1;
   }
@@ -216,17 +252,22 @@ void handleSetActor() {
   String ac_name = actors[id].name_actor;
   String ac_isinverted = actors[id].getInverted();
 
-  for (int i = 0; i < server.args(); i++) {
-    if (server.argName(i) == "name") {
+  for (int i = 0; i < server.args(); i++)
+  {
+    if (server.argName(i) == "name")
+    {
       ac_name = server.arg(i);
     }
-    if (server.argName(i) == "pin")  {
+    if (server.argName(i) == "pin")
+    {
       ac_pin = server.arg(i);
     }
-    if (server.argName(i) == "script")  {
+    if (server.argName(i) == "script")
+    {
       ac_argument = server.arg(i);
     }
-    if (server.argName(i) == "inverted")  {
+    if (server.argName(i) == "inverted")
+    {
       ac_isinverted = server.arg(i);
     }
     yield();
@@ -238,13 +279,18 @@ void handleSetActor() {
   server.send(201, "text/plain", "created");
 }
 
-void handleDelActor() {
+void handleDelActor()
+{
   int id = server.arg(0).toInt();
 
-  for (int i = id; i < numberOfActors; i++) {
-    if (i == 5) {
+  for (int i = id; i < numberOfActors; i++)
+  {
+    if (i == 5)
+    {
       actors[i].change("", "", "", "");
-    } else {
+    }
+    else
+    {
       actors[i].change(PinToString(actors[i + 1].pin_actor), actors[i + 1].argument_actor, actors[i + 1].name_actor, actors[i + 1].getInverted());
     }
   }
@@ -254,19 +300,23 @@ void handleDelActor() {
   server.send(200, "text/plain", "deleted");
 }
 
-void handlereqPins() {
+void handleRequestPins()
+{
   int id = server.arg(0).toInt();
   String message;
 
-  if (id != -1) {
+  if (id != -1)
+  {
     message += F("<option>");
     message += PinToString(actors[id].pin_actor);
     message += F("</option><option disabled>──────────</option>");
   }
-  for (int i = 0; i < numberOfPins; i++) {
-    if (pins_used[pins[i]] == false) {
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
+  {
+    if (pins_used[PINS[i]] == false)
+    {
       message += F("<option>");
-      message += pin_names[i];
+      message += PIN_NAMES[i];
       message += F("</option>");
     }
     yield();
@@ -274,28 +324,37 @@ void handlereqPins() {
   server.send(200, "text/plain", message);
 }
 
-byte StringToPin(String pinstring) {
-  for (int i = 0; i < numberOfPins; i++) {
-    if (pin_names[i] == pinstring) {
-      return pins[i];
+byte StringToPin(String pinstring)
+{
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
+  {
+    if (PIN_NAMES[i] == pinstring)
+    {
+      return PINS[i];
     }
   }
   return 9;
 }
 
-String PinToString(byte pinbyte) {
-  for (int i = 0; i < numberOfPins; i++) {
-    if (pins[i] == pinbyte) {
-      return pin_names[i];
+String PinToString(byte pinbyte)
+{
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
+  {
+    if (PINS[i] == pinbyte)
+    {
+      return PIN_NAMES[i];
     }
   }
   return "NaN";
 }
 
-bool isPin(byte pinbyte) {
+bool isPin(byte pinbyte)
+{
   bool returnValue = false;
-  for (int i = 0; i < numberOfPins; i++) {
-    if (pins[i] == pinbyte) {
+  for (int i = 0; i < NUMBER_OF_PINS; i++)
+  {
+    if (PINS[i] == pinbyte)
+    {
       returnValue = true;
       goto Ende;
     }

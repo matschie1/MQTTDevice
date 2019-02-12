@@ -1,21 +1,33 @@
-void setup() {
+void setup()
+{
   Serial.begin(115200);
+
+  // declare OneWire and PT Pins pin as used
+  pins_used[ONE_WIRE_BUS] = true;
+  pins_used[PT_PINS[0]] = true;
+  pins_used[PT_PINS[1]] = true;
+  pins_used[PT_PINS[2]] = true;
 
   // Sensoren Starten
   DS18B20.begin();
 
-  // Dateisystem laden
+  // Load spif file system laden
   ESP.wdtFeed();
-  if (!SPIFFS.begin())  {
+  if (!SPIFFS.begin())
+  {
     Serial.println("SPIFFS Mount failed");
   }
 
-  // Einstellungen laden
+  // Set device name
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
+
+  // Load settings
   ESP.wdtFeed();
   loadConfig();
 
   // WiFi Manager
   ESP.wdtFeed();
+  WiFi.hostname(mqtt_clientid);
   WiFiManagerParameter cstm_mqtthost("host", "cbpi ip", mqtthost, 16);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
   wifiManager.addParameter(&cstm_mqtthost);
@@ -28,9 +40,9 @@ void setup() {
 
   // ArduinoOTA aktivieren
   setupOTA();
-  
+
   // MQTT starten
-  client.setServer(mqtthost, 1883);
+  client.setServer(mqtthost, MQTT_SERVER_PORT);
   client.setCallback(mqttcallback);
 
   // Webserver starten
@@ -38,42 +50,49 @@ void setup() {
   setupServer();
 }
 
-void setupServer() {
-
+void setupServer()
+{
   server.on("/", handleRoot);
 
-  server.on("/setupActor", handleSetActor);       // Einstellen der Aktoren
-  server.on("/setupSensor", handleSetSensor);     // Einstellen der Sensoren
-
-  server.on("/reqSensors", handleRequestSensors); // Liste der Sensoren ausgeben
-  server.on("/reqActors", handleRequestActors);   // Liste der Aktoren ausgeben
+  // provides current sensor/actor/induction cooker readings
+  server.on("/reqSensors", handleRequestSensors);
+  server.on("/reqActors", handleRequestActors);
   server.on("/reqInduction", handleRequestInduction);
 
-  server.on("/reqSearchSensorAdresses", handleRequestSensorAddresses);
-  server.on("/reqPins", handlereqPins);
+  // provides information about sensor/actor/induction cooker configuration
+  server.on("/reqSensorConfig", handleRequestSensorConfig);
+  server.on("/reqActorConfig", handleRequestActorConfig);
+  server.on("/reqInductionConfig", handleRequestInductionConfig);
 
-  server.on("/reqSensor", handleRequestSensor);   // Infos der Sensoren für WebConfig
-  server.on("/reqActor", handleRequestActor);     // Infos der Aktoren für WebConfig
-  server.on("/reqIndu", handleRequestIndu);       // Infos der Indu für WebConfig
+  // search for OneWire sensors on the bus
+  server.on("/reqSearchSensorAdresses", handleRequestOneWireSensorAddresses);
 
-  server.on("/setSensor", handleSetSensor);       // Sensor ändern
-  server.on("/setActor", handleSetActor);         // Aktor ändern
-  server.on("/setIndu", handleSetIndu);           // Indu ändern
+  // returns the list of (named) currently free pins on this chip (takes a pt sensor id)
+  server.on("/reqSensorPins", handleRequestPtSensorPins);
+  // returns the list of (named) currently free pins on this chip (takes an actor id)
+  server.on("/reqActorPins", handleRequestPins);
 
-  server.on("/delSensor", handleDelSensor);       // Sensor löschen
-  server.on("/delActor", handleDelActor);         // Aktor löschen
+  // create or update sensor/actor/induction cooker
+  server.on("/setSensor", handleSetSensor);
+  server.on("/setActor", handleSetActor);
+  server.on("/setIndu", handleSetIndu);
 
-  server.on("/reboot", rebootDevice);             // reboots the whole Device
-  server.on("/mqttOff", turnMqttOff);             // Turns off MQTT completly until reboot
-  server.onNotFound(handleWebRequests);           // Sonstiges
+  // delete sensor/actor
+  server.on("/delSensor", handleDelSensor);
+  server.on("/delActor", handleDelActor);
+
+  server.on("/reboot", rebootDevice); // reboots the device
+  server.on("/mqttOff", turnMqttOff); // turns off MQTT completly until reboot
+
+  server.onNotFound(handleWebRequests); // fallback
 
   server.begin();
 }
 
-
-void setupOTA() {
+void setupOTA()
+{
   Serial.print("Configuring OTA device...");
-  TelnetServer.begin();   //Necesary to make Arduino Software autodetect OTA device
+  TelnetServer.begin(); // necesary to autodetect OTA device
   ArduinoOTA.onStart([]() {
     Serial.println("OTA starting...");
   });
@@ -82,15 +101,21 @@ void setupOTA() {
     Serial.println("Rebooting...");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("OTA in progress: %u%%\r\n", (progress / (total / 100)));
+    Serial.print("OTA in progress: ");
+    Serial.println((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+    if (error == OTA_AUTH_ERROR)
+      Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR)
+      Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR)
+      Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR)
+      Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR)
+      Serial.println("End Failed");
   });
   ArduinoOTA.begin();
   Serial.println("OTA OK");
