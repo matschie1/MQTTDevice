@@ -95,24 +95,14 @@ class OneWireSensor
     {
       if (client.connected())
       {
-        StaticJsonBuffer<256> jsonBuffer;
-        JsonObject &json = jsonBuffer.createObject();
-
-        json["Name"] = sens_name;
-        JsonObject &Sensor = json.createNestedObject("Sensor");
-        Sensor["Value"] = sens_value;
-        Sensor["Type"] = "1-wire";
-
-        char jsonMessage[100];
-        json.printTo(jsonMessage);
-        client.publish(sens_mqtttopic, jsonMessage);
+        client.publish(sens_mqtttopic, getValueString());
       }
     }
 
     char *getValueString()
     {
-      char buf[5];
-      dtostrf(sens_value, 2, 1, buf);
+      char buf[8];
+      dtostrf(sens_value, 3, 2, buf);
       return buf;
     }
 };
@@ -197,24 +187,14 @@ class PTSensor
     {
       if (client.connected())
       {
-        StaticJsonBuffer<256> jsonBuffer;
-        JsonObject &json = jsonBuffer.createObject();
-
-        json["Name"] = name;
-        JsonObject &Sensor = json.createNestedObject("Sensor");
-        Sensor["Value"] = value;
-        Sensor["Type"] = "PTSensor";
-
-        char jsonMessage[100];
-        json.printTo(jsonMessage);
-        client.publish(mqttTopic, jsonMessage);
+        client.publish(mqttTopic, getValueString());
       }
     }
 
     char *getValueString()
     {
-      char buf[5];
-      dtostrf(value, 2, 1, buf);
+      char buf[8];
+      dtostrf(value, 3, 2, buf);
       return buf;
     }
 };
