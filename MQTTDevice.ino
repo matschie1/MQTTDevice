@@ -36,16 +36,16 @@
 // DEFAULT PINS
 // Change according to your wiring (see also 99_PINMAP_WEMOS_D1Mini)
 
-#define ONE_WIRE_BUS D5
+#define ONE_WIRE_BUS D8
 /*
   common pins across all PT100/1000 sensors
   DI, DO, CLK (currently hardwired in code, change here accordingly)
   When using multiple sensors, reuse these pins and only (re)define
   the CS PIN, meaning you need one additional pin per sensor
 */
-const byte PT_PINS[3] = {D4, D3, D2};
+const byte PT_PINS[3] = {D4, D3, D0};
 // default pin for the CS of a PT sensor (for initial initialization, can be overwritten)
-const byte DEFAULT_CS_PIN = D0;
+const byte DEFAULT_CS_PIN = D1;
 
 // ranges from 9 to 12, higher is better (and slower!)
 #define ONE_WIRE_RESOLUTION 10
@@ -60,7 +60,7 @@ const byte DEFAULT_CS_PIN = D0;
 #define MQTT_SERVER_PORT 1883
 
 // how often should the system update it's state (wifi, ota, mqtt)
-#define SYS_UPDATE 100
+#define SYS_UPDATE 1000
 // how often should sensors', actors' and indu update routine be called
 #define UPDATE 1000
 

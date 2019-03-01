@@ -163,7 +163,7 @@ class PTSensor
           numberOfWires = newNumberOfWires;
           name = newName;
           maxChip = Adafruit_MAX31865(csPin, PT_PINS[0], PT_PINS[1], PT_PINS[2]);
-          Serial.print("Starting PT100 with ");
+          Serial.print("Starting PT sensor with ");
           Serial.print(newNumberOfWires);
           Serial.print(" wires. CS Pin is ");
           Serial.println(PinToString(csPin));
@@ -227,11 +227,14 @@ void handleSensors()
   for (int i = 0; i < numberOfOneWireSensors; i++)
   {
     oneWireSensors[i].update();
+    yield();
+  }
+  for (int i = 0; i < numberOfPTSensors; i++)
+  {
     ptSensors[i].update();
     yield();
   }
 }
-
 /* Search the OneWire bus for available sensor addresses */
 byte searchOneWireSensors()
 {
