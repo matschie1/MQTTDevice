@@ -21,6 +21,8 @@ void loop()
     {
       mqttreconnect();
     }
+
+    drawDisplayContent();
     client.loop();
     lastToggledSys = millis();
   }

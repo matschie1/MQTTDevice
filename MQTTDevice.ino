@@ -16,6 +16,11 @@
 #include <OneWire.h>           // OneWire Bus Kommunikation
 #include <DallasTemperature.h> // Vereinfachte Benutzung der DS18B20 Sensoren
 
+// Display
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+
 #include <Adafruit_MAX31865.h> // PT100/1000
 
 #include <ESP8266WiFi.h>      // Generelle WiFi Funktionalität
@@ -33,12 +38,11 @@
 
 /*########## CONSTANTS #########*/
 
-// DEFAULT PINS
+// PINS
 // Change according to your wiring (see also 99_PINMAP_WEMOS_D1Mini)
-
 #define ONE_WIRE_BUS D8
 /*
-  common pins across all PT100/1000 sensors
+  Common pins across all PT100/1000 sensors
   DI, DO, CLK (currently hardwired in code, change here accordingly)
   When using multiple sensors, reuse these pins and only (re)define
   the CS PIN, meaning you need one additional pin per sensor
@@ -63,6 +67,10 @@ const byte DEFAULT_CS_PIN = D1;
 #define SYS_UPDATE 1000
 // how often should sensors', actors' and indu update routine be called
 #define UPDATE 1000
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1); // placeholder
 
 // Differentiate between the two currently supported sensor types
 const String SENSOR_TYPE_ONE_WIRE = "OneWire";
