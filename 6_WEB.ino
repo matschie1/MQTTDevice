@@ -176,7 +176,7 @@ void handleSetMisc() {
         while (millis() < last + PAUSE2SEC)
         {
           // just wait for approx 2sec
-          delay(0);
+          yield();
         }
         ESP.reset();
       }
@@ -191,7 +191,7 @@ void handleSetMisc() {
         while (millis() < last + PAUSE2SEC)
         {
           // just wait for approx 2sec
-          delay(0);
+          yield();
         }
         ESP.reset();
       }

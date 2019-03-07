@@ -271,14 +271,14 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
       while (millis() < last + SIGNAL_START)
       {
         // wait for approx SIGNAL_START ms
-        delay(0);
+        yield();
       }
       digitalWrite(PIN_YELLOW, LOW);
       last = millis();
       while (millis() < last + SIGNAL_WAIT)
       {
         // wait for approx SIGNAL_WAIT ms
-        delay(0);
+        yield();
       }
 
       for (int i = 0; i < 33; i++) {

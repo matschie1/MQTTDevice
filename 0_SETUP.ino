@@ -1,7 +1,7 @@
 void setup()
 {
   Serial.begin(115200);
-
+  
   gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
   gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
   gEM.addListener(EventManager::cbpiEventActors, listenerActors);
@@ -13,7 +13,7 @@ void setup()
 
   // Start sensors
   DS18B20.begin();
-
+  
   // Load filesystem
   ESP.wdtFeed();
   if (!SPIFFS.begin())
@@ -40,6 +40,12 @@ void setup()
   {
     ESP.wdtFeed();
     loadConfig();
+  }
+  // set pins as used
+  pins_used[ONE_WIRE_BUS] = true;
+  if (useDisplay) {
+    pins_used[DISPLAY_PINS[0]]  = true;
+    pins_used[DISPLAY_PINS[1]]  = true;
   }
 
   // WiFi Manager
@@ -141,10 +147,6 @@ void setupServer()
 
   httpUpdate.setup(&server); // ESP8266HTTPUpdateServer.cpp https://github.com/esp8266/Arduino/pull/3732/files
   server.begin();
-  if (startMDNS)
-  {
-    mdns.addService("http", "tcp", 80);
-  }
 }
 
 void setupOTA()

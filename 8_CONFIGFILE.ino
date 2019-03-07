@@ -18,12 +18,21 @@ bool loadConfig() {
   }
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
+  
   StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buf.get());
-
   if (!json.success()) {
     return false;
   }
+  
+  // ArduinoJSON Version 6
+  // StaticJsonDocument<1024> jsonBuffer;
+  // auto error = deserializeJson( jsonBuffer, buf.get() );
+  // if (error) {
+  //    DBG_PRINT("deserializeJson() failed with code: ");
+  //    DBG_PRINTLN(error.c_str());
+  //    return;
+  // }
 
   JsonArray& jsonactors = json["actors"];
   numberOfActors = jsonactors.size();
@@ -92,7 +101,6 @@ bool loadConfig() {
   String is_enabled_str = jsinduction["ENABLED"];
   bool is_enabled_bl = false;
 
-
   String js_mqtttopic = jsinduction["TOPIC"];
   long delayoff = atol(jsinduction["DELAY"]);
   if (is_enabled_str == "1") {
@@ -125,6 +133,7 @@ bool loadConfig() {
   String dispStatus = jsdisplay["ENABLED"];
   if (dispStatus == "1") {
     oledDisplay.dispEnabled = 1;
+    useDisplay = true;
     DBG_PRINT("Display address: ");
     DBG_PRINTLN(dispAddress);
     DBG_PRINT("Display update interval: ");
@@ -142,8 +151,11 @@ bool loadConfig() {
   JsonObject& jsmisc = jsomisc[0];
   String str_act = jsmisc["enable_actors"];
   String str_act_del = jsmisc["delay_actors"];
-  wait_on_error_actors = atol(jsmisc["delay_actors"]);
-  DBG_PRINT("Switch off all actors on error: ");
+  if (str_act_del.length() > 0)
+  {
+    wait_on_error_actors = str_act_del.toInt();
+  }
+  DBG_PRINT("Switch off actors on error: ");
   if (str_act == "1") {
     StopActorsOnError = true;
     DBG_PRINT(" enabled after ");
@@ -156,7 +168,13 @@ bool loadConfig() {
   }
 
   String str_ind = jsmisc["enable_induction"];
-  wait_on_error_induction = atol(jsmisc["delay_induction"]);
+  String str_ind_del = jsmisc["delay_induction"];
+
+  if (str_ind_del.length() > 0)
+  {
+    wait_on_error_induction = str_ind_del.toInt();
+  }
+
   DBG_PRINT("Switch off induction on error: ");
   if (str_ind == "1") {
     StopInductionOnError = true;
@@ -188,19 +206,19 @@ bool loadConfig() {
     startMDNS = false;
     DBG_PRINTLN("mDNS disabled");
   }
-
-  int newsup = atol(jsmisc["upsen"]);
-  int newaup = atol(jsmisc["upact"]);
-  int newiup = atol(jsmisc["upind"]);
-  if (newsup > 0) {
-    SEN_UPDATE = newsup;
-  }
-  if (newaup > 0) {
-    ACT_UPDATE = newaup;
-  }
-  if (newiup > 0) {
-    IND_UPDATE = newiup;
-  }
+    String str_upsen = jsmisc["upsen"];
+    String str_upact = jsmisc["upact"];
+    String str_upind = jsmisc["upind"];
+    
+    if (str_upsen.length() > 0) {
+      SEN_UPDATE = str_upsen.toInt();
+    }
+    if (str_upact.length() > 0) {
+      ACT_UPDATE = str_upact.toInt();
+    }
+    if (str_upind.length() > 0) {
+      IND_UPDATE = str_upind.toInt();
+    }
   DBG_PRINT("Sensors update intervall: ");
   DBG_PRINTLN(SEN_UPDATE);
   DBG_PRINT("Actors update intervall: ");
@@ -210,8 +228,10 @@ bool loadConfig() {
 
   // General Settings
   String json_mqtthost = json["MQTTHOST"];
-  json_mqtthost.toCharArray(mqtthost, 16);
-
+  if (json_mqtthost.length() > 0) {
+    json_mqtthost.toCharArray(mqtthost, 16);
+  }
+  
   DBG_PRINT("MQTTHost: ");
   DBG_PRINTLN(mqtthost);
 
@@ -226,7 +246,8 @@ bool loadConfig() {
 }
 
 void saveConfigCallback () {
-  DBG_PRINTLN("Should save config"); // was soll callback tun? Aufruf aus setup wifiManager.setSaveConfigCallback(saveConfigCallback)
+  DBG_PRINTLN("Should save config");
+  // shouldSaveConfig = true;
 }
 
 bool saveConfig()
@@ -234,7 +255,7 @@ bool saveConfig()
   DBG_PRINTLN("------ saveConfig started ------");
   StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
-
+    
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
     DBG_PRINTLN("Failed to open config file for writing");
@@ -387,52 +408,9 @@ bool saveConfig()
   json["MQTTHOST"] = mqtthost;
   DBG_PRINT("MQTT broker IP: ");
   DBG_PRINTLN(mqtthost);
+
   json.printTo(configFile);
+  
   DBG_PRINTLN("------ saveConfig finished ------");
   return true;
-}
-
-void DBG_PRINT(String value)
-{
-  if (setDEBUG) Serial.print(value);
-}
-void DBG_PRINT(int value)
-{
-  if (setDEBUG) Serial.print(value);
-}
-void DBG_PRINTHEX(int value)
-{
-  if (setDEBUG) Serial.print(value, HEX);
-}
-void DBG_PRINTLN(String value)
-{
-  if (setDEBUG) Serial.println(value);
-}
-void DBG_PRINTLN(int value)
-{
-  if (setDEBUG) Serial.println(value);
-}
-void DBG_PRINTLNHEX(int value)
-{
-  if (setDEBUG) Serial.println(value, HEX);
-}
-
-void DBG_PRINTLNTS(unsigned long value) // Timestamp
-{
-  value = value / 1000;
-  if (setDEBUG) {
-    Serial.print((value / 3600) % 24); // Stunden
-    Serial.print(":");
-    Serial.print((value / 60) % 60); // Minuten
-    Serial.print(":");
-    Serial.println(value % 60); // Sekunden
-  }
-}
-
-String decToHex(byte decValue, byte desiredStringLength)
-{
-  String hexString = String(decValue, HEX);
-  while (hexString.length() < desiredStringLength) hexString = "0" + hexString;
-
-  return "0x" + hexString;
 }

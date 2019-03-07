@@ -22,7 +22,7 @@ class TemperatureSensor
           unsigned long pause = millis();
           while (millis() < pause + 750) {
             //wait approx. 750ms
-            delay(0);
+            yield();
           }
           DS18B20.requestTemperatures();
         }

@@ -202,7 +202,7 @@ void listenerSystem( int event, int parm )                           // System e
         }
         else {
           mdns.begin(nameMDNS);
-          DBG_PRINT("EM mDNS responder started: ");
+          DBG_PRINT("EM MDNS started: ");
           DBG_PRINT(nameMDNS);
           DBG_PRINT(" to: ");
           IPAddress ip = WiFi.localIP();
