@@ -1,11 +1,28 @@
 This is just another fork of MQTTDevice https://github.com/matschie1/MQTTDevice
 Main work is done by matschie. Please use origin repository!
 
-For internal use
+For internal use only
+
+Requirements:
+- download lib folder
+- modify MQTTDevice.ino as you prefer:
+-- bool useDisplay = true or false;
+-- change the path #include "C:/Arduino/git/MQTTDevice/icons.h". If you use arduino IDE simply remove path #include "icons.h"
+- download th follow libs: 
+-- OneWire (by Jim Studt..) version 2.3.4
+-- DallasTemperature (by Miles Burton...) version 3.8.0
+-- PubSubClient (by Nick O''Leary) version 2.6.0
+-- ArduinoJson (by Benoit Bianchon) version 5.13.4
+-- WiFiManager (by tzapu) version 0.14.0
+-- NTPClient (by by Fabrice Weinberg) version 3.1.0
+-- Time by Michael Margolis Version 1.5.0
+-- Timezone by Jack Christensen Version 1.2.2
+-- TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+
 
 OLED Display:
 You can use OLED display. Up now only an OLED monochrome display 128x64 I2C is tested.
-OLED display is activated in WebIf Display menu.
+OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
 ![oled1](/img/display3.jpg)
 ![oled2](/img/display2.jpg)
 ![oled3](/img/display.jpg)
@@ -23,9 +40,6 @@ In misc menu you can
 - configure Debug output serial monitor
 
 EventManager:
-Download EventManager (Copyright (c) 2016 Igor Mikolic-Torreira) from (https://github.com/InnuendoPi/arduino-EventManager) 
-
-How does it works?
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
 
 #define SYS_UPDATE  100		-> System update events should be queued approx. every 100ms
@@ -50,5 +64,4 @@ mDNS:
 You can active mDNS on webif if required.
 
 Debug information:
-
 You can enable debug output on serial monitor for testing purpose or to find out working settings for your equipment.
