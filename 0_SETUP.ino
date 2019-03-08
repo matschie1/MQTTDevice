@@ -1,7 +1,7 @@
 void setup()
 {
   Serial.begin(115200);
-  
+
   gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
   gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
   gEM.addListener(EventManager::cbpiEventActors, listenerActors);
@@ -13,7 +13,7 @@ void setup()
 
   // Start sensors
   DS18B20.begin();
-  
+
   // Load filesystem
   ESP.wdtFeed();
   if (!SPIFFS.begin())
@@ -43,9 +43,10 @@ void setup()
   }
   // set pins as used
   pins_used[ONE_WIRE_BUS] = true;
-  if (useDisplay) {
-    pins_used[DISPLAY_PINS[0]]  = true;
-    pins_used[DISPLAY_PINS[1]]  = true;
+  if (useDisplay)
+  {
+    pins_used[DISPLAY_PINS[0]] = true;
+    pins_used[DISPLAY_PINS[1]] = true;
   }
 
   // WiFi Manager

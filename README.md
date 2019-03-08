@@ -6,18 +6,26 @@ For internal use only
 Requirements:
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
--- bool useDisplay = true or false;
--- change the path #include "C:/Arduino/git/MQTTDevice/icons.h". If you use arduino IDE simply remove path #include "icons.h"
-- download th follow libs: 
--- OneWire (by Jim Studt..) version 2.3.4
--- DallasTemperature (by Miles Burton...) version 3.8.0
--- PubSubClient (by Nick O''Leary) version 2.6.0
--- ArduinoJson (by Benoit Bianchon) version 5.13.4
--- WiFiManager (by tzapu) version 0.14.0
--- NTPClient (by by Fabrice Weinberg) version 3.1.0
--- Time by Michael Margolis Version 1.5.0
--- Timezone by Jack Christensen Version 1.2.2
--- TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+set useDisplay true or false
+change the path #include "C:/Arduino/git/MQTTDevice/icons.h". If you use arduino IDE simply remove path #include "icons.h".
+- download th follow libs:  
+OneWire (by Jim Studt..) version 2.3.4
+
+DallasTemperature (by Miles Burton...) version 3.8.0
+
+PubSubClient (by Nick O''Leary) version 2.6.0
+
+ArduinoJson (by Benoit Bianchon) version 5.13.4
+
+WiFiManager (by tzapu) version 0.14.0
+
+NTPClient (by by Fabrice Weinberg) version 3.1.0
+
+Time by Michael Margolis Version 1.5.0
+
+Timezone by Jack Christensen Version 1.2.2
+
+TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
 
 OLED Display:
