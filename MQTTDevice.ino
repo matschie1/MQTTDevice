@@ -44,7 +44,7 @@
 // architectures=*
 
 /*############ DEBUG ############*/
-bool setDEBUG = true;
+bool setDEBUG = false;
 /*############ DEBUG ############*/
 
 /*########## KONSTANTEN #########*/
@@ -167,7 +167,7 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define PAUSE2SEC 2000
 
 bool startOTA = false;
-bool startMDNS = true;
+bool startMDNS = false;
 char nameMDNS[16];
 bool StopActorsOnError = false;      // Use webif to configure: switch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
 bool StopInductionOnError = false;   // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
