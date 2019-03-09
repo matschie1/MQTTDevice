@@ -3,7 +3,7 @@
 .vscode/c_cpp_properties.json
 .vscode/arduino.json
 .vscode/settings.json
-.vscode/tasks.json
+.vscode/Upload_SPIFFS.cmd
 spiffs.image
 /data/config.json
 build/

@@ -2,9 +2,7 @@ void loop()
 {
   cbpiEventSystem(EM_WEB);  // Webserver handle
   cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
-  if (startOTA)
-    cbpiEventSystem(EM_OTA); // OTA handle
-
+  
   if (millis() > (lastToggledSen + SEN_UPDATE))
   {
     cbpiEventSensors(sensorsStatus); // Sensor handle
@@ -32,6 +30,10 @@ void loop()
   {
     cbpiEventSystem(EM_DISPUP); // Display Update
     lastToggledDisp = millis();
+  }
+  if (startOTA)
+  {
+    cbpiEventSystem(EM_OTA); // OTA handle
   }
 
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
