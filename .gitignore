@@ -4,10 +4,7 @@
 .vscode/arduino.json
 .vscode/settings.json
 .vscode/Upload_SPIFFS.cmd
-spiffs.image
 /data/config.json
-build/
-/build/
 /build/core
 /build/preproc
 /build/sketch
@@ -17,3 +14,4 @@ build/
 /build/MQTTDevice.ino.elf
 /build/MQTTDevice.ino.map
 /build/includes.cache
+/build/local.eagle.app.v6.common.ld
