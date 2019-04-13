@@ -34,20 +34,28 @@ void setup()
   wifiManager.autoConnect("MQTTDevice");
   strcpy(mqtthost, cstm_mqtthost.getValue());
 
-  // Änderungen speichern
+  // save changes
   ESP.wdtFeed();
   saveConfig();
 
-  // ArduinoOTA aktivieren
+  // activate ArduinoOTA
   setupOTA();
 
-  // MQTT starten
+  // start mqtt
   client.setServer(mqtthost, MQTT_SERVER_PORT);
   client.setCallback(mqttcallback);
 
-  // Webserver starten
+  // start webserver
   ESP.wdtFeed();
   setupServer();
+
+  // start display
+  Wire.begin(D2, D1);
+  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
+    Serial.println(F("SSD1306 allocation failed"));
+  }
+  display.clearDisplay();
+  display.display();
 }
 
 void setupServer()
