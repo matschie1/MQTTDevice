@@ -102,8 +102,13 @@ bool loadConfig() {
   bool is_enabled_bl = false;
 
   String js_mqtttopic = jsinduction["TOPIC"];
-  long delayoff = atol(jsinduction["DELAY"]);
+  //
+  // Neu 20190426
+  // Exception on atol
+  //
+  long delayoff = 0;
   if (is_enabled_str == "1") {
+    delayoff = atol(jsinduction["DELAY"]);
     is_enabled_bl = true;
     DBG_PRINT("Induction ");
     DBG_PRINT(js_mqtttopic);
@@ -119,32 +124,46 @@ bool loadConfig() {
   }
   inductionCooker.change(StringToPin(pin_white), StringToPin(pin_yellow), StringToPin(pin_blue), js_mqtttopic, delayoff, is_enabled_bl);
 
-  JsonArray& jsodisplay = json["display"];
-  JsonObject& jsdisplay = jsodisplay[0];
-  String dispAddress = jsdisplay["ADDRESS"];
-  dispAddress.remove(0, 2);
-  char copy[4];
-  dispAddress.toCharArray(copy, 4);
-  int address = strtol(copy, 0, 16);
-  int newdup = atol(jsdisplay["updisp"]);
-  if (newdup > 0) {
-    DISP_UPDATE = newdup;
-  }
-  String dispStatus = jsdisplay["ENABLED"];
-  if (dispStatus == "1") {
-    oledDisplay.dispEnabled = 1;
-    useDisplay = true;
-    DBG_PRINT("Display address: ");
-    DBG_PRINTLN(dispAddress);
-    DBG_PRINT("Display update interval: ");
-    DBG_PRINTLN(dispAddress);
-  }
-  else {
+  //
+  // Neu 20190426
+  // Exception on atol function when no induction is configured
+  //
+  if (useDisplay) {
+    JsonArray& jsodisplay = json["display"];
+    JsonObject& jsdisplay = jsodisplay[0];
+    String dispAddress = jsdisplay["ADDRESS"];
+    dispAddress.remove(0, 2);
+    char copy[4];
+    dispAddress.toCharArray(copy, 4);
+    int address = strtol(copy, 0, 16);
+    int newdup = atol(jsdisplay["updisp"]);
+    if (newdup > 0) {
+      DISP_UPDATE = newdup;
+    }
+    String dispStatus = jsdisplay["ENABLED"];
+    if (dispStatus == "1") {
+      oledDisplay.dispEnabled = 1;
+      useDisplay = true;
+      DBG_PRINT("Display address: ");
+      DBG_PRINTLN(dispAddress);
+      DBG_PRINT("Display update interval: ");
+      DBG_PRINTLN(dispAddress);
+    }
+    else {
     oledDisplay.dispEnabled = 0;
     DBG_PRINTLN("Display disabled");
+    }
+    oledDisplay.change(address, oledDisplay.dispEnabled);
   }
-  oledDisplay.change(address, oledDisplay.dispEnabled);
+  else
+  {
+    oledDisplay.dispEnabled = 0;
+    DBG_PRINTLN("Display disabled");
+    oledDisplay.change(0, oledDisplay.dispEnabled);
+  }
+  
   DBG_PRINTLN("--------------------");
+
 
   // Misc Settings
   JsonArray& jsomisc = json["misc"];

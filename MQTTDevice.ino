@@ -199,9 +199,9 @@ byte inductionStatus = 0;
 #define SCREEN_HEIGHT 64      // OLED display height, in pixels
 #define DISP_DEF_ADDRESS 0x3c // Only used on init setup!
 Adafruit_SSD1306 display(-1);
-#include "icons.h"
+//#include "icons.h"
 // Using VSCode modify absolut path to icons.h
-// #include "C:/Arduino/git/MQTTDevice/icons.h"
+#include "C:/Arduino/git/MQTTDevice/icons.h"
 bool useDisplay = false;
 const byte DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
