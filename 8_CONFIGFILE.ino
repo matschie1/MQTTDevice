@@ -363,29 +363,6 @@ bool saveConfig()
   DBG_PRINTLN("Schreibe misc");
   JsonArray& jsomisc = json.createNestedArray("misc");
   JsonObject&  jsmisc = jsomisc.createNestedObject();
-  /*
-  jsmisc["upsen"] = SEN_UPDATE;
-  jsmisc["upact"] = ACT_UPDATE;
-  jsmisc["upind"] = IND_UPDATE;
-  
-  jsmisc["MQTTHOST"] = mqtthost;
-  jsmisc["delay_actors"] = wait_on_error_actors;
-  jsmisc["enable_actors"] = StopActorsOnError;
-  jsmisc["enable_induction"] = StopInductionOnError;
-  jsmisc["delay_induction"] = wait_on_error_induction;
-  jsmisc["mdns"] = startMDNS;
-  jsmisc["mdns_name"] = nameMDNS;
-  if (setDEBUG) 
-  {
-    jsmisc["debug"] = "1";
-    DBG_PRINTLN("Debug output enabled");
-  } 
-  else 
-  {
-    jsmisc["debug"] = "0";
-    DBG_PRINTLN("Debug disabled");
-  }
-  */
   
   if (StopActorsOnError) {
     jsmisc["enable_actors"] = "1";
