@@ -4,14 +4,13 @@ bool loadConfig() {
   if (!configFile) {
     DBG_PRINTLN("Failed to open config file");
     DBG_PRINTLN("------ loadConfig aborted ------");
-
     return false;
   }
   else {
     DBG_PRINTLN("opened config file");
   }
   size_t size = configFile.size();
-  if (size > 1024) {
+  if (size > 2048) {
     DBG_PRINT("Config file size is too large");
     DBG_PRINTLN("------ loadConfig aborted ------");
     return false;
@@ -19,21 +18,12 @@ bool loadConfig() {
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
   
-  StaticJsonBuffer<1024> jsonBuffer;
+  StaticJsonBuffer<2048> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buf.get());
   if (!json.success()) {
     return false;
   }
   
-  // ArduinoJSON Version 6
-  // StaticJsonDocument<1024> jsonBuffer;
-  // auto error = deserializeJson( jsonBuffer, buf.get() );
-  // if (error) {
-  //    DBG_PRINT("deserializeJson() failed with code: ");
-  //    DBG_PRINTLN(error.c_str());
-  //    return;
-  // }
-
   JsonArray& jsonactors = json["actors"];
   numberOfActors = jsonactors.size();
   if (numberOfActors > 6) {
@@ -166,6 +156,7 @@ bool loadConfig() {
 
 
   // Misc Settings
+     
   JsonArray& jsomisc = json["misc"];
   JsonObject& jsmisc = jsomisc[0];
   String str_act = jsmisc["enable_actors"];
@@ -209,10 +200,7 @@ bool loadConfig() {
   if (str_debug == "1") {
     setDEBUG = true;
   }
-  //  else {   // moved to end of loadconfig
-  //    DBG_PRINTLN("Debug output on serial monitor now disabled");
-  //    setDEBUG = false;
-  //  }
+
   String str_mdns = jsmisc["mdns"];
   String jsmisc_nameMDNS = jsmisc["mdns_name"];
   jsmisc_nameMDNS.toCharArray(nameMDNS, 16);
@@ -245,15 +233,18 @@ bool loadConfig() {
   DBG_PRINT("Induction update intervall: ");
   DBG_PRINTLN(IND_UPDATE);
 
-  // General Settings
-  String json_mqtthost = json["MQTTHOST"];
+  String json_mqtthost = jsmisc["MQTTHOST"];
+
   if (json_mqtthost.length() > 0) {
     json_mqtthost.toCharArray(mqtthost, 16);
+    DBG_PRINT("MQTT server IP: ");
+    DBG_PRINTLN(mqtthost);
+  }
+  else {
+    DBG_PRINT("mqtthost not found in config file. Using default server address: ");
+    DBG_PRINTLN(mqtthost);
   }
   
-  DBG_PRINT("MQTTHost: ");
-  DBG_PRINTLN(mqtthost);
-
   if (str_debug == "0") {
     DBG_PRINTLN("Debug output on serial monitor now disabled");
     DBG_PRINTLN("------ loadConfig finished ------");
@@ -272,7 +263,7 @@ void saveConfigCallback () {
 bool saveConfig()
 {
   DBG_PRINTLN("------ saveConfig started ------");
-  StaticJsonBuffer<1024> jsonBuffer;
+  StaticJsonBuffer<2048> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
     
   File configFile = SPIFFS.open("/config.json", "w");
@@ -369,9 +360,33 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Misc Stuff
+  DBG_PRINTLN("Schreibe misc");
   JsonArray& jsomisc = json.createNestedArray("misc");
   JsonObject&  jsmisc = jsomisc.createNestedObject();
+  /*
+  jsmisc["upsen"] = SEN_UPDATE;
+  jsmisc["upact"] = ACT_UPDATE;
+  jsmisc["upind"] = IND_UPDATE;
+  
+  jsmisc["MQTTHOST"] = mqtthost;
   jsmisc["delay_actors"] = wait_on_error_actors;
+  jsmisc["enable_actors"] = StopActorsOnError;
+  jsmisc["enable_induction"] = StopInductionOnError;
+  jsmisc["delay_induction"] = wait_on_error_induction;
+  jsmisc["mdns"] = startMDNS;
+  jsmisc["mdns_name"] = nameMDNS;
+  if (setDEBUG) 
+  {
+    jsmisc["debug"] = "1";
+    DBG_PRINTLN("Debug output enabled");
+  } 
+  else 
+  {
+    jsmisc["debug"] = "0";
+    DBG_PRINTLN("Debug disabled");
+  }
+  */
+  
   if (StopActorsOnError) {
     jsmisc["enable_actors"] = "1";
     DBG_PRINT("Switch off actors on error: ");
@@ -383,8 +398,8 @@ bool saveConfig()
     jsmisc["enable_actors"] = "0";
     DBG_PRINTLN("Switch off actors on error disabled");
   }
+  jsmisc["delay_actors"] = wait_on_error_actors;
 
-  jsmisc["delay_induction"] = wait_on_error_induction;
   if (StopInductionOnError) {
     jsmisc["enable_induction"] = "1";
     DBG_PRINT("Switch off induction on error: ");
@@ -396,13 +411,16 @@ bool saveConfig()
     jsmisc["enable_induction"] = "0";
     DBG_PRINTLN("Switch off induction on error disabled");
   }
+  jsmisc["delay_induction"] = wait_on_error_induction;
 
   if (setDEBUG) {
     jsmisc["debug"] = "1";
+    DBG_PRINTLN("Debug 1");
   } else {
     jsmisc["debug"] = "0";
+    DBG_PRINTLN("Debug 0");
   }
-  jsmisc["mdns_name"] = nameMDNS;
+  
   if (startMDNS) {
     jsmisc["mdns"] = "1";
     DBG_PRINT("mDNS enabled: ");
@@ -411,6 +429,7 @@ bool saveConfig()
     jsmisc["mdns"] = "0";
     DBG_PRINTLN("mDNS disabled");
   }
+  jsmisc["mdns_name"] = nameMDNS;
 
   jsmisc["upsen"] = SEN_UPDATE;
   jsmisc["upact"] = ACT_UPDATE;
@@ -423,9 +442,8 @@ bool saveConfig()
   DBG_PRINT("Induction update interval ");
   DBG_PRINTLN(IND_UPDATE);
 
-  // Write General Stuff
-  json["MQTTHOST"] = mqtthost;
-  DBG_PRINT("MQTT broker IP: ");
+  jsmisc["MQTTHOST"] = mqtthost;
+  DBG_PRINT("MQTT server IP: ");
   DBG_PRINTLN(mqtthost);
 
   json.printTo(configFile);
