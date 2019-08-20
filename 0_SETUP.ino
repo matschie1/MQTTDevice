@@ -39,6 +39,9 @@ void setup()
   if (SPIFFS.exists("/config.json"))
   {
     ESP.wdtFeed();
+    Serial.println(Version);
+    Serial.print("Firmware version: ");
+    Serial.println(Version);
     loadConfig();
   }
   // set pins as used

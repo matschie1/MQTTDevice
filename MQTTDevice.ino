@@ -43,6 +43,10 @@
 // ändern in
 // architectures=*
 
+/*############ Version ############*/
+const char Version[5]  = "1.01";
+/*############ Version ############*/
+
 /*############ DEBUG ############*/
 bool setDEBUG = false;
 /*############ DEBUG ############*/
