@@ -44,7 +44,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[5]  = "1.01";
+const char Version[5]  = "1.02";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/

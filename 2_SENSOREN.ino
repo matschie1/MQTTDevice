@@ -38,7 +38,7 @@ class TemperatureSensor
           DBG_PRINT(" ");
         }
         DBG_PRINT(" sensor value: ");
-        DBG_PRINT(sens_value);
+        DBG_PRINTLN(sens_value);
         if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
           DBG_PRINTLN(" CRC check failed");
           sensorsStatus = 1;
@@ -184,7 +184,7 @@ void handleSetSensor() {
     id = numberOfSensors;
     numberOfSensors += 1;
   }
-
+  
   String new_mqtttopic = sensors[id].sens_mqtttopic;
   String new_name = sensors[id].sens_name;
   String new_address = sensors[id].getSens_adress_string();
@@ -192,18 +192,23 @@ void handleSetSensor() {
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "name") {
       new_name = server.arg(i);
+      DBG_PRINT("new_name ");
+      DBG_PRINTLN(new_name);
     }
     if (server.argName(i) == "topic")  {
       new_mqtttopic = server.arg(i);
+      DBG_PRINT("new_mqtttopic ");
+      DBG_PRINTLN(new_mqtttopic);
     }
     if (server.argName(i) == "address")  {
       new_address = server.arg(i);
+      DBG_PRINT("new_address ");
+      DBG_PRINTLN(new_address);
     }
     yield();
   }
 
   sensors[id].change(new_address, new_mqtttopic, new_name);
-
   saveConfig();
   server.send(201, "text/plain", "created");
 }

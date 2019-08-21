@@ -273,12 +273,12 @@ void handleRequestActor()
       message = PinToString(actors[id].pin_actor);
       goto SendMessage;
     }
-    if (request == "inverted")
+    if (request == "inv")
     {
       message = actors[id].getInverted();
       goto SendMessage;
     }
-    if (request == "switchable")
+    if (request == "sw")
     {
       message = actors[id].getSwitchable();
       goto SendMessage;
@@ -320,11 +320,11 @@ void handleSetActor()
     {
       ac_argument = server.arg(i);
     }
-    if (server.argName(i) == "inverted")
+    if (server.argName(i) == "inv")
     {
       ac_isinverted = server.arg(i);
     }
-    if (server.argName(i) == "switchable")
+    if (server.argName(i) == "sw")
     {
       ac_switchable = server.arg(i);
     }

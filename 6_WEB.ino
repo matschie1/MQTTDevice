@@ -81,10 +81,10 @@ void handleRequestMiscSet() {
   StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& miscResponse = jsonBuffer.createObject();
   miscResponse["MQTTHOST"] = mqtthost;
-  miscResponse["enable_actors"] = StopActorsOnError;
-  miscResponse["enable_induction"] = StopInductionOnError;
-  miscResponse["delay_actors"] = wait_on_error_actors / 1000;
-  miscResponse["delay_induction"] = wait_on_error_induction / 1000;
+  miscResponse["enable_act"] = StopActorsOnError;
+  miscResponse["enable_ind"] = StopInductionOnError;
+  miscResponse["delay_act"] = wait_on_error_actors / 1000;
+  miscResponse["delay_ind"] = wait_on_error_induction / 1000;
   miscResponse["debug"] = setDEBUG;
   
   String response;
@@ -113,7 +113,7 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "enable_actors") {
+  if (request == "enable_act") {
     if (StopActorsOnError) {
       message = "1";
     }
@@ -122,7 +122,7 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "enable_induction") {
+  if (request == "enable_ind") {
     if (StopInductionOnError) {
       message = "1";
     }
@@ -131,11 +131,11 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "delay_actors") {
+  if (request == "delay_act") {
     message = wait_on_error_actors / 1000;
     goto SendMessage;
   }
-  if (request == "delay_induction") {
+  if (request == "delay_ind") {
     message = wait_on_error_induction / 1000;
     goto SendMessage;
   }
@@ -178,6 +178,7 @@ void handleSetMisc() {
           // just wait for approx 2sec
           yield();
         }
+        
         ESP.reset();
       }
     }
@@ -209,24 +210,24 @@ void handleSetMisc() {
         startMDNS = false;
       }
     }
-    if (server.argName(i) == "enable_actors")  {
+    if (server.argName(i) == "enable_act")  {
       if (server.arg(i) == "1") {
         StopActorsOnError = true;
       } else {
         StopActorsOnError = false;
       }
     }
-    if (server.argName(i) == "delay_actors")  {
+    if (server.argName(i) == "delay_act")  {
       wait_on_error_actors = server.arg(i).toInt() * 1000;
     }
-    if (server.argName(i) == "enable_induction")  {
+    if (server.argName(i) == "enable_ind")  {
       if (server.arg(i) == "1") {
         StopInductionOnError = true;
       } else {
         StopInductionOnError = false;
       }
     }
-    if (server.argName(i) == "delay_induction")  {
+    if (server.argName(i) == "delay_ind")  {
       wait_on_error_induction = server.arg(i).toInt() * 1000;
     }
     if (server.argName(i) == "debug")  {

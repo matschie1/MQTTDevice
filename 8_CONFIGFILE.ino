@@ -9,8 +9,11 @@ bool loadConfig() {
   else {
     DBG_PRINTLN("opened config file");
   }
+  
   size_t size = configFile.size();
-  if (size > 2048) {
+  DBG_PRINT("Config file size: ");
+  DBG_PRINTLN(size);
+  if (size > 1024) {
     DBG_PRINT("Config file size is too large");
     DBG_PRINTLN("------ loadConfig aborted ------");
     return false;
@@ -18,9 +21,10 @@ bool loadConfig() {
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
   
-  StaticJsonBuffer<2048> jsonBuffer;
+  StaticJsonBuffer<1400> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buf.get());
   if (!json.success()) {
+    DBG_PRINTLN("JSON buffer unsuccessful: aborted");
     return false;
   }
   
@@ -36,8 +40,8 @@ bool loadConfig() {
       String pin = jsonactor["PIN"];
       String script = jsonactor["SCRIPT"];
       String aname = jsonactor["NAME"];
-      String ainverted = jsonactor["INVERTED"];
-      String aswitchable = jsonactor["SWITCHABLE"];
+      String ainverted = jsonactor["INV"];
+      String aswitchable = jsonactor["SW"];
       actors[i].change(pin, script, aname, ainverted, aswitchable);
       DBG_PRINT("Actor ");
       DBG_PRINT(aname);
@@ -159,8 +163,8 @@ bool loadConfig() {
      
   JsonArray& jsomisc = json["misc"];
   JsonObject& jsmisc = jsomisc[0];
-  String str_act = jsmisc["enable_actors"];
-  String str_act_del = jsmisc["delay_actors"];
+  String str_act = jsmisc["enable_act"];
+  String str_act_del = jsmisc["delay_act"];
   if (str_act_del.length() > 0)
   {
     wait_on_error_actors = str_act_del.toInt();
@@ -177,8 +181,8 @@ bool loadConfig() {
     DBG_PRINTLN(" disabled");
   }
 
-  String str_ind = jsmisc["enable_induction"];
-  String str_ind_del = jsmisc["delay_induction"];
+  String str_ind = jsmisc["enable_ind"];
+  String str_ind_del = jsmisc["delay_ind"];
 
   if (str_ind_del.length() > 0)
   {
@@ -235,7 +239,7 @@ bool loadConfig() {
 
   String json_mqtthost = jsmisc["MQTTHOST"];
 
-  if (json_mqtthost.length() > 0) {
+  if (json_mqtthost.length() > 6) {  //1.1.1.1
     json_mqtthost.toCharArray(mqtthost, 16);
     DBG_PRINT("MQTT server IP: ");
     DBG_PRINTLN(mqtthost);
@@ -252,6 +256,7 @@ bool loadConfig() {
   }
 
   DBG_PRINTLN("------ loadConfig finished ------");
+  configFile.close();
   return true;
 }
 
@@ -263,9 +268,8 @@ void saveConfigCallback () {
 bool saveConfig()
 {
   DBG_PRINTLN("------ saveConfig started ------");
-  StaticJsonBuffer<2048> jsonBuffer;
+  StaticJsonBuffer<1400> jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
-    
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile) {
     DBG_PRINTLN("Failed to open config file for writing");
@@ -280,11 +284,13 @@ bool saveConfig()
     jsactor["PIN"] = PinToString(actors[i].pin_actor);
     jsactor["NAME"] = actors[i].name_actor;
     jsactor["SCRIPT"] = actors[i].argument_actor;
-    jsactor["INVERTED"] = actors[i].getInverted();
-    jsactor["SWITCHABLE"] = actors[i].getSwitchable();
+    jsactor["INV"] = actors[i].getInverted();
+    jsactor["SW"] = actors[i].getSwitchable();
     DBG_PRINT("Actor ");
     DBG_PRINT(actors[i].name_actor);
-    DBG_PRINT(" Argument ");
+    DBG_PRINT(" PIN ");
+    DBG_PRINT(actors[i].pin_actor);
+    DBG_PRINT(" Script ");
     DBG_PRINT(actors[i].argument_actor);
     DBG_PRINT(" inverted ");
     DBG_PRINT(actors[i].getInverted());
@@ -360,44 +366,40 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Misc Stuff
-  DBG_PRINTLN("Schreibe misc");
   JsonArray& jsomisc = json.createNestedArray("misc");
   JsonObject&  jsmisc = jsomisc.createNestedObject();
-  
+  jsmisc["delay_act"] = wait_on_error_actors;
   if (StopActorsOnError) {
-    jsmisc["enable_actors"] = "1";
+    jsmisc["enable_act"] = "1";
     DBG_PRINT("Switch off actors on error: ");
     DBG_PRINT(StopActorsOnError);
     DBG_PRINT(" after: ");
     DBG_PRINT(wait_on_error_actors);
     DBG_PRINTLN("ms");
   } else {
-    jsmisc["enable_actors"] = "0";
+    jsmisc["enable_act"] = "0";
     DBG_PRINTLN("Switch off actors on error disabled");
   }
-  jsmisc["delay_actors"] = wait_on_error_actors;
 
+  jsmisc["delay_ind"] = wait_on_error_induction;
   if (StopInductionOnError) {
-    jsmisc["enable_induction"] = "1";
+    jsmisc["enable_ind"] = "1";
     DBG_PRINT("Switch off induction on error: ");
     DBG_PRINT(StopInductionOnError);
     DBG_PRINT(" after: ");
     DBG_PRINT(wait_on_error_induction);
     DBG_PRINTLN("ms");
   } else {
-    jsmisc["enable_induction"] = "0";
+    jsmisc["enable_ind"] = "0";
     DBG_PRINTLN("Switch off induction on error disabled");
   }
-  jsmisc["delay_induction"] = wait_on_error_induction;
 
   if (setDEBUG) {
     jsmisc["debug"] = "1";
-    DBG_PRINTLN("Debug 1");
   } else {
     jsmisc["debug"] = "0";
-    DBG_PRINTLN("Debug 0");
   }
-  
+  jsmisc["mdns_name"] = nameMDNS;
   if (startMDNS) {
     jsmisc["mdns"] = "1";
     DBG_PRINT("mDNS enabled: ");
@@ -406,11 +408,12 @@ bool saveConfig()
     jsmisc["mdns"] = "0";
     DBG_PRINTLN("mDNS disabled");
   }
-  jsmisc["mdns_name"] = nameMDNS;
 
+  jsmisc["MQTTHOST"] = mqtthost;
   jsmisc["upsen"] = SEN_UPDATE;
   jsmisc["upact"] = ACT_UPDATE;
   jsmisc["upind"] = IND_UPDATE;
+  
 
   DBG_PRINT("Sensor update interval ");
   DBG_PRINTLN(SEN_UPDATE);
@@ -418,13 +421,11 @@ bool saveConfig()
   DBG_PRINTLN(ACT_UPDATE);
   DBG_PRINT("Induction update interval ");
   DBG_PRINTLN(IND_UPDATE);
-
-  jsmisc["MQTTHOST"] = mqtthost;
-  DBG_PRINT("MQTT server IP: ");
+  DBG_PRINT("MQTT broker IP: ");
   DBG_PRINTLN(mqtthost);
 
   json.printTo(configFile);
-  
+  configFile.close();
   DBG_PRINTLN("------ saveConfig finished ------");
   return true;
 }
