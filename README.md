@@ -1,7 +1,7 @@
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
 Requirements:
-- Arduino IDE 1.8.8 (Version 1.8.9: 'byte does not name a type'. Try #define byte uint8_t)
+- Arduino IDE 1.8.8 
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
 -- set useDisplay true or false
@@ -26,7 +26,13 @@ Timezone by Jack Christensen Version 1.2.2
 
 TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
+![fw1](/img/fw103.jpg)
+
 Main Functions
+- Firmware and SPIFFS Over the Air Updates
+- Firmware and SPIFFS file upload 
+- Filebrowser for easy file management (eg backup and restore config.json)
+- DS18B20 temperature offset
 
 Misc Menu:
 In misc menu you can
