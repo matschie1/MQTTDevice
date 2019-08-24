@@ -1,13 +1,12 @@
-This is just another fork of MQTTDevice https://github.com/matschie1/MQTTDevice
-Main work is done by matschie. Please use origin repository!
-
-For internal use only
+Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
 Requirements:
+- Arduino IDE 1.8.8 (Version 1.8.9: 'byte does not name a type'. Try #define byte uint8_t)
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
-set useDisplay true or false
-change the path #include "C:/Arduino/git/MQTTDevice/icons.h". If you use arduino IDE simply remove path #include "icons.h".
+-- set useDisplay true or false
+-- VSCode: change the path #include "C:/Arduino/git/MQTTDevice/icons.h". 
+-- Arduino IDE: simply use #include "icons.h".
 - download th follow libs:  
 OneWire (by Jim Studt..) version 2.3.4
 
@@ -15,7 +14,7 @@ DallasTemperature (by Miles Burton...) version 3.8.0
 
 PubSubClient (by Nick O''Leary) version 2.6.0
 
-ArduinoJson (by Benoit Bianchon) version 5.13.4
+ArduinoJson (by Benoit Bianchon) version 5.13.4 (only this version! Do not update lib!)
 
 WiFiManager (by tzapu) version 0.14.0
 
@@ -27,17 +26,7 @@ Timezone by Jack Christensen Version 1.2.2
 
 TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
-
-OLED Display:
-You can use OLED display. Up now only an OLED monochrome display 128x64 I2C is tested.
-OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
-![oled1](/img/display3.jpg)
-![oled2](/img/display2.jpg)
-![oled3](/img/display.jpg)
-![oled4](/img/display1.jpg)
-
-WLAN and MQTT icon will automatically disappear, if an error raises up.
-Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
+Main Functions
 
 Misc Menu:
 In misc menu you can
@@ -73,3 +62,17 @@ You can active mDNS on webif if required.
 
 Debug information:
 You can enable debug output on serial monitor for testing purpose or to find out working settings for your equipment.
+
+OLED Display: (not yet ready)
+You can use OLED display. Up now only an OLED monochrome display 128x64 I2C is tested.
+OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
+
+![oled1](/img/display3.jpg)
+![oled2](/img/display2.jpg)
+![oled3](/img/display.jpg)
+![oled4](/img/display1.jpg)
+
+WLAN and MQTT icon will automatically disappear, if an error raises up.
+Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
+
+This repo is based on https://github.com/matschie1/MQTTDevice Main work is done by matschie! 
