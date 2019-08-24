@@ -2,28 +2,25 @@ class TemperatureSensor
 {
   public:
     char sens_mqtttopic[50];      // Für MQTT Kommunikation
-    byte sens_address[8];         // 1-Wire Adresse
+    unsigned char sens_address[8];         // 1-Wire Adresse
     String sens_name;             // Name für Anzeige auf Website
     float sens_value = -127.0;    // Aktueller Wert
     bool sens_isConnected;        // check if Sensor is connected
+    float sens_offset = 0.0;      // Offset
 
 
     String getSens_adress_string() {
       return SensorAddressToString(sens_address);
     }
 
-    TemperatureSensor(String new_address, String new_mqtttopic, String new_name) {
-      change(new_address, new_mqtttopic, new_name);
+    TemperatureSensor(String new_address, String new_mqtttopic, String new_name, float new_offset) {
+      change(new_address, new_mqtttopic, new_name, new_offset);
     }
 
     void Update() {
         DS18B20.requestTemperatures(); // new conversion to get recent temperatures
         if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
-          unsigned long pause = millis();
-          while (millis() < pause + 750) {
-            //wait approx. 750ms
-            yield();
-          }
+          millis2wait(750);
           DS18B20.requestTemperatures();
         }
         sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
@@ -55,6 +52,8 @@ class TemperatureSensor
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
             sensorsStatus = 3;
+            sens_value = 20.1;
+            sensorsStatus = 0;
           }
           else {// not connected and unvalid address
             sensorsStatus = 4;
@@ -64,9 +63,10 @@ class TemperatureSensor
         publishmqtt();
     } // void Update
 
-    void change(String new_address, String new_mqtttopic, String new_name) {
+    void change(String new_address, String new_mqtttopic, String new_name, float new_offset) {
       new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
       sens_name = new_name;
+      sens_offset = new_offset;
       if (new_address.length() == 16) {
         char address_char[16];
 
@@ -84,7 +84,6 @@ class TemperatureSensor
           // Convert the hex pair to an integer
           sscanf( hexbyte, "%x", &octets[d / 2] ) ;
           yield();
-
         }
         for (int i = 0; i < 8; i++) {
           sens_address[i] = octets[i];
@@ -102,9 +101,8 @@ class TemperatureSensor
 
         json["Name"] = sens_name;
         JsonObject& Sensor = json.createNestedObject("Sensor");
-        Sensor["Value"] = sens_value;
+        Sensor["Value"] = (sens_value + sens_offset);
         Sensor["Type"] = "1-wire";
-
         char jsonMessage[100];
         json.printTo(jsonMessage);
         client.publish(sens_mqtttopic, jsonMessage);
@@ -120,16 +118,16 @@ class TemperatureSensor
 
 /* Initialisierung des Arrays */
 TemperatureSensor sensors[numberOfSensorsMax] = {
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", ""),
-  TemperatureSensor("", "", "")
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0),
+  TemperatureSensor("", "", "", 0.0)
 };
 
 /* Funktion für Loop */
@@ -140,10 +138,10 @@ void handleSensors() {
   }
 }
 
-byte searchSensors() {
-  byte i;
-  byte n = 0;
-  byte addr[8];
+unsigned char searchSensors() {
+  unsigned char i;
+  unsigned char n = 0;
+  unsigned char addr[8];
 
   while (oneWire.search(addr)) {
 
@@ -163,7 +161,7 @@ byte searchSensors() {
   oneWire.reset_search();
 }
 
-String SensorAddressToString(byte addr[8]) {
+String SensorAddressToString(unsigned char addr[8]) {
   char charbuffer[50];
   String AddressString;
 
@@ -188,6 +186,7 @@ void handleSetSensor() {
   String new_mqtttopic = sensors[id].sens_mqtttopic;
   String new_name = sensors[id].sens_name;
   String new_address = sensors[id].getSens_adress_string();
+  float new_offset = sensors[id].sens_offset;
 
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "name") {
@@ -205,10 +204,15 @@ void handleSetSensor() {
       DBG_PRINT("new_address ");
       DBG_PRINTLN(new_address);
     }
+    if (server.argName(i) == "offset")  {
+      new_offset = server.arg(i).toFloat();
+      DBG_PRINT("new_offset ");
+      DBG_PRINTLN(new_offset);
+    }
     yield();
   }
 
-  sensors[id].change(new_address, new_mqtttopic, new_name);
+  sensors[id].change(new_address, new_mqtttopic, new_name, new_offset);
   saveConfig();
   server.send(201, "text/plain", "created");
 }
@@ -218,7 +222,7 @@ void handleDelSensor() {
 
   //  Alle einen nach vorne schieben
   for (int i = id; i < numberOfSensors; i++) {
-    sensors[i].change(sensors[i + 1].getSens_adress_string(), sensors[i + 1].sens_mqtttopic, sensors[i + 1].sens_name);
+    sensors[i].change(sensors[i + 1].getSens_adress_string(), sensors[i + 1].sens_mqtttopic, sensors[i + 1].sens_name, sensors[i + 1].sens_offset);
   }
 
   // den letzten löschen
@@ -252,6 +256,7 @@ void handleRequestSensors() {
   for (int i = 0; i < numberOfSensors; i++) {
     JsonObject& sensorResponse = jsonBuffer.createObject();;
     sensorResponse["name"] = sensors[i].sens_name;
+    sensorResponse["offset"] = sensors[i].sens_offset;
     //if ((sensors[i].sens_value != -127.0) && (sensors[i].sens_value != 85.0)) {
     if (sensors[i].sens_value != -127.0) {
       sensorResponse["value"] = sensors[i].getValueString();
@@ -279,6 +284,10 @@ void handleRequestSensor() {
   } else {
     if (request == "name") {
       message = sensors[id].sens_name;
+      goto SendMessage;
+    }
+    if (request == "offset") {
+      message = sensors[id].sens_offset;
       goto SendMessage;
     }
     if (request == "script") {

@@ -169,18 +169,24 @@ void setupOTA()
       DBG_PRINTLN("OTA starting - updateing SPIFFS");
       //SPIFFS.end();
     }
-    showDispOTA(0, 100);
+    if (useDisplay) {
+      showDispOTA(0, 100);
+    }
   });
   ArduinoOTA.onEnd([]() {
     DBG_PRINTLN("OTA update finished!");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    showDispOTA(progress, total);
+    if (useDisplay){ 
+      showDispOTA(progress, total);
+    }
     DBG_PRINT("OTA in progress: ");
     DBG_PRINTLN((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    showDispOTAEr(String(error));
+    if (useDisplay) {
+      showDispOTAEr(String(error));
+    }
     DBG_PRINT("Error: ");
     DBG_PRINTLN(error);
     if (error == OTA_AUTH_ERROR)

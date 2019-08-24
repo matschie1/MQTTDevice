@@ -49,8 +49,7 @@ bool loadFromSpiffs(String path) {
   return true;
 }
 
-void mqttcallback(char* topic, byte* payload, unsigned int length) {
-
+void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
   DBG_PRINTLN("Received MQTT");
   DBG_PRINT("Topic: ");
   DBG_PRINTLN(topic);
@@ -263,15 +262,18 @@ void handleSetMisc() {
 // Some helper functions WebIf
 void rebootDevice()
 {
-  cbpiEventSystem(11);
+  //cbpiEventSystem(11);
+  cbpiEventSystem(EM_REBOOT);
 }
 
 void turnMqttOff()
 {
-  cbpiEventSystem(10);
+  //cbpiEventSystem(10);
+  cbpiEventSystem(EM_MQTTDIS);
 }
 
 void OTA()
 {
-  cbpiEventSystem(9);
+  //cbpiEventSystem(9);
+  cbpiEventSystem(EM_OTASET);
 }

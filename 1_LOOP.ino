@@ -38,14 +38,17 @@ void loop()
     lastToggledSys = millis();
   }
 
-  if (millis() > (lastToggledDisp + DISP_UPDATE))
+  if (useDisplay) 
   {
-    DBG_PRINT("Loop: event display DISP_UPDATE ");
-    DBG_PRINT(DISP_UPDATE);
-    DBG_PRINT(" lastToggledDisp ");
-    DBG_PRINTLN(lastToggledDisp);
-    cbpiEventSystem(EM_DISPUP); // Display Update
-    lastToggledDisp = millis();
+    if (millis() > (lastToggledDisp + DISP_UPDATE))
+    {
+      DBG_PRINT("Loop: event display DISP_UPDATE ");
+      DBG_PRINT(DISP_UPDATE);
+      DBG_PRINT(" lastToggledDisp ");
+      DBG_PRINTLN(lastToggledDisp);
+      cbpiEventSystem(EM_DISPUP); // Display Update
+      lastToggledDisp = millis();
+    }
   }
   if (startOTA)
   {

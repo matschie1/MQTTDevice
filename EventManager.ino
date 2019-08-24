@@ -125,7 +125,7 @@ void listenerSystem(int event, int parm) // System event listener
     ESP.restart();
     break;
   case EM_OTASET: // Setup OTA Service (12)
-    DBG_PRINT("Start OTA");
+    DBG_PRINTLN("Enable Over The Air Updates - Start OTA handle");
     startOTA = true;
     setupOTA();
     break;
@@ -217,7 +217,7 @@ void listenerSystem(int event, int parm) // System event listener
         DBG_PRINT(nameMDNS);
         DBG_PRINT(" to: ");
         IPAddress ip = WiFi.localIP();
-        DBG_PRINTLN(ip);
+        DBG_PRINTLN(ip.toString());
       }
     }
     break;

@@ -11,8 +11,6 @@ bool loadConfig() {
   }
   
   size_t size = configFile.size();
-  DBG_PRINT("Config file size: ");
-  DBG_PRINTLN(size);
   if (size > 1024) {
     DBG_PRINT("Config file size is too large");
     DBG_PRINTLN("------ loadConfig aborted ------");
@@ -27,8 +25,16 @@ bool loadConfig() {
     DBG_PRINTLN("JSON buffer unsuccessful: aborted");
     return false;
   }
+
+  // JSON 6
+  //StaticJsonDocument<1400> jsonDoc;
+  //auto error = deserializeJson(jsonDoc, buf.get());
+  
   
   JsonArray& jsonactors = json["actors"];
+  
+  // JSON 6
+  // JsonArray jsonactors = jsonDoc["actors"];
   numberOfActors = jsonactors.size();
   if (numberOfActors > 6) {
     numberOfActors = 6;
@@ -74,15 +80,18 @@ bool loadConfig() {
       String aadress = jsonsensor["ADDRESS"];
       String ascript = jsonsensor["SCRIPT"];
       String aname = jsonsensor["NAME"];
-      sensors[i].change(aadress, ascript, aname);
+      float aoffset = jsonsensor["OFFSET"];
+      sensors[i].change(aadress, ascript, aname, aoffset);
       DBG_PRINT("Sensor ");
       DBG_PRINT(aname);
+      DBG_PRINT(" Offset ");
+      DBG_PRINT(aoffset);
       DBG_PRINT(" SCRIPT ");
       DBG_PRINT(ascript);
       DBG_PRINT(" ADDRESS ");
       DBG_PRINTLN(aadress);
     } else {
-      sensors[i].change("", "", "");
+      sensors[i].change("", "", "", 0.0);
     }
   }
   DBG_PRINTLN("--------------------");
@@ -308,9 +317,12 @@ bool saveConfig()
     JsonObject& jssensor = jssensors.createNestedObject();
     jssensor["ADDRESS"] = sensors[i].getSens_adress_string();
     jssensor["NAME"] = sensors[i].sens_name;
+    jssensor["OFFSET"] = sensors[i].sens_offset;
     jssensor["SCRIPT"] = sensors[i].sens_mqtttopic;
     DBG_PRINT("Sensor ");
     DBG_PRINT(sensors[i].sens_name);
+    DBG_PRINT(" Offset ");
+    DBG_PRINT(sensors[i].sens_offset);
     DBG_PRINT(" address ");
     DBG_PRINT(sensors[i].getSens_adress_string());
     DBG_PRINTLN(" saved");
@@ -426,6 +438,16 @@ bool saveConfig()
 
   json.printTo(configFile);
   configFile.close();
+  
+  size_t len = json.measureLength();
+  DBG_PRINT("JSON config length: ");
+  DBG_PRINTLN(len);
+  if (len > 1500) {
+    DBG_PRINTLN("Error: JSON config too big!");
+    DBG_PRINTLN("Error: JSON config coud not be saved completely to SPIFFS!");
+    DBG_PRINTLN("Try short names for all sensors and actors, eg. s1, a1 etc.");
+  }
+  
   DBG_PRINTLN("------ saveConfig finished ------");
   return true;
 }

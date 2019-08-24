@@ -1,9 +1,30 @@
-
+void millis2wait(int value)
+{
+  unsigned long pause = millis();
+  while (millis() < pause + value)
+  {
+    //wait approx. [period] ms
+    yield();
+  }
+}
 void DBG_PRINT(String value)
 {
   if (setDEBUG) Serial.print(value);
 }
 void DBG_PRINT(int value)
+{
+  if (setDEBUG) Serial.print(value);
+}
+void DBG_PRINT(unsigned int value)
+{
+  if (setDEBUG) Serial.print(value);
+}
+void DBG_PRINT(long unsigned int value)
+{
+  if (setDEBUG) Serial.print(value);
+}
+
+void DBG_PRINT(float value)
 {
   if (setDEBUG) Serial.print(value);
 }
@@ -19,11 +40,23 @@ void DBG_PRINTLN(int value)
 {
   if (setDEBUG) Serial.println(value);
 }
+void DBG_PRINTLN(unsigned int value)
+{
+  if (setDEBUG) Serial.println(value);
+}
+void DBG_PRINTLN(long unsigned int value)
+{
+  if (setDEBUG) Serial.println(value);
+}
+
+void DBG_PRINTLN(float value)
+{
+  if (setDEBUG) Serial.println(value);
+}
 void DBG_PRINTLNHEX(int value)
 {
   if (setDEBUG) Serial.println(value, HEX);
 }
-
 void DBG_PRINTLNTS(unsigned long value) // Timestamp
 {
   value = value / 1000;
@@ -36,7 +69,7 @@ void DBG_PRINTLNTS(unsigned long value) // Timestamp
   }
 }
 
-String decToHex(byte decValue, byte desiredStringLength)
+String decToHex(unsigned char decValue, unsigned char desiredStringLength)
 {
   String hexString = String(decValue, HEX);
   while (hexString.length() < desiredStringLength) hexString = "0" + hexString;
@@ -44,9 +77,9 @@ String decToHex(byte decValue, byte desiredStringLength)
   return "0x" + hexString;
 }
 
-byte convertCharToHex(char ch)
+unsigned char convertCharToHex(char ch)
 {
-  byte returnType;
+  unsigned char returnType;
   switch (ch)
   {
     case '0':

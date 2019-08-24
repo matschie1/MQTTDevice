@@ -7,13 +7,12 @@
    Unterstützung für GGM Induktionskochfeld
    Unterstützung für "PWM" Steuerung mit GPIO (Heizstab)
 
-   Unterstützung für OverTheAir Firmware Changes
    Unterstützung für Web Update
    Unterstützung für OLED Display 126x64 I2C (D1+D2)
 */
 
 /*########## INCLUDES ##########*/
-#include <Arduino.h>
+//#include <Arduino.h>         // Entfernt: wird automatisch einbezogen -> String does not name a type
 #include <OneWire.h>           // OneWire Bus Kommunikation
 #include <DallasTemperature.h> // Vereinfachte Benutzung der DS18B20 Sensoren
 
@@ -44,7 +43,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[5]  = "1.02";
+const char Version[5]  = "1.03";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -83,8 +82,7 @@ int CMD[6][33] = {
     {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},  // P3
     {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},  // P4
     {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}}; // P5
-byte PWR_STEPS[] = {0, 20, 40, 60, 80, 100};                                                              // Prozentuale Abstufung zwischen den Stufen
-
+unsigned char PWR_STEPS[] = {0, 20, 40, 60, 80, 100};                                                              // Prozentuale Abstufung zwischen den Stufen
 String errorMessages[10] = {
     "E0",
     "E1",
@@ -98,16 +96,16 @@ String errorMessages[10] = {
     "EC"};
 
 bool pins_used[17];
-const byte numberOfPins = 9;
-const byte pins[numberOfPins] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
+const unsigned char numberOfPins = 9;
+const unsigned char pins[numberOfPins] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 const String pin_names[numberOfPins] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
 /*########## VARIABLEN #########*/
-byte numberOfSensors = 0;           // Gesamtzahl der Sensoren
-const byte numberOfSensorsMax = 10; // Maximale Gesamtzahl Sensoren
-byte addressesFound[numberOfSensorsMax][8];
-byte numberOfSensorsFound = 0;
-byte numberOfActors = 0;              // Gesamtzahl der Aktoren
+unsigned char numberOfSensors = 0;           // Gesamtzahl der Sensoren
+const unsigned char numberOfSensorsMax = 10; // Maximale Gesamtzahl Sensoren
+unsigned char addressesFound[numberOfSensorsMax][8];
+unsigned char numberOfSensorsFound = 0;
+unsigned char numberOfActors = 0;              // Gesamtzahl der Aktoren
 char mqtthost[16] = "192.168.100.30"; // Default Value für MQTT Server
 
 // Set device name
@@ -133,26 +131,26 @@ int ACT_UPDATE = 10000;  //  actor event
 int IND_UPDATE = 10000;  //  induction cooker event
 int DISP_UPDATE = 10000; //  NTP and display update
 
-#define SYS_UPDATE 100
+#define SYS_UPDATE 0      // 0 := keine Verzögerung
 #define MQTT_DELAY 30000 // MQTT reconnect
 // System error events
 #define EM_WLANER 1
 #define EM_MQTTER 2
 #define EM_SPIFFS 6
-#define EM_WEBER 7
+#define EM_WEBER  7
 
 // System triggered events
 #define EM_MQTTDIS 10
-#define EM_REBOOT 11
-#define EM_OTASET 12
+#define EM_REBOOT  11
+#define EM_OTASET  12
 
 // System run & set events
 #define EM_WLAN 20
-#define EM_OTA 21
+#define EM_OTA  21
 #define EM_MQTT 22
-#define EM_WEB 23
+#define EM_WEB  23
 #define EM_MDNS 24
-#define EM_NTP 25
+#define EM_NTP  25
 #define EM_MDNSET 26
 
 #define EM_DISPUP 30
@@ -189,9 +187,10 @@ unsigned long lastSenInd;
 unsigned long lastSysAct;
 unsigned long lastSysInd;
 
-byte sensorsStatus = 0;
-byte actorsStatus = 0;
-byte inductionStatus = 0;
+unsigned char sensorsStatus = 0;
+unsigned char actorsStatus = 0;
+unsigned char inductionStatus = 0;
+
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
@@ -207,6 +206,6 @@ Adafruit_SSD1306 display(-1);
 // Using VSCode modify absolut path to icons.h
 #include "C:/Arduino/git/MQTTDevice/icons.h"
 bool useDisplay = false;
-const byte DISPLAY_PINS[2] = {D1, D2};
+const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
 // D2 -> SDA Oled Display

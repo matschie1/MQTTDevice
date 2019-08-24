@@ -14,10 +14,11 @@
     <div class="container">
       <div class="row">
         <div class="col">
-          <h1 class="text-center">MQTT Device V 1.02</h1>
+          <h1 class="text-center">MQTT Device V 1.03</h1>
         </div>
         <div class="col-md-auto">
 			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
+			<a href="/update" class="btn btn-outline-danger" id="btn_upd">Update</a>
 			<button type="button" class="btn btn-outline-danger" id="btn_ota">Start OTA</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_disable_mqtt">Disable MQTT</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
@@ -169,6 +170,10 @@
             <div class="form-group">
               <label for="modal_sensor_script">MQTT Topic</label>
               <input type="text" class="form-control" placeholder="" id="modal_sensor_script">
+            </div>
+			<div class="form-group">
+              <label for="modal_sensor_offset">Offset </label>
+              <input type="text" class="form-control" placeholder="" id="modal_sensor_offset">
             </div>
           </form>
         </div>
@@ -324,9 +329,11 @@
           }
           else {
             sensor += element.value + "°C";
-          }
-          sensor += " </span> <span class='badge badge-info'> "
-          sensor += element.mqtt;
+          }		  
+          sensor += " </span> "
+          sensor += element.offset;
+		  sensor += "<span class='badge badge-info'> "
+		  sensor += element.mqtt;
           sensor += " </span> <a href='' class='badge badge-warning' data-toggle='modal' data-target='#sensor_modal' data-value='";
           sensor += index;
           sensor += "'> Edit </a> </li>";
@@ -534,6 +541,7 @@
       var sensorid = button.data('value') // Extract info from data-* attributes
       var sensorname;
       var sensorscript;
+	  var sensoroffset;
       $.ajax({
         url: '/reqSensor?id=' + sensorid + '&req=name',
         type: 'get',
@@ -554,10 +562,21 @@
           sensorscript = data;
         }
       });
+	  $.ajax({
+        url: '/reqSensor?id=' + sensorid + '&req=offset',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          sensoroffset = data;
+        }
+      });
       $('#modal_sensor_address').load('/reqSearchSensorAdresses?id=' + sensorid);
       var modal = $(this)
       modal.find('#modal_sensor_name').val(sensorname)
       modal.find('#modal_sensor_script').val(sensorscript)
+	  modal.find('#modal_sensor_offset').val(sensoroffset)
       modal.attr('sensor_id', sensorid)
     })
 
@@ -567,8 +586,9 @@
       var sensorscript = modal.find('#modal_sensor_script').val()
       var sensorid = modal.attr('sensor_id')
       var sensoraddress = modal.find('#modal_sensor_address').val()
+	  var sensoroffset = modal.find('#modal_sensor_offset').val()
       $.ajax({
-        url: '/setSensor?id=' + sensorid + '&name=' + sensorname + '&topic=' + sensorscript + '&address=' + sensoraddress,
+        url: '/setSensor?id=' + sensorid + '&name=' + sensorname + '&topic=' + sensorscript + '&address=' + sensoraddress + '&offset=' + sensoroffset,
         type: 'POST',
         dataType: 'html',
         async: false,

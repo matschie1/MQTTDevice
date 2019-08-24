@@ -3,14 +3,14 @@ class Actor
   unsigned long powerLast; // Zeitmessung für High oder Low
   bool isInverted = false;
   int dutycycle_actor = 5000;
-  byte OFF;
-  byte ON;
+  unsigned char OFF;
+  unsigned char ON;
 
 public:
-  byte pin_actor = 9; // the number of the LED pin
+  unsigned char pin_actor = 9; // the number of the LED pin
   String argument_actor;
   String name_actor;
-  byte power_actor;
+  unsigned char power_actor;
   bool isOn;
   bool switchable;
 
@@ -55,12 +55,7 @@ public:
     {
       digitalWrite(pin_actor, HIGH);
       pins_used[pin_actor] = false;
-      unsigned long pause = millis();
-      while (millis() < pause + 10)
-      {
-        //wait approx. [period] ms
-        yield();
-      }
+      millis2wait(10);
     }
 
     pin_actor = StringToPin(pin);
@@ -382,7 +377,7 @@ void handlereqPins()
   server.send(200, "text/plain", message);
 }
 
-byte StringToPin(String pinstring)
+unsigned char StringToPin(String pinstring)
 {
   for (int i = 0; i < numberOfPins; i++)
   {
@@ -394,7 +389,7 @@ byte StringToPin(String pinstring)
   return 9;
 }
 
-String PinToString(byte pinbyte)
+String PinToString(unsigned char pinbyte)
 {
   for (int i = 0; i < numberOfPins; i++)
   {
@@ -406,7 +401,7 @@ String PinToString(byte pinbyte)
   return "NaN";
 }
 
-bool isPin(byte pinbyte)
+bool isPin(unsigned char pinbyte)
 {
   bool returnValue = false;
   for (int i = 0; i < numberOfPins; i++)

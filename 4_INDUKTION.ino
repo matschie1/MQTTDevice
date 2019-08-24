@@ -7,10 +7,10 @@ class induction
     unsigned long lastInterrupt;
     unsigned long lastCommand;
     bool inputStarted = false;
-    byte inputCurrent = 0;
-    byte inputBuffer[33];
+    unsigned char inputCurrent = 0;
+    unsigned char inputBuffer[33];
     bool isError = false;
-    byte error = 0;
+    unsigned char error = 0;
 
     //int storePower = 0;
     long powerSampletime = 20000;
@@ -19,12 +19,13 @@ class induction
     long powerLow = 0;
 
   public:
-    byte PIN_WHITE = 9;       // RELAIS
-    byte PIN_YELLOW = 9;      // AUSGABE AN PLATTE
-    byte PIN_INTERRUPT = 9;   // EINGABE VON PLATTE
+    unsigned char PIN_WHITE = 9;       // RELAIS
+    unsigned char PIN_YELLOW = 9;      // AUSGABE AN PLATTE
+    unsigned char PIN_INTERRUPT = 9;   // EINGABE VON PLATTE
     int power = 0;
     int newPower = 0;
-    byte CMD_CUR = 0;                 // Aktueller Befehl
+    //byte CMD_CUR = 0;                 // Aktueller Befehl
+    unsigned char CMD_CUR = 0;                 // Aktueller Befehl
     boolean isRelayon = false;        // Systemstatus: ist das Relais in der Platte an?
     boolean isInduon = false;         // Systemstatus: ist Power > 0?
     boolean isPower = false;
@@ -38,8 +39,8 @@ class induction
     induction() {
       setupCommands();
     }
-
-    void change(byte pinwhite, byte pinyellow, byte pinblue, String topic, long delayoff, bool is_enabled) {
+    
+    void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled) {
       if (isEnabled) {
         // aktuelle PINS deaktivieren
         if (isPin(PIN_WHITE)) {
@@ -267,20 +268,9 @@ setPowerLevel:                                      /* Wie lange "HIGH" oder "LO
 
     void sendCommand(int command[33]) {
       digitalWrite(PIN_YELLOW, HIGH);
-      unsigned long last = millis();
-      while (millis() < last + SIGNAL_START)
-      {
-        // wait for approx SIGNAL_START ms
-        yield();
-      }
+      millis2wait(SIGNAL_START);
       digitalWrite(PIN_YELLOW, LOW);
-      last = millis();
-      while (millis() < last + SIGNAL_WAIT)
-      {
-        // wait for approx SIGNAL_WAIT ms
-        yield();
-      }
-
+      millis2wait(SIGNAL_WAIT);
       for (int i = 0; i < 33; i++) {
         digitalWrite(PIN_YELLOW, HIGH);
         delayMicroseconds(command[i]);
@@ -399,7 +389,7 @@ void handleRequestIndu() {
   }
   if (request == "pins")  {
     int id = server.arg(1).toInt();
-    byte pinswitched;
+    unsigned char pinswitched;
     switch (id) {
       case 0:
         pinswitched = inductionCooker.PIN_WHITE;
@@ -433,10 +423,9 @@ SendMessage:
 }
 
 void handleSetIndu() {
-
-  byte pin_white = inductionCooker.PIN_WHITE;
-  byte pin_blue = inductionCooker.PIN_INTERRUPT;
-  byte pin_yellow = inductionCooker.PIN_YELLOW;
+  unsigned char pin_white = inductionCooker.PIN_WHITE;
+  unsigned char pin_blue = inductionCooker.PIN_INTERRUPT;
+  unsigned char pin_yellow = inductionCooker.PIN_YELLOW;
   long delayoff = inductionCooker.delayAfteroff;
   bool is_enabled = inductionCooker.isEnabled;
   String topic = inductionCooker.mqtttopic;
