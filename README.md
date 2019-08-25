@@ -1,28 +1,36 @@
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
 Requirements:
-- Arduino IDE 1.8.8 
+- Arduino IDE 1.8.9
+- ESP8266 by ESP8266 Community boardlibs Version 2.5.2
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
 -- set useDisplay true or false
 -- VSCode: change the path #include "C:/Arduino/git/MQTTDevice/icons.h". 
 -- Arduino IDE: simply use #include "icons.h".
-- download th follow libs:  
-OneWire (by Jim Studt..) version 2.3.4
+- download and install the following libs:  
 
-DallasTemperature (by Miles Burton...) version 3.8.0
+NTPClient by Fabrice Weinberg Version 3.1.0
 
-PubSubClient (by Nick O''Leary) version 2.6.0
+Adafruit Circuit Playground by Adafruit Version 1.8.6
 
-ArduinoJson (by Benoit Bianchon) version 5.13.4 (only this version! Do not update lib!)
+Adafruit GFX Library by Adafruit Version 1.5.6
 
-WiFiManager (by tzapu) version 0.14.0
+Adafruit SSD1306 by Adafruit Version 1.3.0
 
-NTPClient (by by Fabrice Weinberg) version 3.1.0
+ArduinoJSON by Benoit Blanchon Version 5.13.4 (only use this version! Do not update this lib!)
+
+DallasTemperature by Miles Burton Version 3.8.0
+
+OneWire By Jim Studt Version 2.3.4
+
+PubSubClient by Nick O'Leary Version 2.7.0
 
 Time by Michael Margolis Version 1.5.0
 
 Timezone by Jack Christensen Version 1.2.2
+
+WiFiManager by tzapu Version 0.14.0
 
 TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
