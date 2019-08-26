@@ -43,7 +43,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.032";
+const char Version[6]  = "1.033";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/

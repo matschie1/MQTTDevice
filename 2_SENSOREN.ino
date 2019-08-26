@@ -52,8 +52,6 @@ class TemperatureSensor
             DBG_PRINT(sens_name);
             DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
             sensorsStatus = 3;
-            sens_value = 20.1;
-            sensorsStatus = 0;
           }
           else {// not connected and unvalid address
             sensorsStatus = 4;
@@ -106,7 +104,7 @@ class TemperatureSensor
         }
         else
         {
-          Sensor["Value"] = sens_offset;
+          Sensor["Value"] = sens_value;
         }
         Sensor["Type"] = "1-wire";
         char jsonMessage[100];
