@@ -131,7 +131,7 @@ bool loadConfig() {
   // Neu 20190426
   // Exception on atol function when no induction is configured
   //
-  if (useDisplay) {
+  //if (useDisplay == true) {
     JsonArray& jsodisplay = json["display"];
     JsonObject& jsdisplay = jsodisplay[0];
     String dispAddress = jsdisplay["ADDRESS"];
@@ -153,17 +153,19 @@ bool loadConfig() {
       DBG_PRINTLN(dispAddress);
     }
     else {
-    oledDisplay.dispEnabled = 0;
-    DBG_PRINTLN("Display disabled");
+      useDisplay = false;
+      oledDisplay.dispEnabled = 0;
+      DBG_PRINTLN("Display disabled");
     }
     oledDisplay.change(address, oledDisplay.dispEnabled);
-  }
-  else
-  {
-    oledDisplay.dispEnabled = 0;
-    DBG_PRINTLN("Display disabled");
-    oledDisplay.change(0, oledDisplay.dispEnabled);
-  }
+
+//  }
+//  else
+//  {
+//    oledDisplay.dispEnabled = 0;
+//    DBG_PRINTLN("Display disabled");
+//    oledDisplay.change(0, oledDisplay.dispEnabled);
+//  }
   
   DBG_PRINTLN("--------------------");
 

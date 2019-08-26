@@ -101,7 +101,13 @@ class TemperatureSensor
 
         json["Name"] = sens_name;
         JsonObject& Sensor = json.createNestedObject("Sensor");
-        Sensor["Value"] = (sens_value + sens_offset);
+        if (sensorsStatus == 0) {
+          Sensor["Value"] = (sens_value + sens_offset);
+        }
+        else
+        {
+          Sensor["Value"] = sens_offset;
+        }
         Sensor["Type"] = "1-wire";
         char jsonMessage[100];
         json.printTo(jsonMessage);
