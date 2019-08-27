@@ -147,6 +147,10 @@ bool loadConfig() {
     if (dispStatus == "1") {
       oledDisplay.dispEnabled = 1;
       useDisplay = true;
+      DBG_PRINT("OLED display enabled: ");
+      DBG_PRINTLN(oledDisplay.dispEnabled);
+      DBG_PRINT(" useDisplay Status: ");
+      DBG_PRINTLN(useDisplay);
       DBG_PRINT("Display address: ");
       DBG_PRINTLN(dispAddress);
       DBG_PRINT("Display update interval: ");
@@ -156,6 +160,10 @@ bool loadConfig() {
       useDisplay = false;
       oledDisplay.dispEnabled = 0;
       DBG_PRINTLN("Display disabled");
+      DBG_PRINT("OLED display enabled: ");
+      DBG_PRINTLN(oledDisplay.dispEnabled);
+      DBG_PRINT(" useDisplay Status: ");
+      DBG_PRINTLN(useDisplay);
     }
     oledDisplay.change(address, oledDisplay.dispEnabled);
 
@@ -369,6 +377,10 @@ bool saveConfig()
 
   if (oledDisplay.dispEnabled) {
     jsdisplay["ENABLED"] = "1";
+    DBG_PRINT("OLED display enabled: ");
+    DBG_PRINTLN(oledDisplay.dispEnabled);
+    DBG_PRINT(" useDisplay Status: ");
+    DBG_PRINTLN(useDisplay);
     DBG_PRINT("Display address ");
     DBG_PRINTLN(String(decToHex(oledDisplay.address, 2)));
     DBG_PRINT("Display update interval ");
@@ -376,6 +388,10 @@ bool saveConfig()
   } else {
     jsdisplay["ENABLED"] = "0";
     DBG_PRINTLN("Display disabled");
+    DBG_PRINT("OLED display enabled: ");
+    DBG_PRINTLN(oledDisplay.dispEnabled);
+    DBG_PRINT(" useDisplay Status: ");
+    DBG_PRINTLN(useDisplay);
   }
   DBG_PRINTLN("--------------------");
 

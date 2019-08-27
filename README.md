@@ -12,8 +12,6 @@ Requirements:
 
 NTPClient by Fabrice Weinberg Version 3.1.0
 
-Adafruit Circuit Playground by Adafruit Version 1.8.6
-
 Adafruit GFX Library by Adafruit Version 1.5.6
 
 Adafruit SSD1306 by Adafruit Version 1.3.0

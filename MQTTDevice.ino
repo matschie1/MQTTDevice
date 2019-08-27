@@ -43,7 +43,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.033";
+const char Version[6]  = "1.034";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -200,8 +200,9 @@ unsigned char inductionStatus = 0;
 #include <Adafruit_SSD1306.h>
 #define SCREEN_WIDTH 128      // OLED display width, in pixels
 #define SCREEN_HEIGHT 64      // OLED display height, in pixels
-#define DISP_DEF_ADDRESS 0x3c // Only used on init setup!
-Adafruit_SSD1306 display(-1);
+#define DISP_DEF_ADDRESS 0x3C // Only used on init setup!
+#define OLED_RESET LED_BUILTIN //4
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 //#include "icons.h"
 // Using VSCode modify absolut path to icons.h
 #include "C:/Arduino/git/MQTTDevice/icons.h"

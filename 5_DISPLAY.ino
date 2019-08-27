@@ -39,8 +39,10 @@ public:
     if (is_enabled == 1 && dispAddress != 0)
     {
       address = dispAddress;
-      display.begin(SSD1306_SWITCHCAPVCC, address, true);
+      //display.begin(SSD1306_SWITCHCAPVCC, address, true);
+      display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
       display.ssd1306_command(SSD1306_DISPLAYON);
+      //display.setFont();  
       display.clearDisplay();
       display.display();
       dispEnabled = is_enabled;
@@ -66,8 +68,8 @@ public:
     // convert received time stamp to time_t object
     // time_t local, utc;
     utc = epochTime;
-    TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 0}; //Central European Summer Time
-    TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 0};   //Central European Standard Time
+    TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 60}; //Central European Summer Time
+    TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 120};   //Central European Standard Time
     Timezone CE(CEST, CET);
     local = CE.toLocal(utc);
     setTime(local);
