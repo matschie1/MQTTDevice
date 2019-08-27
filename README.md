@@ -91,10 +91,15 @@ OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLE
 ![oled4](/img/display1.jpg)
 
 Wiring ESP8266 D1 Mini, AZ-Delivery 0.96 i2c 128x64 OLED display
+
 VCC -> 3.3V
+
 GND -> GND
+
 SCL -> D1
+
 SDA -> D2
+
 
 WLAN and MQTT icon will automatically disappear, if an error raises up.
 Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
