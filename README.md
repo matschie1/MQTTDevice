@@ -1,13 +1,19 @@
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
+Please note: starting with Version 1.034 you need to install Adafruit SSD1306 and Adafruit GFX in your Arduino IDE. Libs are removed from repository!
+
 Requirements:
 - Arduino IDE 1.8.9
 - ESP8266 by ESP8266 Community boardlibs Version 2.5.2
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
+
 -- set useDisplay true or false
+
 -- VSCode: change the path #include "C:/Arduino/git/MQTTDevice/icons.h". 
+
 -- Arduino IDE: simply use #include "icons.h".
+
 - download and install the following libs:  
 
 NTPClient by Fabrice Weinberg Version 3.1.0
