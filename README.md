@@ -77,19 +77,16 @@ In misc menu you can
 ### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
 
-#define SYS_UPDATE  10		-> System update events should be queued approx. every 10ms
-
-#define SEN_UPDATE  5000	-> Sensor data read should be queued approx. every 5s
-
-#define ACT_UPDATE  10000	-> Actor data read/write should be queued approx. every 10s
-
-#define IND_UPDATE  10000	-> Induction data read/write should be queued approx. every 10s
-
-#define DISP_UPDATE 10000	-> Display screen update queued approx. every 10s
+* SYS_UPDATE  10		-> System update events should be queued approx. every 10ms
+* SEN_UPDATE  5000	-> Sensor data read should be queued approx. every 5s
+* ACT_UPDATE  10000	-> Actor data read/write should be queued approx. every 10s
+* IND_UPDATE  10000	-> Induction data read/write should be queued approx. every 10s
+* DISP_UPDATE 10000	-> Display screen update queued approx. every 10s
 
 Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. 
 
 CAUTION: If you do not know, what these time periods will effect, leave all of them on default! 
+
 CAUTION: Setting SYS_UPDATE to a higher value will slow down device! Prefered value should be 0 (zero) which means: start all system handles ín any loop (no delay) 
 
 ### FileBrowser:
