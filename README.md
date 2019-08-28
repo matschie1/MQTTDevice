@@ -94,8 +94,8 @@ ArduinoOTA can be activated on webif. Keep in mind to start OTA on ESP before yo
 ### Debug information:
 You can enable debug output on serial monitor for testing purpose or to find out working settings for your equipment.
 
-### OLED Display: (not yet ready)
-You can use OLED display. Up now only an OLED monochrome display 128x64 I2C is tested.
+### OLED Display:
+You can use OLED display. This firmware is tested with monochrom OLED 128x64 I2C 0.96".
 OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
 WLAN and MQTT icon will automatically disappear, if an error raises up.
 Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
@@ -106,14 +106,11 @@ Sensors, actors and induction are displayed with their configured number. In an 
 ![oled3](/img/display.jpg)
 ![oled4](/img/display1.jpg)
 
-Wiring ESP8266 D1 Mini, AZ-Delivery 0.96 i2c 128x64 OLED display
+Wiring ESP8266 D1 Mini, AZ-Delivery 0.96 i2c 128x64 OLED display (use this information on your own risk!)
 
-VCC -> 3.3V
-
-GND -> GND
-
-SCL -> D1
-
-SDA -> D2
+ * VCC -> 3.3V
+ * GND -> GND
+ * SCL -> D1
+ * SDA -> D2
 
 This repo is based on https://github.com/matschie1/MQTTDevice Main work is done by matschie! 
