@@ -85,10 +85,6 @@ Configured are 4 event queues: system, sensors, actors and induction. For exampl
 
 Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. 
 
-CAUTION: If you do not know, what these time periods will effect, leave all of them on default! 
-
-CAUTION: Setting SYS_UPDATE to a higher value will slow down device! Prefered value should be 0 (zero) which means: start all system handles ín any loop (no delay) 
-
 ### FileBrowser:
 You can browse, down- an dupload files from/to spiffs. This makes it very easy to safe or restore configuration (config.json)
 
