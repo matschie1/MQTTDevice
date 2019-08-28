@@ -30,16 +30,21 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 
 - Arduino IDE 1.8.9 
 - ESP8266 by ESP8266 Community version 2.5.2
-- download lib folder
+- download lib folder from repository
+
+-- EventManager
+
+-- ESP8266HTTPUpdateServer
+
 - modify MQTTDevice.ino as you prefer:
 
 -- set useDisplay true or false
 
--- VSCode: change the path #include "C:/Arduino/git/MQTTDevice/icons.h". 
+-- VSCode: change path as your need #include "C:/Arduino/git/MQTTDevice/icons.h". 
 
 -- Arduino IDE: simply use #include "icons.h".
 
-- download and install the following libs:  
+- download and install the following libs in your Arduino IDE:  
 
 NTPClient by Fabrice Weinberg Version 3.1.0
 
