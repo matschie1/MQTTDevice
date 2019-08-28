@@ -7,12 +7,6 @@
 
 The MQTTDevice is an Arduino Sketch based on the ESP8266 to enable stable communication between the CraftBeerPi and wireless actors and sensors.
 
-### Why do i need it?
-
-I can only speak for myself. I wanted a centralized CBPi installation that shows me all the information in one place, but i need sensors and actors all over the place. E.g. the fridge in the basement, the fermenter somewhere in the house and the brewery again someplace else.
-
-This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication which is why i chose it.
-
 ### What does it offer?
 
 * Web Interface for configuration
@@ -32,9 +26,10 @@ This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication 
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
 
-### Requirements:
-- Arduino IDE 1.8.9
-- ESP8266 by ESP8266 Community boardlibs Version 2.5.2
+### Requirements: (2019.08)
+
+- Arduino IDE 1.8.9 
+- ESP8266 by ESP8266 Community version 2.5.2
 - download lib folder
 - modify MQTTDevice.ino as you prefer:
 
@@ -72,23 +67,29 @@ Please note: starting with Version 1.03 you need to install Adafruit SSD1306 and
 
 
 ### Main Functions
-- Firmware and SPIFFS Over the Air Updates
-- Firmware and SPIFFS file upload 
+
+- Add, edit and remove sensors, actors and induction
+- Configure OLED display
+- Configure misc settings
+- Firmware and SPIFFS Over the Air Update
+- Firmware and SPIFFS update by file upload 
 - Filebrowser for easy file management (eg backup and restore config.json)
 - DS18B20 temperature offset
 
 ### Misc Menu:
 In misc menu you can
+- configure time period to update sensor, actor, induction, system and display data
 - reset WiFi settings		-> ESP device will reboot in AP mode!
 - clear all settings		-> ESP device will reboot in AP mode!
 - edit MQTT broker IP address
 - configure event handling (actors and induction on/off with delay)
 - configure Debug output serial monitor
+- configure mDNS
 
 ### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
 
-#define SYS_UPDATE  100		-> System update events should be queued approx. every 100ms
+#define SYS_UPDATE  10		-> System update events should be queued approx. every 10ms
 
 #define SEN_UPDATE  5000	-> Sensor data read should be queued approx. every 5s
 
@@ -99,6 +100,9 @@ Configured are 4 event queues: system, sensors, actors and induction. For exampl
 #define DISP_UPDATE 10000	-> Display screen update queued approx. every 10s
 
 Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. 
+
+CAUTION: If you do not know, what these time periods will effect, leave all of them on default! 
+CAUTION: Setting SYS_UPDATE to a higher value will slow down device! Prefered value should be 0 (zero) which means: start all system handles ín any loop (no delay) 
 
 ### FileBrowser:
 You can browse, down- an dupload files from/to spiffs. This makes it very easy to safe or restore configuration (config.json)
