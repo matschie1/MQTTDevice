@@ -103,16 +103,14 @@ bool loadConfig() {
   String pin_blue = jsinduction["PINBLUE"];
   String is_enabled_str = jsinduction["ENABLED"];
   bool is_enabled_bl = false;
+  inductionStatus = 0;
 
   String js_mqtttopic = jsinduction["TOPIC"];
-  //
-  // Neu 20190426
-  // Exception on atol
-  //
   long delayoff = 0;
   if (is_enabled_str == "1") {
     delayoff = atol(jsinduction["DELAY"]);
     is_enabled_bl = true;
+    inductionStatus = 1;
     DBG_PRINT("Induction ");
     DBG_PRINT(js_mqtttopic);
     DBG_PRINT(" WHITE ");

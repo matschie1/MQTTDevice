@@ -1,8 +1,38 @@
+![ov1](/img/overview.jpg)
+
+# MQTTDevice
+
+## General Introduction
+### What is is?
+
+The MQTTDevice is an Arduino Sketch based on the ESP8266 to enable stable communication between the CraftBeerPi and wireless actors and sensors.
+
+### Why do i need it?
+
+I can only speak for myself. I wanted a centralized CBPi installation that shows me all the information in one place, but i need sensors and actors all over the place. E.g. the fridge in the basement, the fermenter somewhere in the house and the brewery again someplace else.
+
+This is why i wanted WiFi-Connected Devices. MQTT offers a stable communication which is why i chose it.
+
+### What does it offer?
+
+* Web Interface for configuration
+
+* Sensors
+  * Search for OneWire addresses
+  * value is read in a configurable period[sec], corrected by an optional offset and sent to CraftBeerPi
+* Actors
+  * Choose PIN
+  * Used PINS are not shown
+  * Inverted GPIO
+  * Power Percentage: If a Value between 0 and 100% is sent, the ESP "pulses" with a duty cycle of 1000ms
+* Induction
+  * Control of a GGM Induction Cooker via serial communication
+
+
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
-Please note: starting with Version 1.034 you need to install Adafruit SSD1306 and Adafruit GFX in your Arduino IDE. Libs are removed from repository!
 
-Requirements:
+### Requirements:
 - Arduino IDE 1.8.9
 - ESP8266 by ESP8266 Community boardlibs Version 2.5.2
 - download lib folder
@@ -38,15 +68,16 @@ WiFiManager by tzapu Version 0.14.0
 
 TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
-![fw1](/img/fw103.jpg)
+Please note: starting with Version 1.03 you need to install Adafruit SSD1306 and Adafruit GFX in your Arduino IDE. Libs are removed from repository!
 
-Main Functions
+
+### Main Functions
 - Firmware and SPIFFS Over the Air Updates
 - Firmware and SPIFFS file upload 
 - Filebrowser for easy file management (eg backup and restore config.json)
 - DS18B20 temperature offset
 
-Misc Menu:
+### Misc Menu:
 In misc menu you can
 - reset WiFi settings		-> ESP device will reboot in AP mode!
 - clear all settings		-> ESP device will reboot in AP mode!
@@ -54,7 +85,7 @@ In misc menu you can
 - configure event handling (actors and induction on/off with delay)
 - configure Debug output serial monitor
 
-EventManager:
+### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
 
 #define SYS_UPDATE  100		-> System update events should be queued approx. every 100ms
@@ -69,21 +100,21 @@ Configured are 4 event queues: system, sensors, actors and induction. For exampl
 
 Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. 
 
-FileBrowser:
+### FileBrowser:
 You can browse, down- an dupload files from/to spiffs. This makes it very easy to safe or restore configuration (config.json)
 
-Over the Air Updates:
+### Over the Air Updates:
 ArduinoOTA can be activated on webif. Keep in mind to start OTA on ESP before you open Arduino-IDE.
 
-mDNS:
-You can active mDNS on webif if required.
-
-Debug information:
+### Debug information:
 You can enable debug output on serial monitor for testing purpose or to find out working settings for your equipment.
 
-OLED Display: (not yet ready)
+### OLED Display: (not yet ready)
 You can use OLED display. Up now only an OLED monochrome display 128x64 I2C is tested.
 OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
+WLAN and MQTT icon will automatically disappear, if an error raises up.
+Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
+
 
 ![oled1](/img/display3.jpg)
 ![oled2](/img/display2.jpg)
@@ -99,9 +130,5 @@ GND -> GND
 SCL -> D1
 
 SDA -> D2
-
-
-WLAN and MQTT icon will automatically disappear, if an error raises up.
-Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
 
 This repo is based on https://github.com/matschie1/MQTTDevice Main work is done by matschie! 

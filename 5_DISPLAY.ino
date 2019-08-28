@@ -344,10 +344,14 @@ void showDispInd() // Show InductionCooker status on the right
   display.setTextSize(1);
   display.setCursor(87, 55);
   display.setTextColor(WHITE);
-  if (inductionStatus == 0)
-    display.print("Ind:ok");
+  if (inductionStatus == 1)
+    display.print("In:on");
+  else if (inductionStatus == 0)
+    display.print("In:off");
+  else if (inductionStatus == -1)
+    display.print("In:err");
   else
-    display.print("Ind:Er");
+    display.print("In:??");
 }
 
 void showDispTime(String value) // Show time value in the upper left with fontsize 2
