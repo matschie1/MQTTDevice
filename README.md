@@ -28,68 +28,51 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 
 ### Requirements: (2019.08)
 
-- Arduino IDE 1.8.9 
-- ESP8266 by ESP8266 Community version 2.5.2
-- download lib folder from repository
+* Arduino IDE 1.8.9 
+* ESP8266 by ESP8266 Community version 2.5.2
+* download lib folder from repository
+  * EventManager
+  * ESP8266HTTPUpdateServer
+* modify MQTTDevice.ino as you prefer:
+  * set useDisplay true or false
+  * VSCode change path: #include "C:/Arduino/git/MQTTDevice/icons.h". 
+  * Arduino IDE: simply use #include "icons.h".
+* download and install the following libs in your Arduino IDE:  
 
--- EventManager
-
--- ESP8266HTTPUpdateServer
-
-- modify MQTTDevice.ino as you prefer:
-
--- set useDisplay true or false
-
--- VSCode: change path as your need #include "C:/Arduino/git/MQTTDevice/icons.h". 
-
--- Arduino IDE: simply use #include "icons.h".
-
-- download and install the following libs in your Arduino IDE:  
-
-NTPClient by Fabrice Weinberg Version 3.1.0
-
-Adafruit GFX Library by Adafruit Version 1.5.6
-
-Adafruit SSD1306 by Adafruit Version 1.3.0
-
-ArduinoJSON by Benoit Blanchon Version 5.13.4 (only use this version! Do not update this lib!)
-
-DallasTemperature by Miles Burton Version 3.8.0
-
-OneWire By Jim Studt Version 2.3.4
-
-PubSubClient by Nick O'Leary Version 2.7.0
-
-Time by Michael Margolis Version 1.5.0
-
-Timezone by Jack Christensen Version 1.2.2
-
-WiFiManager by tzapu Version 0.14.0
-
-TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+  * NTPClient by Fabrice Weinberg Version 3.1.0
+  * Adafruit GFX Library by Adafruit Version 1.5.6
+  * Adafruit SSD1306 by Adafruit Version 1.3.0
+  * ArduinoJSON by Benoit Blanchon Version 5.13.4 (only use this version! Do not update this lib!)
+  * DallasTemperature by Miles Burton Version 3.8.0
+  * OneWire By Jim Studt Version 2.3.4
+  * PubSubClient by Nick O'Leary Version 2.7.0
+  * Time by Michael Margolis Version 1.5.0
+  * Timezone by Jack Christensen Version 1.2.2
+  * WiFiManager by tzapu Version 0.14.0
+  * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
 Please note: starting with Version 1.03 you need to install Adafruit SSD1306 and Adafruit GFX in your Arduino IDE. Libs are removed from repository!
 
 
 ### Main Functions
 
-- Add, edit and remove sensors, actors and induction
-- Configure OLED display
-- Configure misc settings
-- Firmware and SPIFFS Over the Air Update
-- Firmware and SPIFFS update by file upload 
-- Filebrowser for easy file management (eg backup and restore config.json)
-- DS18B20 temperature offset
+* Add, edit and remove sensors, actors and induction
+* Configure OLED display
+* Configure misc settings
+* Firmware and SPIFFS Over the Air Update
+* Firmware and SPIFFS update by file upload 
+* Filebrowser for easy file management (eg backup and restore config.json)
+* DS18B20 temperature offset
 
 ### Misc Menu:
 In misc menu you can
-- configure time period to update sensor, actor, induction, system and display data
-- reset WiFi settings		-> ESP device will reboot in AP mode!
-- clear all settings		-> ESP device will reboot in AP mode!
-- edit MQTT broker IP address
-- configure event handling (actors and induction on/off with delay)
-- configure Debug output serial monitor
-- configure mDNS
+* configure time period to update sensor, actor, induction, system and display data
+* reset WiFi settings		-> ESP device will reboot in AP mode!
+* clear all settings		-> ESP device will reboot in AP mode!
+* edit MQTT broker IP address
+* configure event handling (actors and induction on/off with delay)
+* configure Debug output serial monitor
+* configure mDNS
 
 ### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
