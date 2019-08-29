@@ -102,6 +102,11 @@ void setup()
   {
     gEM.processEvent();
   }
+
+  // Testing only!!! 
+  // PLEASE LEAVE THESE LINES UNCOMMENTED
+  // cbpiEventActors(EM_ACTTEST); // Switch on all actors
+  // cbpiEventInduction(EM_INDTEST); // Switch on Induction
 }
 
 void setupServer()

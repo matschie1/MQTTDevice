@@ -163,6 +163,9 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define EM_SENER 4 // Sensor all errors
 #define EM_ACTER 1 // Actor error
 #define EM_INDER 1 // Induction error
+#define EM_ACTTEST 2 // Test Actor error
+#define EM_INDTEST 2 // Test Induction error
+
 
 #define PAUSE1SEC 1000
 #define PAUSE2SEC 2000

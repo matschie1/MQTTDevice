@@ -17,7 +17,7 @@ void listenerSystem(int event, int parm) // System event listener
       // Stop induction on WLAN error
       if (StopInductionOnError)
       {
-        cbpiEventActors(EM_INDER);
+        cbpiEventInduction(EM_INDER);
       }
       break;
     }
@@ -89,7 +89,7 @@ void listenerSystem(int event, int parm) // System event listener
       // Stop induction on WLAN error
       if (StopInductionOnError)
       {
-        cbpiEventActors(EM_INDER);
+        cbpiEventInduction(EM_INDER);
       }
       break;
     }
@@ -196,6 +196,7 @@ void listenerSystem(int event, int parm) // System event listener
           DBG_PRINTLN("WLAN reconnect successful");
           retriesWLAN = 1;
           oledDisplay.wlanOK = true;
+          StopWLANOnError = false;
         }
         wlanconnectlasttry = millis();
         if ( retriesWLAN == (maxRetriesWLAN + 1) )
@@ -211,6 +212,7 @@ void listenerSystem(int event, int parm) // System event listener
     else
     {
       oledDisplay.wlanOK = true;
+      StopWLANOnError = false;
       retriesWLAN = 1;
     }
   
@@ -245,14 +247,13 @@ void listenerSystem(int event, int parm) // System event listener
         {
           retriesMQTT++;
           DBG_PRINT("EM: MQTT try to reconnect no. ");
-          DBG_PRINT(retriesMQTT);
-          DBG_PRINT(" Device name: ");
-          DBG_PRINTLN(mqtt_clientid);
+          DBG_PRINTLN(retriesMQTT);
           if (client.connect(mqtt_clientid))
           {
             DBG_PRINTLN("MQTT connect successful. Subscribing.");
             retriesMQTT = 1;
             oledDisplay.mqttOK = true;
+            StopMQTTOnError = false;
             for (int i = 0; i < numberOfActors; i++)
             {
               actors[i].mqtt_subscribe();
@@ -276,6 +277,7 @@ void listenerSystem(int event, int parm) // System event listener
       {
         oledDisplay.mqttOK = true;
         retriesMQTT = 1;
+        StopMQTTOnError = false;
         client.loop();
       }
     }
@@ -396,7 +398,7 @@ void listenerActors(int event, int parm) // Actor event listener
   case EM_OK: 
     break;
   case EM_ACTER:
-    DBG_PRINTLN("EM: received actor event - actor state not null (ok)");
+    //DBG_PRINTLN("EM: received actor event - actor state not null (ok)");
     for (int i = 0; i < numberOfActors; i++)
     {
       if (actors[i].switchable)
@@ -405,6 +407,13 @@ void listenerActors(int event, int parm) // Actor event listener
         actors[i].Update();
         //actors[i].publishmqtt(); // not yet ready
       }
+    }
+    break;
+  case EM_ACTTEST:
+    for (int i = 0; i < numberOfActors; i++)
+    {
+        actors[i].isOn = true;
+        actors[i].Update();
     }
     break;
   default:
@@ -419,13 +428,24 @@ void listenerInduction(int event, int parm) // Induction event listener
   case EM_OK:
     break;
   case EM_INDER:
-    DBG_PRINTLN("EM: received induction event - induction state not null (ok)");
+    //DBG_PRINTLN("EM: received induction event - induction state not null (ok)");
     if (inductionCooker.isInduon)
     {
       inductionCooker.isInduon = false;
       inductionCooker.Update();
-      //inductionCooker.publishmqtt(); // not yet ready
+      DBG_PRINTLN("EM: received induction event - INDER");
     }
+    break;
+  case EM_INDTEST:
+    // delayAfteroff muss einen haben (120000)
+    DBG_PRINTLN("EM: received induction event - INDTEST");
+    inductionCooker.newPower = 100;
+    inductionCooker.isInduon = true;
+    inductionCooker.isRelayon = true;
+    inductionCooker.isPower = true;
+    inductionCooker.isEnabled = true;
+    inductionCooker.Update();
+    DBG_PRINTLN("EM: Induction ist switch on due to event INDTEST");
     break;
   default:
     break;

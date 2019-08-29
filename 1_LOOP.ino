@@ -1,9 +1,7 @@
 void loop()
 {
   cbpiEventSystem(EM_WEB);  // Webserver handle
-  cbpiEventSystem(EM_WLAN); // Check WLAN
-  cbpiEventSystem(EM_MQTT); // Check MQTT
-  
+    
   if (millis() > (lastToggledSen + SEN_UPDATE))
   {
 //      DBG_PRINT("Loop: event sensors SEN_UPDATE ");
@@ -26,8 +24,8 @@ void loop()
 
   if (millis() > (lastToggledSys + SYS_UPDATE))
   {
-    //cbpiEventSystem(EM_WLAN); // Check WLAN
-    //cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
+    cbpiEventSystem(EM_WLAN); // Check WLAN
+    cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
     cbpiEventSystem(EM_MDNS); // MDNS handle
     lastToggledSys = millis();
   }
