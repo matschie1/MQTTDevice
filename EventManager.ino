@@ -5,8 +5,24 @@ void listenerSystem(int event, int parm) // System event listener
   case EM_OK: // Normal mode
     break;
   // 1 - 9 Error events
-  case EM_WLANER: // WLAN error
-    oledDisplay.wlanOK = false;
+  case EM_WLANER: // WLAN error -> handling
+
+    if ( StopWLANOnError)  // WLAN in error state. configured retries and delay unsuccessful
+    {
+      // Stop actors on WLAN error
+      if (StopActorsOnError)
+      {
+        cbpiEventActors(EM_ACTER);
+      }
+      // Stop induction on WLAN error
+      if (StopInductionOnError)
+      {
+        cbpiEventActors(EM_INDER);
+      }
+      break;
+    }
+      
+  
     // Stop actors
     if (StopActorsOnError && lastSysAct == 0)
     {
@@ -45,9 +61,39 @@ void listenerSystem(int event, int parm) // System event listener
       }
     }
     break;
-  case EM_MQTTER: // MQTT Error
-    oledDisplay.mqttOK = false;
+  case EM_MQTTER: // MQTT Error -> handling
     // Stop actors
+
+    if ( (StopMQTTOnError) && (StopWLANOnError) ) // WLAN und MQTT ausgefallen
+    {
+      if ( retriesWLAN == (maxRetriesWLAN + 1) )
+      {
+        DBG_PRINTLN("EM: MQTT and WLAN in error state");
+      }
+    }
+    if ( (StopMQTTOnError) && !(StopWLANOnError) ) // MQTT Server nicht erreichbar, WLAN ok
+    {
+      if ( retriesMQTT == (maxRetriesMQTT + 1) )
+      {
+        DBG_PRINTLN("EM: MQTT in error state, but WLAN up'n'running");
+        retriesMQTT++;
+      }
+    }
+    if ( StopMQTTOnError)  // MQTT in error state. configured retries and delay unsuccessful
+    {
+      // Stop actors on WLAN error
+      if (StopActorsOnError)
+      {
+        cbpiEventActors(EM_ACTER);
+      }
+      // Stop induction on WLAN error
+      if (StopInductionOnError)
+      {
+        cbpiEventActors(EM_INDER);
+      }
+      break;
+    }
+
     if (StopActorsOnError && lastSysAct == 0)
     {
       lastSysAct = millis(); // Timestamp on error
@@ -131,13 +177,43 @@ void listenerSystem(int event, int parm) // System event listener
     break;
 
   // System run & set events
-  case EM_WLAN: // check WLAN (20)
+  case EM_WLAN: // check WLAN (20) and reconnect on error
     // ToDo: Check WLAN status
     if (WiFi.status() != WL_CONNECTED)
+    {
+      oledDisplay.wlanOK = false;
       cbpiEventSystem(EM_WLANER);
-    else
-      oledDisplay.wlanOK = true;
+      if ((millis() > (wlanconnectlasttry + WLAN_DELAY)) && ( retriesWLAN <= maxRetriesWLAN))
+      {
+        DBG_PRINT("WLAN connection lost - try to reconnect no. ");
+        DBG_PRINT(retriesWLAN);
+        wifiManager.setSaveConfigCallback(saveConfigCallback);  
+        wifiManager.autoConnect(mqtt_clientid);
+        retriesWLAN++;
 
+        if (WiFi.status() == WL_CONNECTED)
+        {
+          DBG_PRINTLN("WLAN reconnect successful");
+          retriesWLAN = 1;
+          oledDisplay.wlanOK = true;
+        }
+        wlanconnectlasttry = millis();
+        if ( retriesWLAN == (maxRetriesWLAN + 1) )
+        {
+          DBG_PRINT("WLAN connection lost. Max retries of ");
+          DBG_PRINT(retriesWLAN);
+          DBG_PRINTLN(" reached");
+          StopWLANOnError = true;
+          cbpiEventSystem(EM_WLANER);
+        }
+      }
+    }
+    else
+    {
+      oledDisplay.wlanOK = true;
+      retriesWLAN = 1;
+    }
+  
     //         WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
     //        if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
     //        else if (WiFi.status() == WL_IDLE_STATUS)     DBG_PRINTLN("Wifi Status: WL_IDLE_STATUS");     // connection result 0
@@ -150,7 +226,6 @@ void listenerSystem(int event, int parm) // System event listener
     //        if (WiFi.status() == WL_DISCONNECTED) cbpiEventSystem(1);
     //        if (WiFi.status() == WL_CONNECTION_LOST) cbpiEventSystem(1);
     //        if (WiFi.status() == WL_CONNECT_FAILED) cbpiEventSystem(1);
-
     break;
   case EM_OTA: // check OTA (21)
     if (startOTA)
@@ -158,21 +233,26 @@ void listenerSystem(int event, int parm) // System event listener
       ArduinoOTA.handle();
     }
     break;
-  case EM_MQTT: // check MQTT (22)
+  case EM_MQTT: // check MQTT (22) and reconnect on error 
+  
     if ((numberOfActors + numberOfSensors > 0) || inductionCooker.isEnabled) // anything to subscribe?
     {
       if (!client.connected())
       {
         oledDisplay.mqttOK = false;
         cbpiEventSystem(EM_MQTTER);
-        if (millis() > (mqttconnectlasttry + MQTT_DELAY))
+        if ( (millis() > (mqttconnectlasttry + MQTT_DELAY) ) && (retriesMQTT <= maxRetriesMQTT) )
         {
-          DBG_PRINT("MQTT Trying to connect. Device name: ");
+          retriesMQTT++;
+          DBG_PRINT("EM: MQTT try to reconnect no. ");
+          DBG_PRINT(retriesMQTT);
+          DBG_PRINT(" Device name: ");
           DBG_PRINTLN(mqtt_clientid);
-          //oledDisplay.mqttOK = false;
           if (client.connect(mqtt_clientid))
           {
             DBG_PRINTLN("MQTT connect successful. Subscribing.");
+            retriesMQTT = 1;
+            oledDisplay.mqttOK = true;
             for (int i = 0; i < numberOfActors; i++)
             {
               actors[i].mqtt_subscribe();
@@ -180,17 +260,29 @@ void listenerSystem(int event, int parm) // System event listener
             inductionCooker.mqtt_subscribe();
           }
           mqttconnectlasttry = millis();
+          if ( retriesMQTT == (maxRetriesMQTT + 1) )
+          {
+            DBG_PRINT("EM: MQTT server ");
+            DBG_PRINT(mqtthost);
+            DBG_PRINT(" unavailable. Max retries ");
+            DBG_PRINT(maxRetriesMQTT);
+            DBG_PRINTLN(" reached.");
+            StopMQTTOnError = true;
+            cbpiEventSystem(EM_MQTTER);
+          }
         }
       }
       else
       {
         oledDisplay.mqttOK = true;
+        retriesMQTT = 1;
         client.loop();
       }
     }
     else
     {
-      oledDisplay.mqttOK = false;
+      oledDisplay.mqttOK = true;  // MQTT not required, no sensors, actors or induction active. In this state MQTT icon is visible. Change to false to hide icon on display
+      retriesMQTT = 1;
     }
     break;
   case EM_WEB: // Webserver (23)
@@ -240,16 +332,17 @@ void listenerSensors(int event, int parm) // Sensor event listener
   {
   case EM_OK:
     // all sensors ok
+    DBG_PRINTLN("EM: sensor event - ok ");
     break;
   case EM_CRCER:
     // Sensor CRC ceck failed
-    DBG_PRINTLN("EM: received event sensor crc check failed");
+    DBG_PRINTLN("EM: received sensor event - crc check failed");
   case EM_DEVER:
     // -127°C device error
-    DBG_PRINTLN("EM: received event sensor data error (-127°C)");
+    DBG_PRINTLN("EM: received sensor event - data error (-127°C)");
   case EM_UNPL:
     // sensor unpluged
-    DBG_PRINTLN("EM: received event sensor not connected");
+    DBG_PRINTLN("EM: received sensor event - not connected");
   //break;  // uncomment this line, if you don't want to stop actors when sensor is unpluged (shared device)
   case EM_SENER:
     // all other errors
@@ -303,7 +396,7 @@ void listenerActors(int event, int parm) // Actor event listener
   case EM_OK: 
     break;
   case EM_ACTER:
-    DBG_PRINTLN("EM_ACTER called");
+    DBG_PRINTLN("EM: received actor event - actor state not null (ok)");
     for (int i = 0; i < numberOfActors; i++)
     {
       if (actors[i].switchable)
@@ -324,10 +417,9 @@ void listenerInduction(int event, int parm) // Induction event listener
   switch (parm)
   {
   case EM_OK:
-
     break;
   case EM_INDER:
-    DBG_PRINTLN("EM_INDER called");
+    DBG_PRINTLN("EM: received induction event - induction state not null (ok)");
     if (inductionCooker.isInduon)
     {
       inductionCooker.isInduon = false;

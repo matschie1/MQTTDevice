@@ -92,8 +92,10 @@ class TemperatureSensor
       DS18B20.setResolution(sens_address, 10);
     }
 
-    void publishmqtt() {
-      if (client.connected()) {
+    void publishmqtt() 
+    {
+      if (client.connected()) 
+      {
         StaticJsonBuffer<256> jsonBuffer;
         JsonObject& json = jsonBuffer.createObject();
 

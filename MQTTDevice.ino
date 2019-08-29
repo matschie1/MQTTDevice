@@ -132,7 +132,6 @@ int IND_UPDATE = 10000;  //  induction cooker event
 int DISP_UPDATE = 10000; //  NTP and display update
 
 #define SYS_UPDATE 0      // 0 := keine Verzögerung
-#define MQTT_DELAY 30000 // MQTT reconnect
 // System error events
 #define EM_WLANER 1
 #define EM_MQTTER 2
@@ -168,6 +167,18 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define PAUSE1SEC 1000
 #define PAUSE2SEC 2000
 
+// WLAN and MQTT reconnect parameters
+int retriesWLAN = 1; // Counter WLAN reconnects
+int retriesMQTT = 1; // Counter MQTT reconnects
+unsigned long mqttconnectlasttry = 0; // Timestamp MQTT
+unsigned long wlanconnectlasttry = 0; // Timestamp WLAN
+#define maxRetriesWLAN 5 
+#define maxRetriesMQTT 5
+#define WLAN_DELAY 10000  // How long should device wait, before try to reconnect
+#define MQTT_DELAY 10000  // How long should device wait, before try to reconnect
+bool StopWLANOnError = false; // flase := WLAN ok btw. MQTT server available
+bool StopMQTTOnError = false; // true  := WLAN error btw. MQTT server not available
+
 bool startOTA = false;
 bool startMDNS = false;
 char nameMDNS[16];
@@ -181,7 +192,6 @@ unsigned long lastToggledSen = 0; // Sensor event delta
 unsigned long lastToggledAct = 0; // Actor event delta
 unsigned long lastToggledInd = 0; // Induction event delta
 unsigned long lastToggledDisp = 0;
-unsigned long mqttconnectlasttry = 0;
 unsigned long lastSenAct;
 unsigned long lastSenInd;
 unsigned long lastSysAct;
@@ -203,9 +213,9 @@ unsigned char inductionStatus = 0;
 #define DISP_DEF_ADDRESS 0x3C // Only used on init setup!
 #define OLED_RESET LED_BUILTIN //4
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
-//#include "icons.h"
+#include "icons.h"
 // Using VSCode modify absolut path to icons.h
-#include "C:/Arduino/git/MQTTDevice/icons.h"
+// #include "C:/Arduino/git/MQTTDevice/icons.h"
 bool useDisplay = false;
 const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay

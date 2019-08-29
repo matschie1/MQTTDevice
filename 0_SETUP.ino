@@ -83,6 +83,7 @@ void setup()
   }
 
   // Start MQTT
+  ESP.wdtFeed();
   client.setServer(mqtthost, 1883);
   client.setCallback(mqttcallback);
 
@@ -96,7 +97,7 @@ void setup()
   cbpiEventSystem(EM_WLAN);   // Check WLAN
   cbpiEventSystem(EM_MQTT);   // Check MQTT
   cbpiEventSystem(EM_DISPUP); // Update display
-
+  
   while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
   {
     gEM.processEvent();
