@@ -18,47 +18,47 @@ class TemperatureSensor
     }
 
     void Update() {
-        DS18B20.requestTemperatures(); // new conversion to get recent temperatures
-        if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
-          millis2wait(750);
-          DS18B20.requestTemperatures();
-        }
-        sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
-        sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+      DS18B20.requestTemperatures(); // new conversion to get recent temperatures
+      if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
+        millis2wait(750);
+        DS18B20.requestTemperatures();
+      }
+      sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
+      sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
 
-        DBG_PRINT(sens_name);
-        DBG_PRINT(" is connected: ");
-        DBG_PRINT(sens_isConnected);
-        DBG_PRINT(" sensor address: ");
-        for (int i = 0; i < 8; i++) {
-          DBG_PRINTHEX(sens_address[i]);
-          DBG_PRINT(" ");
+      DBG_PRINT(sens_name);
+      DBG_PRINT(" is connected: ");
+      DBG_PRINT(sens_isConnected);
+      DBG_PRINT(" sensor address: ");
+      for (int i = 0; i < 8; i++) {
+        DBG_PRINTHEX(sens_address[i]);
+        DBG_PRINT(" ");
+      }
+      DBG_PRINT(" sensor value: ");
+      DBG_PRINTLN(sens_value);
+      if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
+        DBG_PRINTLN(" CRC check failed");
+        sensorsStatus = 1;
+      }
+      //else DBG_PRINTLN(" CRC check ok");
+      //if (sens_value == -127.0 || sens_value == 85.0) {
+      else if (sens_value == -127.0 || sens_value == 85.0) {
+        if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
+          DBG_PRINT(sens_name);
+          DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
+          sensorsStatus = 2;
         }
-        DBG_PRINT(" sensor value: ");
-        DBG_PRINTLN(sens_value);
-        if ( OneWire::crc8( sens_address, 7) != sens_address[7]) {
-          DBG_PRINTLN(" CRC check failed");
-          sensorsStatus = 1;
+        else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
+          DBG_PRINT(sens_name);
+          DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
+          sensorsStatus = 3;
         }
-        //else DBG_PRINTLN(" CRC check ok");
-        //if (sens_value == -127.0 || sens_value == 85.0) {
-        else if (sens_value == -127.0 || sens_value == 85.0) {
-          if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
-            DBG_PRINT(sens_name);
-            DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
-            sensorsStatus = 2;
-          }
-          else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
-            DBG_PRINT(sens_name);
-            DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-            sensorsStatus = 3;
-          }
-          else {// not connected and unvalid address
-            sensorsStatus = 4;
-          } // sens_isConnected
-        } // sens_value -127 || +85
-        else sensorsStatus = 0;
-        publishmqtt();
+        else {// not connected and unvalid address
+          sensorsStatus = 4;
+        } // sens_isConnected
+      } // sens_value -127 || +85
+      else sensorsStatus = 0;
+      publishmqtt();
     } // void Update
 
     void change(String new_address, String new_mqtttopic, String new_name, float new_offset) {
@@ -92,9 +92,9 @@ class TemperatureSensor
       DS18B20.setResolution(sens_address, 10);
     }
 
-    void publishmqtt() 
+    void publishmqtt()
     {
-      if (client.connected()) 
+      if (client.connected())
       {
         StaticJsonBuffer<256> jsonBuffer;
         JsonObject& json = jsonBuffer.createObject();
@@ -188,7 +188,7 @@ void handleSetSensor() {
     id = numberOfSensors;
     numberOfSensors += 1;
   }
-  
+
   String new_mqtttopic = sensors[id].sens_mqtttopic;
   String new_name = sensors[id].sens_name;
   String new_address = sensors[id].getSens_adress_string();

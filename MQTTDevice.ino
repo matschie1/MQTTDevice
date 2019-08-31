@@ -43,7 +43,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.034";
+const char Version[6]  = "1.035";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -76,24 +76,26 @@ const int SIGNAL_WAIT_TOL = 5;
 
 /*  Binäre Signale für Induktionsplatte */
 int CMD[6][33] = {
-    {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},  // Aus
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},  // P1
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0},  // P2
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},  // P3
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},  // P4
-    {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}}; // P5
+  {1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},  // Aus
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0},  // P1
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0},  // P2
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},  // P3
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},  // P4
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}
+}; // P5
 unsigned char PWR_STEPS[] = {0, 20, 40, 60, 80, 100};                                                              // Prozentuale Abstufung zwischen den Stufen
 String errorMessages[10] = {
-    "E0",
-    "E1",
-    "E2",
-    "E3",
-    "E4",
-    "E5",
-    "E6",
-    "E7",
-    "E8",
-    "EC"};
+  "E0",
+  "E1",
+  "E2",
+  "E3",
+  "E4",
+  "E5",
+  "E6",
+  "E7",
+  "E8",
+  "EC"
+};
 
 bool pins_used[17];
 const unsigned char numberOfPins = 9;
@@ -175,7 +177,7 @@ int retriesWLAN = 1; // Counter WLAN reconnects
 int retriesMQTT = 1; // Counter MQTT reconnects
 unsigned long mqttconnectlasttry = 0; // Timestamp MQTT
 unsigned long wlanconnectlasttry = 0; // Timestamp WLAN
-#define maxRetriesWLAN 5 
+#define maxRetriesWLAN 5
 #define maxRetriesMQTT 5
 #define WLAN_DELAY 10000  // How long should device wait, before try to reconnect
 #define MQTT_DELAY 10000  // How long should device wait, before try to reconnect

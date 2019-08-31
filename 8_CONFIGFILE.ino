@@ -9,7 +9,7 @@ bool loadConfig() {
   else {
     DBG_PRINTLN("opened config file");
   }
-  
+
   size_t size = configFile.size();
   if (size > 1024) {
     DBG_PRINT("Config file size is too large");
@@ -18,7 +18,7 @@ bool loadConfig() {
   }
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
-  
+
   StaticJsonBuffer<1400> jsonBuffer;
   JsonObject& json = jsonBuffer.parseObject(buf.get());
   if (!json.success()) {
@@ -29,10 +29,10 @@ bool loadConfig() {
   // JSON 6
   //StaticJsonDocument<1400> jsonDoc;
   //auto error = deserializeJson(jsonDoc, buf.get());
-  
-  
+
+
   JsonArray& jsonactors = json["actors"];
-  
+
   // JSON 6
   // JsonArray jsonactors = jsonDoc["actors"];
   numberOfActors = jsonactors.size();
@@ -130,54 +130,54 @@ bool loadConfig() {
   // Exception on atol function when no induction is configured
   //
   //if (useDisplay == true) {
-    JsonArray& jsodisplay = json["display"];
-    JsonObject& jsdisplay = jsodisplay[0];
-    String dispAddress = jsdisplay["ADDRESS"];
-    dispAddress.remove(0, 2);
-    char copy[4];
-    dispAddress.toCharArray(copy, 4);
-    int address = strtol(copy, 0, 16);
-    int newdup = atol(jsdisplay["updisp"]);
-    if (newdup > 0) {
-      DISP_UPDATE = newdup;
-    }
-    String dispStatus = jsdisplay["ENABLED"];
-    if (dispStatus == "1") {
-      oledDisplay.dispEnabled = 1;
-      useDisplay = true;
-      DBG_PRINT("OLED display enabled: ");
-      DBG_PRINTLN(oledDisplay.dispEnabled);
-      DBG_PRINT(" useDisplay Status: ");
-      DBG_PRINTLN(useDisplay);
-      DBG_PRINT("Display address: ");
-      DBG_PRINTLN(dispAddress);
-      DBG_PRINT("Display update interval: ");
-      DBG_PRINTLN(dispAddress);
-    }
-    else {
-      useDisplay = false;
-      oledDisplay.dispEnabled = 0;
-      DBG_PRINTLN("Display disabled");
-      DBG_PRINT("OLED display enabled: ");
-      DBG_PRINTLN(oledDisplay.dispEnabled);
-      DBG_PRINT(" useDisplay Status: ");
-      DBG_PRINTLN(useDisplay);
-    }
-    oledDisplay.change(address, oledDisplay.dispEnabled);
+  JsonArray& jsodisplay = json["display"];
+  JsonObject& jsdisplay = jsodisplay[0];
+  String dispAddress = jsdisplay["ADDRESS"];
+  dispAddress.remove(0, 2);
+  char copy[4];
+  dispAddress.toCharArray(copy, 4);
+  int address = strtol(copy, 0, 16);
+  int newdup = atol(jsdisplay["updisp"]);
+  if (newdup > 0) {
+    DISP_UPDATE = newdup;
+  }
+  String dispStatus = jsdisplay["ENABLED"];
+  if (dispStatus == "1") {
+    oledDisplay.dispEnabled = 1;
+    useDisplay = true;
+    DBG_PRINT("OLED display enabled: ");
+    DBG_PRINTLN(oledDisplay.dispEnabled);
+    DBG_PRINT(" useDisplay Status: ");
+    DBG_PRINTLN(useDisplay);
+    DBG_PRINT("Display address: ");
+    DBG_PRINTLN(dispAddress);
+    DBG_PRINT("Display update interval: ");
+    DBG_PRINTLN(dispAddress);
+  }
+  else {
+    useDisplay = false;
+    oledDisplay.dispEnabled = 0;
+    DBG_PRINTLN("Display disabled");
+    DBG_PRINT("OLED display enabled: ");
+    DBG_PRINTLN(oledDisplay.dispEnabled);
+    DBG_PRINT(" useDisplay Status: ");
+    DBG_PRINTLN(useDisplay);
+  }
+  oledDisplay.change(address, oledDisplay.dispEnabled);
 
-//  }
-//  else
-//  {
-//    oledDisplay.dispEnabled = 0;
-//    DBG_PRINTLN("Display disabled");
-//    oledDisplay.change(0, oledDisplay.dispEnabled);
-//  }
-  
+  //  }
+  //  else
+  //  {
+  //    oledDisplay.dispEnabled = 0;
+  //    DBG_PRINTLN("Display disabled");
+  //    oledDisplay.change(0, oledDisplay.dispEnabled);
+  //  }
+
   DBG_PRINTLN("--------------------");
 
 
   // Misc Settings
-     
+
   JsonArray& jsomisc = json["misc"];
   JsonObject& jsmisc = jsomisc[0];
   String str_act = jsmisc["enable_act"];
@@ -234,19 +234,19 @@ bool loadConfig() {
     startMDNS = false;
     DBG_PRINTLN("mDNS disabled");
   }
-    String str_upsen = jsmisc["upsen"];
-    String str_upact = jsmisc["upact"];
-    String str_upind = jsmisc["upind"];
-    
-    if (str_upsen.length() > 0) {
-      SEN_UPDATE = str_upsen.toInt();
-    }
-    if (str_upact.length() > 0) {
-      ACT_UPDATE = str_upact.toInt();
-    }
-    if (str_upind.length() > 0) {
-      IND_UPDATE = str_upind.toInt();
-    }
+  String str_upsen = jsmisc["upsen"];
+  String str_upact = jsmisc["upact"];
+  String str_upind = jsmisc["upind"];
+
+  if (str_upsen.length() > 0) {
+    SEN_UPDATE = str_upsen.toInt();
+  }
+  if (str_upact.length() > 0) {
+    ACT_UPDATE = str_upact.toInt();
+  }
+  if (str_upind.length() > 0) {
+    IND_UPDATE = str_upind.toInt();
+  }
   DBG_PRINT("Sensors update intervall: ");
   DBG_PRINTLN(SEN_UPDATE);
   DBG_PRINT("Actors update intervall: ");
@@ -265,7 +265,7 @@ bool loadConfig() {
     DBG_PRINT("mqtthost not found in config file. Using default server address: ");
     DBG_PRINTLN(mqtthost);
   }
-  
+
   if (str_debug == "0") {
     DBG_PRINTLN("Debug output on serial monitor now disabled");
     DBG_PRINTLN("------ loadConfig finished ------");
@@ -441,7 +441,7 @@ bool saveConfig()
   jsmisc["upsen"] = SEN_UPDATE;
   jsmisc["upact"] = ACT_UPDATE;
   jsmisc["upind"] = IND_UPDATE;
-  
+
 
   DBG_PRINT("Sensor update interval ");
   DBG_PRINTLN(SEN_UPDATE);
@@ -454,7 +454,7 @@ bool saveConfig()
 
   json.printTo(configFile);
   configFile.close();
-  
+
   size_t len = json.measureLength();
   DBG_PRINT("JSON config length: ");
   DBG_PRINTLN(len);
@@ -463,7 +463,14 @@ bool saveConfig()
     DBG_PRINTLN("Error: JSON config coud not be saved completely to SPIFFS!");
     DBG_PRINTLN("Try short names for all sensors and actors, eg. s1, a1 etc.");
   }
-  
+
   DBG_PRINTLN("------ saveConfig finished ------");
+  IPAddress ip = WiFi.localIP();
+  String Network = WiFi.SSID();
+  DBG_PRINT("Device IP: ");
+  DBG_PRINTLN(ip.toString());
+  DBG_PRINT("WLAN SSID: ");
+  DBG_PRINTLN(Network);
+  DBG_PRINTLN("---------------------------------");
   return true;
 }

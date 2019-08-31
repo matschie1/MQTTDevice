@@ -39,7 +39,7 @@ class induction
     induction() {
       setupCommands();
     }
-    
+
     void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled) {
       if (isEnabled) {
         // aktuelle PINS deaktivieren
@@ -71,7 +71,7 @@ class induction
 
       mqtttopic = topic;
       delayAfteroff = delayoff;
-      
+
       // MQTT Publish - not yet ready
       //mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
 
@@ -124,27 +124,27 @@ class induction
       }
     }
 
-/*    //  Not yet ready
-    // MQTT Publish
-    void publishmqtt() {
-      if (client.connected()) {
-        StaticJsonBuffer<256> jsonBuffer;
-        JsonObject& json = jsonBuffer.createObject();
-        if (isInduon) {
-          json["state"] = "on";
-          json["power"] = String(power);
+    /*    //  Not yet ready
+        // MQTT Publish
+        void publishmqtt() {
+          if (client.connected()) {
+            StaticJsonBuffer<256> jsonBuffer;
+            JsonObject& json = jsonBuffer.createObject();
+            if (isInduon) {
+              json["state"] = "on";
+              json["power"] = String(power);
+            }
+            else
+              json["state"] = "off";
+
+            char jsonMessage[100];
+            json.printTo(jsonMessage);
+            client.publish(induction_mqtttopic, jsonMessage);
+            DBG_PRINT("MQTT pub message: ");
+            DBG_PRINTLN(jsonMessage);
+          }
         }
-        else
-          json["state"] = "off";
-        
-        char jsonMessage[100];
-        json.printTo(jsonMessage);
-        client.publish(induction_mqtttopic, jsonMessage);
-        DBG_PRINT("MQTT pub message: ");
-        DBG_PRINTLN(jsonMessage);
-      }
-    }
-*/
+    */
 
     void handlemqtt(char* payload) {
       StaticJsonBuffer<128> jsonBuffer;

@@ -1,84 +1,84 @@
 class oled
 {
-  String t;
-  unsigned long lastNTPupdate = 0;
+    String t;
+    unsigned long lastNTPupdate = 0;
 
-public:
-  bool dispEnabled = 0;
-  int address;
+  public:
+    bool dispEnabled = 0;
+    int address;
 
-  bool senOK = true;
-  bool actOK = true;
-  bool indOK = true;
-  bool wlanOK = true;
-  bool mqttOK = false;
+    bool senOK = true;
+    bool actOK = true;
+    bool indOK = true;
+    bool wlanOK = true;
+    bool mqttOK = false;
 
-  oled()
-  {
-  }
-
-  void dispUpdate()
-  {
-    if (dispEnabled == 1)
+    oled()
     {
-      showDispClear();
-      showDispTime(t);
-      showDispIP(WiFi.localIP().toString());
-      showDispWlan();
-      showDispMqtt();
-      showDispLines();
-      showDispSen();
-      showDispAct();
-      showDispInd();
-      showDispDisplay();
     }
-  }
 
-  void change(int dispAddress, bool is_enabled)
-  {
-    if (is_enabled == 1 && dispAddress != 0)
+    void dispUpdate()
     {
-      address = dispAddress;
-      //display.begin(SSD1306_SWITCHCAPVCC, address, true);
-      display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-      display.ssd1306_command(SSD1306_DISPLAYON);
-      //display.setFont();  
-      display.clearDisplay();
-      display.display();
-      dispEnabled = is_enabled;
-      timeClient.begin();
-      digClock();
+      if (dispEnabled == 1)
+      {
+        showDispClear();
+        showDispTime(t);
+        showDispIP(WiFi.localIP().toString());
+        showDispWlan();
+        showDispMqtt();
+        showDispLines();
+        showDispSen();
+        showDispAct();
+        showDispInd();
+        showDispDisplay();
+      }
     }
-    else
-    {
-      dispEnabled = is_enabled;
-    }
-  }
 
-  void digClock()
-  {
-    t = ""; // clear value for display
-    time_t local, utc;
-    if (millis() > (lastNTPupdate + NTP_INTERVAL))
+    void change(int dispAddress, bool is_enabled)
     {
-      cbpiEventSystem(EM_NTP);
-      lastNTPupdate = millis();
+      if (is_enabled == 1 && dispAddress != 0)
+      {
+        address = dispAddress;
+        //display.begin(SSD1306_SWITCHCAPVCC, address, true);
+        display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+        display.ssd1306_command(SSD1306_DISPLAYON);
+        //display.setFont();
+        display.clearDisplay();
+        display.display();
+        dispEnabled = is_enabled;
+        timeClient.begin();
+        digClock();
+      }
+      else
+      {
+        dispEnabled = is_enabled;
+      }
     }
-    unsigned long epochTime = timeClient.getEpochTime();
-    // convert received time stamp to time_t object
-    // time_t local, utc;
-    utc = epochTime;
-    TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 60}; //Central European Summer Time
-    TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 120};   //Central European Standard Time
-    Timezone CE(CEST, CET);
-    local = CE.toLocal(utc);
-    setTime(local);
-    t += hour(local);
-    t += ":";
-    if (minute(local) < 10) // add a zero if minute is under 10
-      t += "0";
-    t += minute(local);
-  }
+
+    void digClock()
+    {
+      t = ""; // clear value for display
+      time_t local, utc;
+      if (millis() > (lastNTPupdate + NTP_INTERVAL))
+      {
+        cbpiEventSystem(EM_NTP);
+        lastNTPupdate = millis();
+      }
+      unsigned long epochTime = timeClient.getEpochTime();
+      // convert received time stamp to time_t object
+      // time_t local, utc;
+      utc = epochTime;
+      TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 60}; //Central European Summer Time
+      TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 120};   //Central European Standard Time
+      Timezone CE(CEST, CET);
+      local = CE.toLocal(utc);
+      setTime(local);
+      t += hour(local);
+      t += ":";
+      if (minute(local) < 10) // add a zero if minute is under 10
+        t += "0";
+      t += minute(local);
+    }
 }
 
 oledDisplay = oled();
@@ -251,17 +251,17 @@ void showDispOTA(unsigned int progress, unsigned int total) // Show OTA icon
   bool up = false;
   switch (otaStatus)
   {
-  case 0:
-  case 20:
-  case 40:
-  case 60:
-  case 80:
-  case 100:
-    up = true;
-    break;
-  default:
-    up = false;
-    break;
+    case 0:
+    case 20:
+    case 40:
+    case 60:
+    case 80:
+    case 100:
+      up = true;
+      break;
+    default:
+      up = false;
+      break;
   }
   if (up)
   {

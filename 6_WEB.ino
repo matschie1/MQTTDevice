@@ -85,7 +85,7 @@ void handleRequestMiscSet() {
   miscResponse["delay_act"] = wait_on_error_actors / 1000;
   miscResponse["delay_ind"] = wait_on_error_induction / 1000;
   miscResponse["debug"] = setDEBUG;
-  
+
   String response;
   miscResponse.printTo(response);
   server.send(200, "application/json", response);
@@ -170,14 +170,14 @@ void handleSetMisc() {
       if (server.arg(i) == "1") {
         WiFi.disconnect();
         wifiManager.resetSettings();
-        
+
         unsigned long last = millis();
         while (millis() < last + PAUSE2SEC)
         {
           // just wait for approx 2sec
           yield();
         }
-        
+
         ESP.reset();
       }
     }
@@ -186,7 +186,7 @@ void handleSetMisc() {
         SPIFFS.remove("/config.json");
         WiFi.disconnect();
         wifiManager.resetSettings();
-        
+
         unsigned long last = millis();
         while (millis() < last + PAUSE2SEC)
         {

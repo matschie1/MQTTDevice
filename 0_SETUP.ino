@@ -39,10 +39,10 @@ void setup()
   if (SPIFFS.exists("/config.json"))
   {
     ESP.wdtFeed();
+    loadConfig();
     Serial.println(Version);
     Serial.print("Firmware version: ");
     Serial.println(Version);
-    loadConfig();
   }
   // set pins as used
   pins_used[ONE_WIRE_BUS] = true;
