@@ -80,7 +80,8 @@ bool loadConfig() {
       String aadress = jsonsensor["ADDRESS"];
       String ascript = jsonsensor["SCRIPT"];
       String aname = jsonsensor["NAME"];
-      float aoffset = jsonsensor["OFFSET"];
+      float aoffset = 0.0;
+      jsonsensor["OFFSET"] ? aoffset = jsonsensor["OFFSET"] : 0.0;
       sensors[i].change(aadress, ascript, aname, aoffset);
       DBG_PRINT("Sensor ");
       DBG_PRINT(aname);
@@ -108,7 +109,7 @@ bool loadConfig() {
   String js_mqtttopic = jsinduction["TOPIC"];
   long delayoff = 0;
   if (is_enabled_str == "1") {
-    delayoff = atol(jsinduction["DELAY"]);
+    jsinduction["DELAY"] ? delayoff = atol(jsinduction["DELAY"]) : 120000;
     is_enabled_bl = true;
     inductionStatus = 1;
     DBG_PRINT("Induction ");

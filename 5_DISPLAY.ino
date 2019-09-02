@@ -344,8 +344,16 @@ void showDispInd() // Show InductionCooker status on the right
   display.setTextSize(1);
   display.setCursor(87, 55);
   display.setTextColor(WHITE);
-  if (inductionStatus == 1)
-    display.print("In:on");
+  if (inductionStatus == 1) {
+    if (inductionCooker.isRelayon) {
+      display.print("In:");
+      display.print(inductionCooker.newPower);
+    }
+    else
+    {
+      display.print("In:off");
+    }
+  }
   else if (inductionStatus == 0)
     display.print("In:off");
   else if (inductionStatus == -1)

@@ -131,13 +131,13 @@ void listenerSystem(int event, int parm) // System event listener
       }
       break;
     case EM_SPIFFS: // SPIFFS error (6)
-      DBG_PRINT("SPIFFS Mount failed");
+      DBG_PRINTLN("EM: SPIFFS Mount failed");
       cbpiEventActors(EM_ACTER);
       cbpiEventInduction(EM_INDER);
       break;
 
     case EM_WEBER: // Webserver error (7)
-      DBG_PRINT("Webserver failed");
+      DBG_PRINTLN("EM: Webserver failed");
       cbpiEventActors(EM_ACTER);
       cbpiEventInduction(EM_INDER);
       break;
@@ -401,6 +401,10 @@ void listenerActors(int event, int parm) // Actor event listener
   {
     case EM_OK:
       break;
+    case 1:
+      break;
+    case 2:
+      break;
     case EM_ACTER:
       //DBG_PRINTLN("EM: received actor event - actor state not null (ok)");
       for (int i = 0; i < numberOfActors; i++)
@@ -431,6 +435,12 @@ void listenerInduction(int event, int parm) // Induction event listener
   {
     case EM_OK:
       break;
+    case 1:
+      //DBG_PRINTLN("EM: received induction event - relay on");
+      break;
+    case 2:
+      DBG_PRINTLN("EM: received induction event - error");
+      break;
     case EM_INDER:
       //DBG_PRINTLN("EM: received induction event - induction state not null (ok)");
       if (inductionCooker.isInduon)
@@ -441,7 +451,7 @@ void listenerInduction(int event, int parm) // Induction event listener
       }
       break;
     case EM_INDTEST:
-      // delayAfteroff muss einen haben (120000)
+      // delayAfteroff muss einen Wert haben (120000)
       DBG_PRINTLN("EM: received induction event - INDTEST");
       inductionCooker.newPower = 100;
       inductionCooker.isInduon = true;

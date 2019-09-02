@@ -43,7 +43,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.035";
+const char Version[6]  = "1.036";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -163,10 +163,10 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define EM_DEVER 2 // Sensor device error
 #define EM_UNPL 3  // Sensor unplugged
 #define EM_SENER 4 // Sensor all errors
-#define EM_ACTER 1 // Actor error
-#define EM_INDER 1 // Induction error
-#define EM_ACTTEST 2 // Test Actor error
-#define EM_INDTEST 2 // Test Induction error
+#define EM_ACTER 10 // Actor error
+#define EM_INDER 10 // Induction error
+#define EM_ACTTEST 20 // Test Actor error
+#define EM_INDTEST 20 // Test Induction error
 
 
 #define PAUSE1SEC 1000
