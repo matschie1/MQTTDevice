@@ -39,11 +39,13 @@ void setup()
   if (SPIFFS.exists("/config.json"))
   {
     ESP.wdtFeed();
+    DBG_PRINT("Firmware version: ");
+    DBG_PRINTLN(Version);
     loadConfig();
-    Serial.println(Version);
-    Serial.print("Firmware version: ");
-    Serial.println(Version);
   }
+  else
+    DBG_PRINTLN("Config file not found. Use defaults ...");
+
   // set pins as used
   pins_used[ONE_WIRE_BUS] = true;
   if (useDisplay)
@@ -64,6 +66,11 @@ void setup()
   ESP.wdtFeed();
   saveConfig();
 
+  // Start MQTT
+  ESP.wdtFeed();
+  cbpiEventSystem(EM_MQTTCON);   // MQTT connect
+  cbpiEventSystem(EM_MQTTSUB);   // MQTT subscribe
+
   // Display Start Screen
   ESP.wdtFeed();
   dispStartScreen();
@@ -82,30 +89,27 @@ void setup()
     setupOTA();
   }
 
-  // Start MQTT
-  ESP.wdtFeed();
-  client.setServer(mqtthost, 1883);
-  client.setCallback(mqttcallback);
-
   // Start Webserver
   ESP.wdtFeed();
   setupServer();
 
+
   ESP.wdtFeed();
-  cbpiEventSystem(EM_NTP);    // NTP handle
-  cbpiEventSystem(EM_MDNS);   // MDNS handle
   cbpiEventSystem(EM_WLAN);   // Check WLAN
   cbpiEventSystem(EM_MQTT);   // Check MQTT
-  cbpiEventSystem(EM_DISPUP); // Update display
-  
+  cbpiEventSystem(EM_NTP);    // NTP handle
+  cbpiEventSystem(EM_MDNS);   // MDNS handle
+
   while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
   {
     gEM.processEvent();
   }
 
-  // Testing only!!! 
-  // cbpiEventActors(EM_ACTTEST); // Switch on all actors
-  // cbpiEventInduction(EM_INDTEST); // Switch on Induction
+//  Test events - ignore!
+//  if (testing > 0) {
+//    startTest();  
+//  }
+
 }
 
 void setupServer()
@@ -128,14 +132,14 @@ void setupServer()
   server.on("/delActor", handleDelActor);       // Aktor löschen
   server.on("/reboot", rebootDevice);           // reboots the whole Device
   server.on("/OTA", OTA);
-  server.on("/mqttOff", turnMqttOff); // Turns off MQTT completly until reboot
+  server.on("/reconmqtt", reconMQTT);           // Reconnect MQTT
   server.on("/reqDisplay", handleRequestDisplay);
-  server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
-  server.on("/setDisp", handleSetDisp);     // Display ändern
-  server.on("/displayOff", turnDisplayOff); // Turns off display completly until reboot
+  server.on("/reqDisp", handleRequestDisp);     // Infos Display für WebConfig
+  server.on("/setDisp", handleSetDisp);         // Display ändern
+  server.on("/displayOff", turnDisplayOff);     // Display on / off
   server.on("/reqMiscSet", handleRequestMiscSet);
-  server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
-  server.on("/setMisc", handleSetMisc);     // Misc ändern
+  server.on("/reqMisc", handleRequestMisc);     // Misc Infos für WebConfig
+  server.on("/setMisc", handleSetMisc);         // Misc ändern
 
   // FSBrowser initialisieren
   server.on("/list", HTTP_GET, handleFileList); // list directory
@@ -150,7 +154,7 @@ void setupServer()
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
   },
-            handleFileUpload);
+  handleFileUpload);
 
   server.onNotFound(handleWebRequests); // Sonstiges
 
@@ -174,24 +178,21 @@ void setupOTA()
       DBG_PRINTLN("OTA starting - updateing SPIFFS");
       //SPIFFS.end();
     }
-    if (useDisplay) {
+    if (useDisplay)
       showDispOTA(0, 100);
-    }
   });
   ArduinoOTA.onEnd([]() {
     DBG_PRINTLN("OTA update finished!");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    if (useDisplay){ 
+    if (useDisplay)
       showDispOTA(progress, total);
-    }
     DBG_PRINT("OTA in progress: ");
     DBG_PRINTLN((progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    if (useDisplay) {
+    if (useDisplay)
       showDispOTAEr(String(error));
-    }
     DBG_PRINT("Error: ");
     DBG_PRINTLN(error);
     if (error == OTA_AUTH_ERROR)

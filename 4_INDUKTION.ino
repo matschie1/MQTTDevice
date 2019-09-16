@@ -32,6 +32,10 @@ class induction
     String mqtttopic = "";
     boolean isEnabled = false;
     long delayAfteroff = 120000;
+    int powerLevelOnError = 100;      // 100% schaltet das Event handling für Induktion aus
+    int powerLevelBeforeError = 0;    // in error event save last power state
+    bool induction_state = true;      // Error state induction
+
 
     // MQTT Publish - not yet ready
     // char induction_mqtttopic[50];      // Für MQTT Kommunikation
@@ -40,7 +44,7 @@ class induction
       setupCommands();
     }
 
-    void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled) {
+    void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled, int powerLevel) {
       if (isEnabled) {
         // aktuelle PINS deaktivieren
         if (isPin(PIN_WHITE)) {
@@ -71,6 +75,8 @@ class induction
 
       mqtttopic = topic;
       delayAfteroff = delayoff;
+      powerLevelOnError = powerLevel;
+      induction_state = true;
 
       // MQTT Publish - not yet ready
       //mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
@@ -153,7 +159,7 @@ class induction
       if (!json.success()) {
         return;
       }
-
+      
       String state = json["state"];
 
       if (state == "off") {
@@ -223,6 +229,7 @@ class induction
 
     void updatePower() {
       lastCommand = millis();
+
       if (power != newPower) {                              /* Neuer Befehl empfangen */
 
         if (newPower > 100) {
@@ -231,8 +238,8 @@ class induction
         if (newPower < 0)   {
           newPower = 0;    /* Nicht < 0 */
         }
-        DBG_PRINT("Setting Power to ");
-        DBG_PRINTLN(newPower);
+        //DBG_PRINT("Setting Power to ");
+        //DBG_PRINTLN(newPower);
         power = newPower;
 
         timeTurnedoff = 0;
@@ -355,6 +362,7 @@ void handleRequestInduction() {
     inductionResponse["relayOn"] = inductionCooker.isRelayon;
     inductionResponse["power"] = inductionCooker.power;
     inductionResponse["relayOn"] = inductionCooker.isRelayon;
+    inductionResponse["state"] = inductionCooker.induction_state;
     if (inductionCooker.isPower) {
       inductionResponse["powerLevel"] = inductionCooker.CMD_CUR;
     } else {
@@ -384,7 +392,11 @@ void handleRequestIndu() {
     goto SendMessage;
   }
   if (request == "delay") {
-    message = inductionCooker.delayAfteroff;
+    message = inductionCooker.delayAfteroff / 1000;
+    goto SendMessage;
+  }
+  if (request == "pl") {
+    message = inductionCooker.powerLevelOnError;
     goto SendMessage;
   }
   if (request == "pins")  {
@@ -429,7 +441,7 @@ void handleSetIndu() {
   long delayoff = inductionCooker.delayAfteroff;
   bool is_enabled = inductionCooker.isEnabled;
   String topic = inductionCooker.mqtttopic;
-
+  int pl = inductionCooker.powerLevelOnError;
 
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "enabled") {
@@ -452,12 +464,15 @@ void handleSetIndu() {
       pin_blue = StringToPin(server.arg(i));
     }
     if (server.argName(i) == "delay")  {
-      delayoff = server.arg(i).toInt();
+      delayoff = server.arg(i).toInt() * 1000;
+    }
+    if (server.argName(i) == "pl")  {
+      pl = server.arg(i).toInt();
     }
     yield();
   }
 
-  inductionCooker.change(pin_white, pin_yellow, pin_blue, topic, delayoff, is_enabled);
+  inductionCooker.change(pin_white, pin_yellow, pin_blue, topic, delayoff, is_enabled, pl);
 
   saveConfig();
 }

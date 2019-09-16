@@ -63,14 +63,24 @@ void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
   }
 
   if (inductionCooker.mqtttopic == topic) {
-    DBG_PRINTLN("passing mqtt to induction");
-    inductionCooker.handlemqtt(payload_msg);
+    if (inductionCooker.induction_state)
+    {
+      DBG_PRINTLN("passing mqtt to induction");
+      inductionCooker.handlemqtt(payload_msg);
+    }
+    else
+      DBG_PRINTLN("bypass mqtt due to induction state");
   }
   for (int i = 0; i < numberOfActors; i++) {
     if (actors[i].argument_actor == topic) {
-      DBG_PRINT("passing mqtt to actor ");
-      DBG_PRINTLN(actors[i].name_actor);
-      actors[i].handlemqtt(payload_msg);
+      if (actors[i].actor_state)
+      {
+        DBG_PRINT("passing mqtt to actor ");
+        DBG_PRINTLN(actors[i].name_actor);
+        actors[i].handlemqtt(payload_msg);
+      }
+      else
+        DBG_PRINTLN("bypass mqtt due to actor state");
     }
     yield();
   }
@@ -80,10 +90,14 @@ void handleRequestMiscSet() {
   StaticJsonBuffer<1024> jsonBuffer;
   JsonObject& miscResponse = jsonBuffer.createObject();
   miscResponse["MQTTHOST"] = mqtthost;
-  miscResponse["enable_act"] = StopActorsOnError;
-  miscResponse["enable_ind"] = StopInductionOnError;
-  miscResponse["delay_act"] = wait_on_error_actors / 1000;
-  miscResponse["delay_ind"] = wait_on_error_induction / 1000;
+  miscResponse["del_sen_act"] = wait_on_Sensor_error_actor / 1000;
+  miscResponse["del_sen_ind"] = wait_on_Sensor_error_induction / 1000;
+  miscResponse["enable_mqtt"] = StopOnMQTTError;
+  miscResponse["enable_wlan"] = StopOnWLANError;
+  miscResponse["mqtt_state"] = mqtt_state;
+  miscResponse["wlan_state"] = wlan_state;
+  miscResponse["delay_mqtt"] = wait_on_error_mqtt / 1000;
+  miscResponse["delay_wlan"] = wait_on_error_wlan / 1000;
   miscResponse["debug"] = setDEBUG;
 
   String response;
@@ -112,8 +126,8 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "enable_act") {
-    if (StopActorsOnError) {
+  if (request == "enable_mqtt") {
+    if (StopOnMQTTError) {
       message = "1";
     }
     else {
@@ -121,8 +135,8 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "enable_ind") {
-    if (StopInductionOnError) {
+  if (request == "enable_wlan") {
+    if (StopOnWLANError) {
       message = "1";
     }
     else {
@@ -130,12 +144,38 @@ void handleRequestMisc() {
     }
     goto SendMessage;
   }
-  if (request == "delay_act") {
-    message = wait_on_error_actors / 1000;
+  if (request == "delay_mqtt") {
+    message = wait_on_error_mqtt / 1000;
     goto SendMessage;
   }
-  if (request == "delay_ind") {
-    message = wait_on_error_induction / 1000;
+  if (request == "delay_wlan") {
+    message = wait_on_error_wlan / 1000;
+    goto SendMessage;
+  }
+  if (request == "wlan_state") {
+    if (wlan_state) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "mqtt_state") {
+    if (mqtt_state) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "del_sen_act") {
+    message = wait_on_Sensor_error_actor / 1000;
+    goto SendMessage;
+  }
+  if (request == "del_sen_ind") {
+    message = wait_on_Sensor_error_induction / 1000;
     goto SendMessage;
   }
   if (request == "debug") {
@@ -209,25 +249,31 @@ void handleSetMisc() {
         startMDNS = false;
       }
     }
-    if (server.argName(i) == "enable_act")  {
+    if (server.argName(i) == "enable_mqtt")  {
       if (server.arg(i) == "1") {
-        StopActorsOnError = true;
+        StopOnMQTTError = true;
       } else {
-        StopActorsOnError = false;
+        StopOnMQTTError = false;
       }
     }
-    if (server.argName(i) == "delay_act")  {
-      wait_on_error_actors = server.arg(i).toInt() * 1000;
+    if (server.argName(i) == "delay_mqtt")  {
+      wait_on_error_mqtt = server.arg(i).toInt() * 1000;
     }
-    if (server.argName(i) == "enable_ind")  {
+    if (server.argName(i) == "enable_wlan")  {
       if (server.arg(i) == "1") {
-        StopInductionOnError = true;
+        StopOnWLANError = true;
       } else {
-        StopInductionOnError = false;
+        StopOnWLANError = false;
       }
     }
-    if (server.argName(i) == "delay_ind")  {
-      wait_on_error_induction = server.arg(i).toInt() * 1000;
+    if (server.argName(i) == "delay_wlan")  {
+      wait_on_error_wlan = server.arg(i).toInt() * 1000;
+    }
+    if (server.argName(i) == "del_sen_act")  {
+      wait_on_Sensor_error_actor = server.arg(i).toInt() * 1000;
+    }
+    if (server.argName(i) == "del_sen_ind")  {
+      wait_on_Sensor_error_induction = server.arg(i).toInt() * 1000;
     }
     if (server.argName(i) == "debug")  {
       if (server.arg(i) == "1") {
@@ -266,10 +312,12 @@ void rebootDevice()
   cbpiEventSystem(EM_REBOOT);
 }
 
-void turnMqttOff()
+void reconMQTT()
 {
   //cbpiEventSystem(10);
-  cbpiEventSystem(EM_MQTTDIS);
+  retriesMQTT = 1;
+  mqttconnectlasttry = 0;
+  cbpiEventSystem(EM_MQTTER);
 }
 
 void OTA()

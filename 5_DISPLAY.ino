@@ -199,9 +199,11 @@ void dispStartScreen() // Show Startscreen
   {
     if (oledDisplay.dispEnabled == 1 && oledDisplay.address != 0)
     {
+      showDispClear();
       showDispCbpi();
       showDispSTA();
       showDispDisplay();
+      lastToggledDisp = millis();
     }
   }
 }

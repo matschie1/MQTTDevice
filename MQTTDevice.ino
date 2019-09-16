@@ -43,11 +43,11 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.036";
+const char Version[6]  = "1.040";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
-bool setDEBUG = false;
+bool setDEBUG = true;
 /*############ DEBUG ############*/
 
 /*########## KONSTANTEN #########*/
@@ -73,6 +73,7 @@ const int SIGNAL_START = 25;
 const int SIGNAL_START_TOL = 10;
 const int SIGNAL_WAIT = 10;
 const int SIGNAL_WAIT_TOL = 5;
+#define DEF_DELAY_IND 120000 //default delay after power off induction
 
 /*  Binäre Signale für Induktionsplatte */
 int CMD[6][33] = {
@@ -132,8 +133,8 @@ int SEN_UPDATE = 5000;   //  wait this time in ms before a sensor event is raise
 int ACT_UPDATE = 10000;  //  actor event
 int IND_UPDATE = 10000;  //  induction cooker event
 int DISP_UPDATE = 10000; //  NTP and display update
+int SYS_UPDATE = 0;      // 0 := keine Verzögerung
 
-#define SYS_UPDATE 0      // 0 := keine Verzögerung
 // System error events
 #define EM_WLANER 1
 #define EM_MQTTER 2
@@ -141,7 +142,7 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define EM_WEBER  7
 
 // System triggered events
-#define EM_MQTTDIS 10
+#define EM_MQTTRES 10
 #define EM_REBOOT  11
 #define EM_OTASET  12
 
@@ -153,6 +154,8 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define EM_MDNS 24
 #define EM_NTP  25
 #define EM_MDNSET 26
+#define EM_MQTTCON 27
+#define EM_MQTTSUB 28
 
 #define EM_DISPUP 30
 
@@ -165,47 +168,54 @@ int DISP_UPDATE = 10000; //  NTP and display update
 #define EM_SENER 4 // Sensor all errors
 #define EM_ACTER 10 // Actor error
 #define EM_INDER 10 // Induction error
-#define EM_ACTTEST 20 // Test Actor error
-#define EM_INDTEST 20 // Test Induction error
-
+#define EM_ACTOFF 11 // Actor error
+#define EM_INDOFF 11 // Induction error
+#define EM_ACTTEST 20 // Test event actor error
+#define EM_INDTEST 20 // Test event anduction error
+#define EM_SENTEST1 20 // Test event sensor no error
+#define EM_SENTEST2 21 // Test event sensor no error
 
 #define PAUSE1SEC 1000
 #define PAUSE2SEC 2000
 
 // WLAN and MQTT reconnect parameters
-int retriesWLAN = 1; // Counter WLAN reconnects
-int retriesMQTT = 1; // Counter MQTT reconnects
-unsigned long mqttconnectlasttry = 0; // Timestamp MQTT
-unsigned long wlanconnectlasttry = 0; // Timestamp WLAN
-#define maxRetriesWLAN 5
-#define maxRetriesMQTT 5
-#define WLAN_DELAY 10000  // How long should device wait, before try to reconnect
-#define MQTT_DELAY 10000  // How long should device wait, before try to reconnect
-bool StopWLANOnError = false; // flase := WLAN ok btw. MQTT server available
-bool StopMQTTOnError = false; // true  := WLAN error btw. MQTT server not available
+bool StopOnWLANError = false;               // Enabled or disabled event handling actors and induvtion on WLAN error
+bool StopOnMQTTError = false;               // Enabled or disabled event handling actors and induvtion on MQTT error
+int retriesWLAN = 1;                        // Counter WLAN reconnects
+int retriesMQTT = 1;                        // Counter MQTT reconnects
+unsigned long mqttconnectlasttry = 0;       // Timestamp MQTT
+unsigned long wlanconnectlasttry = 0;       // Timestamp WLAN
+bool mqtt_state = true;                     // Error state MQTT
+bool wlan_state = true;                     // Error state WLAN
+
+#define maxRetriesWLAN 5                    // Max retries before errer event 
+#define maxRetriesMQTT 5                    // Max retries before error event 
+int wait_on_error_mqtt = 10000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_wlan = 10000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+// Sensor reconnect parameters
+int wait_on_Sensor_error_actor = 30000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
+int wait_on_Sensor_error_induction = 30000;  // How long should induction wait between tries to reconnect sensor - approx in ms
+
+bool StopActorsOnError = false;              // Useswitch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
+bool StopInductionOnError = false;           // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
 
 bool startOTA = false;
 bool startMDNS = false;
 char nameMDNS[16];
-bool StopActorsOnError = false;      // Use webif to configure: switch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
-bool StopInductionOnError = false;   // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
-int wait_on_error_actors = 60000;    // approx in ms - use webif to configure
-int wait_on_error_induction = 30000; // approx in ms - use webif to configure
 
 unsigned long lastToggledSys = 0; // System event delta
 unsigned long lastToggledSen = 0; // Sensor event delta
 unsigned long lastToggledAct = 0; // Actor event delta
 unsigned long lastToggledInd = 0; // Induction event delta
 unsigned long lastToggledDisp = 0;
-unsigned long lastSenAct;
-unsigned long lastSenInd;
-unsigned long lastSysAct;
-unsigned long lastSysInd;
+unsigned long lastSenAct = 0;
+unsigned long lastSenInd = 0;
+//unsigned long lastSysAct;
+//unsigned long lastSysInd;
 
-unsigned char sensorsStatus = 0;
-unsigned char actorsStatus = 0;
-unsigned char inductionStatus = 0;
-
+int sensorsStatus = 0;
+int actorsStatus = 0;
+int inductionStatus = 0;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
@@ -225,3 +235,7 @@ bool useDisplay = false;
 const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
 // D2 -> SDA Oled Display
+
+// test events - ignore!
+int testcounter = 1;
+int testing = 0;

@@ -13,6 +13,8 @@ class Actor
     unsigned char power_actor;
     bool isOn;
     bool switchable;
+    bool isOnBeforeError = false;
+    bool actor_state = true;        // Error state actor
 
     // MQTT Publish
     char actor_mqtttopic[50]; // Für MQTT Kommunikation
@@ -100,6 +102,9 @@ class Actor
       {
         switchable = false;
       }
+      actor_state = true;
+      isOnBeforeError = false;
+
     }
 
     /*    //    Not yet ready
@@ -153,7 +158,7 @@ class Actor
       {
         return;
       }
-
+      
       String state = json["state"];
 
       if (state == "off")
@@ -232,6 +237,8 @@ void handleRequestActors()
     actorResponse["power"] = actors[i].power_actor;
     actorResponse["mqtt"] = actors[i].argument_actor;
     actorResponse["pin"] = PinToString(actors[i].pin_actor);
+    actorResponse["sw"] = actors[i].switchable;
+    actorResponse["state"] = actors[i].actor_state;
     actorsResponse.add(actorResponse);
     yield();
   }

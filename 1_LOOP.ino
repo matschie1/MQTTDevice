@@ -2,14 +2,24 @@ void loop()
 {
   cbpiEventSystem(EM_WEB);  // Webserver handle
 
+  if (millis() > (lastToggledSys + SYS_UPDATE))
+  {
+    cbpiEventSystem(EM_WLAN); // Check WLAN
+    cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
+    cbpiEventSystem(EM_MDNS); // MDNS handle
+    lastToggledSys = millis();
+  }
+
   if (millis() > (lastToggledSen + SEN_UPDATE))
   {
-    //      DBG_PRINT("Loop: event sensors SEN_UPDATE ");
-    //      DBG_PRINT(SEN_UPDATE);
-    //      DBG_PRINT(" lastToggledSen ");
-    //      DBG_PRINTLN(lastToggledSen);
     cbpiEventSensors(sensorsStatus); // Sensor handle
     lastToggledSen = millis();
+
+    // Test events - ignore!
+    //if (testing  == 1)
+      //cbpiEventSensors(EM_SENTEST);
+    //else if (testing == 2)
+      //cbpiEventSensors(EM_SENTEST2);
   }
   if (millis() > (lastToggledAct + ACT_UPDATE))
   {
@@ -20,14 +30,6 @@ void loop()
   {
     cbpiEventInduction(inductionStatus); // Induction handle
     lastToggledInd = millis();
-  }
-
-  if (millis() > (lastToggledSys + SYS_UPDATE))
-  {
-    cbpiEventSystem(EM_WLAN); // Check WLAN
-    cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
-    cbpiEventSystem(EM_MDNS); // MDNS handle
-    lastToggledSys = millis();
   }
 
   if (useDisplay)

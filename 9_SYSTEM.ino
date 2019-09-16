@@ -23,7 +23,14 @@ void DBG_PRINT(long unsigned int value)
 {
   if (setDEBUG) Serial.print(value);
 }
-
+void DBG_PRINT(long value)
+{
+  if (setDEBUG) Serial.print(value);
+}
+void DBG_PRINTLN(long value)
+{
+  if (setDEBUG) Serial.println(value);
+}
 void DBG_PRINT(float value)
 {
   if (setDEBUG) Serial.print(value);
@@ -48,7 +55,6 @@ void DBG_PRINTLN(long unsigned int value)
 {
   if (setDEBUG) Serial.println(value);
 }
-
 void DBG_PRINTLN(float value)
 {
   if (setDEBUG) Serial.println(value);
