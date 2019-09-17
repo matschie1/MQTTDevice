@@ -273,6 +273,34 @@ void listenerSystem(int event, int parm) // System event listener
         }
       }
       break;
+    case EM_TELSET: // Telnet setup
+      TelnetServer.begin();
+      TelnetServer.setNoDelay(true);
+      DBG_PRINTLN("Please connect Telnet Client, exit with ^] and 'quit'");
+      break;
+    case EM_TELNET: // Telnet
+      if (TelnetServer.hasClient())
+      {
+        if (!Telnet || !Telnet.connected())
+        {
+          if (Telnet) {
+            Telnet.stop();
+          }
+          Telnet = TelnetServer.available();
+        }
+        else
+        {
+          TelnetServer.available().stop();
+        }
+      }
+      /* 
+       *  von telnet lesen
+       *  
+        if (Telnet && Telnet.connected() && Telnet.available()){
+        while(Telnet.available())
+          Serial.write(Telnet.read());
+        }*/
+      break;
     case EM_DISPUP: // Display screen output update (30)
       if (oledDisplay.dispEnabled)
       {
@@ -292,7 +320,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
   {
     case EM_OK:
       // all sensors ok
-      
+
       for (int i = 0; i < numberOfSensors; i++)
       {
         if (sensors[i].sens_sw && !sensors[i].sens_state)
@@ -301,8 +329,11 @@ void listenerSensors(int event, int parm) // Sensor event listener
           break;
         }
       }
+      
+      lastSenInd = 0; // Delete induction timestamp after event
+      lastSenAct = 0; // Delete actor timestamp after event
 
-      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected? 
+      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected?
       if (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state)
       {
         for (int i = 0; i < numberOfActors; i++)
@@ -355,7 +386,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
     //break;  // sensor handling in EM_SENER
     case EM_UNPL:
     // sensor unpluged
-    //DBG_PRINTLN("EM UNPL: sensor not connected");
+      DBG_PRINTLN("EM UNPL: sensor not connected");
     //cbpiEventSensors(EM_SENER);
     //break;  // sensor handling in EM_SENER
     case EM_SENER:
@@ -367,7 +398,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
          Wenn 1 oder 2 false ist, kann kein sensor publishmqtt
       */
 
-      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected? 
+      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected?
       if (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state)
       {
         for (int i = 0; i < numberOfSensors; i++)
@@ -407,13 +438,15 @@ void listenerSensors(int event, int parm) // Sensor event listener
         }     // Iterate sensors
       }     // wlan und mqtt state
       break;
+#ifdef TEST
     case EM_SENTEST1:
-      //sentest1();
+      sentest1();
       break;
     case EM_SENTEST2:
       // Test event - ignore!
-      //sentest2();
+      sentest2();
       break;
+#endif
     default:
       break;
   }
@@ -433,7 +466,8 @@ void listenerActors(int event, int parm) // Actor event listener
     case EM_ACTER:
       for (int i = 0; i < numberOfActors; i++)
       {
-        if (actors[i].switchable && actors[i].actor_state)    // Check if actor is switchable and in normal mode
+        //if (actors[i].switchable && actors[i].actor_state)    // Check if actor is switchable and in normal mode
+        if (actors[i].switchable && actors[i].actor_state && actors[i].isOn)    // Check if actor is switchable, isOn and in normal mode - 20190917: Prüfen!
         {
           actors[i].isOnBeforeError = actors[i].isOn;
           actors[i].isOn = false;
@@ -526,7 +560,6 @@ void listenerInduction(int event, int parm) // Induction event listener
       }
       break;
     case EM_INDTEST:        // Test event - ignore!
-      break;
       DBG_PRINTLN("*** CAUTION *** EM INDTEST: induction test event - switch on induction 100%");
       inductionCooker.newPower = 100;
       inductionCooker.isInduon = true;

@@ -198,7 +198,7 @@ bool loadConfig() {
 
   if ( (jsmisc.containsKey("del_sen_act"))  && (jsmisc["del_sen_act"].is<int>()) )
     wait_on_Sensor_error_actor = jsmisc["del_sen_act"];
- 
+
   if ( (jsmisc.containsKey("del_sen_ind"))  && (jsmisc["del_sen_ind"].is<int>()) )
     wait_on_Sensor_error_induction = jsmisc["del_sen_ind"];
 
@@ -279,12 +279,14 @@ bool loadConfig() {
     DBG_PRINTLN(mqtthost);
   }
 
+  if (jsmisc.containsKey("telnet"))
+    startTEL = jsmisc["telnet"];
   if (jsmisc.containsKey("debug"))
     setDEBUG = jsmisc["debug"];
 
-  Serial.print("Debug output on serial monitor: ");
-  Serial.println(setDEBUG);
-  Serial.println("------ loadConfig finished ------");
+  DBG_PRINT("Debug output on serial monitor: ");
+  DBG_PRINTLN(setDEBUG);
+  DBG_PRINTLN("------ loadConfig finished ------");
 
   configFile.close();
   return true;
@@ -459,6 +461,11 @@ bool saveConfig()
   else
     DBG_PRINTLN("disabled");
 
+  if (startTEL)
+    jsmisc["telnet"] = "1";
+  else
+    jsmisc["telnet"] = "0";
+    
   if (setDEBUG)
     jsmisc["debug"] = "1";
   else

@@ -87,7 +87,7 @@ void turnDisplayOff()
 {
   if (oledDisplay.dispEnabled)
   {
-    DBG_PRINTLN("Switch OLED display off");
+    DBG_PRINTLN("Disp: Switch OLED display off");
     display.ssd1306_command(SSD1306_DISPLAYOFF);
     oledDisplay.dispEnabled = 0;
   }
@@ -95,7 +95,7 @@ void turnDisplayOff()
   {
     if (oledDisplay.address != 0)
     {
-      DBG_PRINTLN("Switch OLED display on");
+      DBG_PRINTLN("Disp: Switch OLED display on");
       display.ssd1306_command(SSD1306_DISPLAYON);
       oledDisplay.dispEnabled = 1;
     }

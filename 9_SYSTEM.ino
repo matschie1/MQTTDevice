@@ -9,69 +9,149 @@ void millis2wait(int value)
 }
 void DBG_PRINT(String value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINT(int value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINT(unsigned int value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINT(long unsigned int value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINT(long value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINTLN(long value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINT(float value)
 {
-  if (setDEBUG) Serial.print(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value);
+    else
+      Serial.print(value);
+  }
 }
 void DBG_PRINTHEX(int value)
 {
-  if (setDEBUG) Serial.print(value, HEX);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.print(value, HEX);
+    else
+      Serial.print(value, HEX);
+  }
+ 
 }
 void DBG_PRINTLN(String value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINTLN(int value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINTLN(unsigned int value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINTLN(long unsigned int value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINTLN(float value)
 {
-  if (setDEBUG) Serial.println(value);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value);
+    else
+      Serial.println(value);
+  }
 }
 void DBG_PRINTLNHEX(int value)
 {
-  if (setDEBUG) Serial.println(value, HEX);
+  if (setDEBUG) {
+    if (Telnet.connected())
+      Telnet.println(value, HEX);
+    else
+      Serial.println(value, HEX);
+  }
 }
 void DBG_PRINTLNTS(unsigned long value) // Timestamp
 {
   value = value / 1000;
   if (setDEBUG) {
-    Serial.print((value / 3600) % 24); // Stunden
-    Serial.print(":");
-    Serial.print((value / 60) % 60); // Minuten
-    Serial.print(":");
-    Serial.println(value % 60); // Sekunden
+    if (Telnet.connected()) {
+      Telnet.print((value / 3600) % 24); // Stunden
+      Telnet.print(":");
+      Telnet.print((value / 60) % 60); // Minuten
+      Telnet.print(":");
+      Telnet.println(value % 60); // Sekunden
+    }
+    else {
+      Serial.print((value / 3600) % 24); // Stunden
+      Serial.print(":");
+      Serial.print((value / 60) % 60); // Minuten
+      Serial.print(":");
+      Serial.println(value % 60); // Sekunden
+    }
   }
 }
 

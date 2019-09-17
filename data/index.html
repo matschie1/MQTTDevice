@@ -14,7 +14,7 @@
     <div class="container">
       <div class="row">
         <div class="col">
-          <h1 class="text-center">MQTT Device V 1.040</h1>
+		   <h1 class="text-center">MQTT Device V1.042</h1>
         </div>
         <div class="col-md-auto">
 			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
@@ -316,6 +316,10 @@
             <label class="form-check-label" for="modal_misc_clear">Clear all settings and reset to defaults</label>
           </div>
 		  <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_misc_telnet">
+            <label class="form-check-label" for="modal_misc_telnet">Enable Telnet</label>
+          </div>
+		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_debug">
             <label class="form-check-label" for="modal_misc_debug">Enable Debug</label>
           </div>
@@ -392,11 +396,11 @@
 		  let actor = "<li class='list-group-item justify-content-between align-items-center d-flex'> ";
           actor += element.name;
           actor += "<span class='badge";
-          if (element.state != true && element.status == true) 
+          if (element.state != true) 
 		  {
 			actor += " badge-danger'>OFF ";
 		  }
-		  else if (element.status == true) 
+		  else if (element.state == true && element.status == true) 
 		  {
 			actor += " badge-success'>ON: ";
 	        actor += element.power;
@@ -520,6 +524,14 @@
         else {
           miscRender += " badge-dark'> OFF";
         }
+		miscRender += "</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Enable Telnet <span class='badge ";
+        if (data.telnet) {
+          miscRender += " badge-success'> ON";
+        }
+        else {
+          miscRender += " badge-dark'> OFF";
+        }
+		miscRender += " </span> </li>";
 		miscRender += "</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Debug output serial monitor <span class='badge ";
         if (data.debug) {
           miscRender += " badge-success'> ON";
@@ -898,6 +910,7 @@
 	  var del_sen_act;
 	  var del_sen_ind;
 	  var debug;
+	  var telnet;
 	  var upsen;
 	  var upact;
 	  var upind;
@@ -992,6 +1005,16 @@
         }
       });
 	  $.ajax({
+        url: '/reqMisc?req=telnet',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          telnet = data;
+        }
+      });
+	  $.ajax({
         url: '/reqMisc?req=debug',
         type: 'get',
         dataType: 'html',
@@ -1041,6 +1064,8 @@
       else { modal.find('#modal_misc_onErrorMQTT').prop("checked", false) }
 	  if (enable_wlan == "1") { modal.find('#modal_misc_onErrorWLAN').prop("checked", true) }
       else { modal.find('#modal_misc_onErrorInduction').prop("checked", false) }
+	  if (telnet == "1") { modal.find('#modal_misc_telnet').prop("checked", true) }
+      else { modal.find('#modal_misc_telnet').prop("checked", false) }
 	  if (debug == "1") { modal.find('#modal_misc_debug').prop("checked", true) }
       else { modal.find('#modal_misc_debug').prop("checked", false) }
 	  modal.find('#modal_misc_delay_mqtt').val(delay_mqtt)
@@ -1052,7 +1077,7 @@
 	  modal.find('#modal_misc_upsen').val(upsen)
 	  modal.find('#modal_misc_upact').val(upact)
 	  modal.find('#modal_misc_upind').val(upind)
-	  
+	  	  
       var modal = $(this)
 	});
 	
@@ -1093,6 +1118,11 @@
       } else {
         var clear = "0"
       }
+	  if (modal.find('#modal_misc_telnet').prop("checked") == true) {
+        var telnet = "1"
+      } else {
+        var telnet = "0"
+      }
 	  if (modal.find('#modal_misc_debug').prop("checked") == true) {
         var debug = "1"
       } else {
@@ -1100,7 +1130,7 @@
       }
 
       $.ajax({
-        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_mqtt=' + enable_mqtt + '&delay_mqtt=' + delay_mqtt + '&enable_wlan=' + enable_wlan + '&delay_wlan=' + delay_wlan + '&del_sen_act=' + del_sen_act + '&del_sen_ind=' + del_sen_ind + '&debug=' + debug + '&mdns=' + mdns + '&mdns_name=' + mdns_name + '&upsen=' + upsen + '&upact=' + upact + '&upind=' + upind,
+        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_mqtt=' + enable_mqtt + '&delay_mqtt=' + delay_mqtt + '&enable_wlan=' + enable_wlan + '&delay_wlan=' + delay_wlan + '&del_sen_act=' + del_sen_act + '&del_sen_ind=' + del_sen_ind + '&telnet=' + telnet + '&debug=' + debug + '&mdns=' + mdns + '&mdns_name=' + mdns_name + '&upsen=' + upsen + '&upact=' + upact + '&upind=' + upind,
         type: 'POST',
         dataType: 'html',
         async: false,

@@ -27,49 +27,60 @@ class TemperatureSensor
       }
       sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
       sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
-
+      DBG_PRINT("Sen: ");
       DBG_PRINT(sens_name);
-      DBG_PRINT(" is connected: ");
+      DBG_PRINT(" connected: ");
       DBG_PRINT(sens_isConnected);
-      DBG_PRINT(" sensor address: ");
+      DBG_PRINT(" address: ");
       for (int i = 0; i < 8; i++) {
         DBG_PRINTHEX(sens_address[i]);
         DBG_PRINT(" ");
       }
-      DBG_PRINT(" sensor value: ");
-      DBG_PRINTLN(sens_value);
+      DBG_PRINT(" value: ");
+      DBG_PRINT(sens_value);
       sensorsStatus = 4;
       sens_state = false;
+
+//      if (testing == 0)
+//          sens_state = ;
+
       if ( OneWire::crc8( sens_address, 7) != sens_address[7])
       {
         DBG_PRINTLN(" CRC check failed");
-        sensorsStatus = 1;
+        sensorsStatus = EM_CRCER;
       }
       //else DBG_PRINTLN(" CRC check ok");
       //if (sens_value == -127.0 || sens_value == 85.0) {
       else if (sens_value == -127.0 || sens_value == 85.0)
       {
         if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
-          DBG_PRINT(sens_name);
-          DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
-          sensorsStatus = 2;
+          //DBG_PRINT(sens_name);
+          //DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
+          DBG_PRINTLN(" device error");
+          sensorsStatus = EM_DEVER;
         }
         else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
-          DBG_PRINT(sens_name);
-          DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-          sensorsStatus = 3;
+          //DBG_PRINT(sens_name);
+          //DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
+          DBG_PRINTLN(" unplugged?");
+          sensorsStatus = EM_UNPL;
         }
         else // not connected and unvalid address
-          sensorsStatus = 4;
+          sensorsStatus = EM_SENER;
       } // sens_value -127 || +85
       else
       {
-        sensorsStatus = 0;
+        sensorsStatus = EM_OK;
         sens_state = true;
+        DBG_PRINTLN("");
+
+//        if (testing == 0)
+//          sens_state = true;
+
       }
-     
+
       // Test event - ignore!
-      /*
+#ifdef TEST
       switch (testing)
       {
         case 0:
@@ -82,27 +93,29 @@ class TemperatureSensor
           sensorsStatus = EM_SENTEST1;
           break;
         case 2:
-          testcounter++;
-          sens_state = true;
+          if (testcounter == 0) {
+            if (sens_state) {
+              sensorsStatus = 4;
+              sens_state = false;
+            }
+            else {
+              sensorsStatus = 0;
+              sens_state = true;
+            }
+          }
           wlan_state = true; // sensor tests only
           mqtt_state = true; // sensor tests only
-          sensorsStatus = EM_SENTEST2;
+          testcounter++;
           break;
         case 3:
-          if (sens_state) {
-            sensorsStatus = 4;
-            sens_state = false;
-          }
-          else if (sens_state) {
-            sensorsStatus = 0;
-            sens_state = true;
-          }
+          sens_state = true;
           wlan_state = true; // sensor tests only
           mqtt_state = true; // sensor tests only
           break;
         default:
           break;
-      } */
+      }
+#endif
       sens_err = sensorsStatus;
       publishmqtt();
     } // void Update
@@ -199,7 +212,7 @@ unsigned char searchSensors() {
   while (oneWire.search(addr)) {
 
     if ( OneWire::crc8( addr, 7) == addr[7]) {
-      DBG_PRINT("Sensor found:");
+      DBG_PRINT("Sen: Sensor found:");
       for ( i = 0; i < 8; i++) {
         addressesFound[n][i] = addr[i];
         DBG_PRINTHEX(addr[i]);
@@ -245,21 +258,25 @@ void handleSetSensor() {
   for (int i = 0; i < server.args(); i++) {
     if (server.argName(i) == "name") {
       new_name = server.arg(i);
+      DBG_PRINT("Sen: ");
       DBG_PRINT("new_name ");
       DBG_PRINTLN(new_name);
     }
     if (server.argName(i) == "topic")  {
       new_mqtttopic = server.arg(i);
+      DBG_PRINT("Sen: ");
       DBG_PRINT("new_mqtttopic ");
       DBG_PRINTLN(new_mqtttopic);
     }
     if (server.argName(i) == "address")  {
       new_address = server.arg(i);
+      DBG_PRINT("Sen: ");
       DBG_PRINT("new_address ");
       DBG_PRINTLN(new_address);
     }
     if (server.argName(i) == "offset")  {
       new_offset = server.arg(i).toFloat();
+      DBG_PRINT("Sen: ");
       DBG_PRINT("new_offset ");
       DBG_PRINTLN(new_offset);
     }

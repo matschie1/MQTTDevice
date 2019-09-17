@@ -113,6 +113,7 @@ class induction
         if (client.connected()) {
           char subscribemsg[50];
           mqtttopic.toCharArray(subscribemsg, 50);
+          DBG_PRINT("Ind: ");
           DBG_PRINT("Subscribing to ");
           DBG_PRINTLN(subscribemsg);
           client.subscribe(subscribemsg);
@@ -124,6 +125,7 @@ class induction
       if (client.connected()) {
         char subscribemsg[50];
         mqtttopic.toCharArray(subscribemsg, 50);
+        DBG_PRINT("Ind: ");
         DBG_PRINT("Unsubscribing from ");
         DBG_PRINTLN(subscribemsg);
         client.unsubscribe(subscribemsg);
@@ -159,7 +161,7 @@ class induction
       if (!json.success()) {
         return;
       }
-      
+
       String state = json["state"];
 
       if (state == "off") {
@@ -185,14 +187,14 @@ class induction
 
     bool updateRelay() {
       if (isInduon == true && isRelayon == false) {         /* Relais einschalten */
-        DBG_PRINTLN("Turning Relay on");
+        DBG_PRINTLN("Ind: Turning Relay on");
         digitalWrite(PIN_WHITE, HIGH);
         return true;
       }
 
       if (isInduon == false && isRelayon == true) {         /* Relais ausschalten */
         if (millis() > timeTurnedoff + delayAfteroff) {
-          DBG_PRINTLN("Turning Relay off");
+          DBG_PRINTLN("Ind: Turning Relay off");
           digitalWrite(PIN_WHITE, LOW);
           return false;
         }

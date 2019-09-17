@@ -43,11 +43,11 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.040";
+const char Version[6]  = "1.041";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
-bool setDEBUG = true;
+bool setDEBUG = false;
 /*############ DEBUG ############*/
 
 /*########## KONSTANTEN #########*/
@@ -63,6 +63,11 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 MDNSResponder mdns;
 ESP8266HTTPUpdateServer httpUpdate;
+
+// declare telnet server (do NOT put in setup())
+WiFiServer TelnetServer(23);
+WiFiClient Telnet;
+
 // Induktion
 /*  Signallaufzeiten */
 const int SIGNAL_HIGH = 5120;
@@ -132,7 +137,7 @@ EventManager gEM;        // Eventmanager
 int SEN_UPDATE = 5000;   //  wait this time in ms before a sensor event is raised up - change this value as you need
 int ACT_UPDATE = 10000;  //  actor event
 int IND_UPDATE = 10000;  //  induction cooker event
-int DISP_UPDATE = 10000; //  NTP and display update
+int DISP_UPDATE = 5000; //  NTP and display update
 int SYS_UPDATE = 0;      // 0 := keine Verzögerung
 
 // System error events
@@ -156,8 +161,9 @@ int SYS_UPDATE = 0;      // 0 := keine Verzögerung
 #define EM_MDNSET 26
 #define EM_MQTTCON 27
 #define EM_MQTTSUB 28
-
-#define EM_DISPUP 30
+#define EM_DISPUP  30
+#define EM_TELSET  31
+#define EM_TELNET  32
 
 // Sensor, actor and induction
 #define EM_OK 0 // Normal mode
@@ -190,17 +196,18 @@ bool wlan_state = true;                     // Error state WLAN
 
 #define maxRetriesWLAN 5                    // Max retries before errer event 
 #define maxRetriesMQTT 5                    // Max retries before error event 
-int wait_on_error_mqtt = 10000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
-int wait_on_error_wlan = 10000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_mqtt = 20000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_wlan = 20000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
 // Sensor reconnect parameters
-int wait_on_Sensor_error_actor = 30000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
-int wait_on_Sensor_error_induction = 30000;  // How long should induction wait between tries to reconnect sensor - approx in ms
+int wait_on_Sensor_error_actor = 60000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
+int wait_on_Sensor_error_induction = 60000;  // How long should induction wait between tries to reconnect sensor - approx in ms
 
 bool StopActorsOnError = false;              // Useswitch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
 bool StopInductionOnError = false;           // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
 
 bool startOTA = false;
 bool startMDNS = false;
+bool startTEL = false;
 char nameMDNS[16];
 
 unsigned long lastToggledSys = 0; // System event delta
@@ -210,8 +217,6 @@ unsigned long lastToggledInd = 0; // Induction event delta
 unsigned long lastToggledDisp = 0;
 unsigned long lastSenAct = 0;
 unsigned long lastSenInd = 0;
-//unsigned long lastSysAct;
-//unsigned long lastSysInd;
 
 int sensorsStatus = 0;
 int actorsStatus = 0;
@@ -237,5 +242,8 @@ const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D2 -> SDA Oled Display
 
 // test events - ignore!
+//#define TEST
+#ifdef TEST
 int testcounter = 1;
 int testing = 0;
+#endif

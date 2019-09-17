@@ -131,6 +131,7 @@ class Actor
       {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
+        DBG_PRINT("Act: ");
         DBG_PRINT("Subscribing to ");
         DBG_PRINTLN(subscribemsg);
         client.subscribe(subscribemsg);
@@ -143,6 +144,7 @@ class Actor
       {
         char subscribemsg[50];
         argument_actor.toCharArray(subscribemsg, 50);
+        DBG_PRINT("Act: ");
         DBG_PRINT("Unsubscribing from ");
         DBG_PRINTLN(subscribemsg);
         client.unsubscribe(subscribemsg);
@@ -158,7 +160,7 @@ class Actor
       {
         return;
       }
-      
+
       String state = json["state"];
 
       if (state == "off")

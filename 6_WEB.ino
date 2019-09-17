@@ -50,10 +50,10 @@ bool loadFromSpiffs(String path) {
 }
 
 void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
-  DBG_PRINTLN("Received MQTT");
+  DBG_PRINTLN("Web: Received MQTT");
   DBG_PRINT("Topic: ");
   DBG_PRINTLN(topic);
-  DBG_PRINT("Payload: ");
+  DBG_PRINT("Web: Payload: ");
   for (int i = 0; i < length; i++) {
     DBG_PRINT((char)payload[i]);
   } DBG_PRINTLN(" ");
@@ -65,22 +65,22 @@ void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
   if (inductionCooker.mqtttopic == topic) {
     if (inductionCooker.induction_state)
     {
-      DBG_PRINTLN("passing mqtt to induction");
+      DBG_PRINTLN("Web: passing mqtt to induction");
       inductionCooker.handlemqtt(payload_msg);
     }
     else
-      DBG_PRINTLN("bypass mqtt due to induction state");
+      DBG_PRINTLN("Web: bypass mqtt due to induction state");
   }
   for (int i = 0; i < numberOfActors; i++) {
     if (actors[i].argument_actor == topic) {
       if (actors[i].actor_state)
       {
-        DBG_PRINT("passing mqtt to actor ");
+        DBG_PRINT("Web: passing mqtt to actor ");
         DBG_PRINTLN(actors[i].name_actor);
         actors[i].handlemqtt(payload_msg);
       }
       else
-        DBG_PRINTLN("bypass mqtt due to actor state");
+        DBG_PRINTLN("Web: bypass mqtt due to actor state");
     }
     yield();
   }
@@ -99,6 +99,7 @@ void handleRequestMiscSet() {
   miscResponse["delay_mqtt"] = wait_on_error_mqtt / 1000;
   miscResponse["delay_wlan"] = wait_on_error_wlan / 1000;
   miscResponse["debug"] = setDEBUG;
+  miscResponse["telnet"] = startTEL;
 
   String response;
   miscResponse.printTo(response);
@@ -180,6 +181,15 @@ void handleRequestMisc() {
   }
   if (request == "debug") {
     if (setDEBUG) {
+      message = "1";
+    }
+    else {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "telnet") {
+    if (startTEL) {
       message = "1";
     }
     else {
@@ -280,6 +290,18 @@ void handleSetMisc() {
         setDEBUG = true;
       } else {
         setDEBUG = false;
+      }
+    }
+    if (server.argName(i) == "telnet")  {
+      if (server.arg(i) == "1") 
+      {
+        startTEL = true;
+      } 
+      else 
+      {
+        if (Telnet) 
+          Telnet.stop();
+        startTEL = false;
       }
     }
     if (server.argName(i) == "upsen")  {

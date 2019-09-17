@@ -61,7 +61,11 @@ void setup()
   wifiManager.addParameter(&cstm_mqtthost);
   wifiManager.autoConnect(mqtt_clientid);
   strcpy(mqtthost, cstm_mqtthost.getValue());
-
+  
+  // Telnet
+  if (startTEL)
+    cbpiEventSystem(EM_TELSET);   // Telnet
+  
   // Save configuration
   ESP.wdtFeed();
   saveConfig();
@@ -105,11 +109,12 @@ void setup()
     gEM.processEvent();
   }
 
-//  Test events - ignore!
-//  if (testing > 0) {
-//    startTest();  
-//  }
-
+  // Test events - ignore!
+#ifdef TEST
+  if (testing > 0) {
+    startTest();
+  }
+#endif
 }
 
 void setupServer()

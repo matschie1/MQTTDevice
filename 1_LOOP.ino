@@ -16,10 +16,12 @@ void loop()
     lastToggledSen = millis();
 
     // Test events - ignore!
-    //if (testing  == 1)
-      //cbpiEventSensors(EM_SENTEST);
-    //else if (testing == 2)
-      //cbpiEventSensors(EM_SENTEST2);
+#ifdef TEST
+    if (testing  == 1)
+      cbpiEventSensors(EM_SENTEST1);
+    else if (testing == 2)
+      cbpiEventSensors(EM_SENTEST2);
+#endif
   }
   if (millis() > (lastToggledAct + ACT_UPDATE))
   {
@@ -45,6 +47,11 @@ void loop()
     cbpiEventSystem(EM_OTA); // OTA handle
   }
 
+  if (startTEL)
+  {
+    cbpiEventSystem(EM_TELNET); // TELNET
+  }
+    
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {
     gEM.processEvent();
