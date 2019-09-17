@@ -50,9 +50,9 @@ bool loadFromSpiffs(String path) {
 }
 
 void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
-  DBG_PRINTLN("Web: Received MQTT");
-  DBG_PRINT("Topic: ");
-  DBG_PRINTLN(topic);
+  DBG_PRINT("Web: Received MQTT");
+  DBG_PRINT(" Topic: ");
+  DBG_PRINT(topic);
   DBG_PRINT("Web: Payload: ");
   for (int i = 0; i < length; i++) {
     DBG_PRINT((char)payload[i]);

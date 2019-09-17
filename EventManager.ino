@@ -341,7 +341,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
           if (actors[i].switchable && !actors[i].actor_state)   // Sensor in normal mode: check actor in error state
           {
             DBG_PRINT("EM SenOK: ");
-            DBG_PRINT(actors[i].name_actor);
+            DBG_PRINTLN(actors[i].name_actor);
             DBG_PRINT("EM SenOK: isOnBeforeError: ");
             DBG_PRINTLN(actors[i].isOnBeforeError);
             DBG_PRINT("EM SenOK: ");
@@ -386,7 +386,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
     //break;  // sensor handling in EM_SENER
     case EM_UNPL:
     // sensor unpluged
-      DBG_PRINTLN("EM UNPL: sensor not connected");
+    // DBG_PRINTLN("EM UNPL: sensor not connected");
     //cbpiEventSensors(EM_SENER);
     //break;  // sensor handling in EM_SENER
     case EM_SENER:
