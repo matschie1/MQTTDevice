@@ -7,6 +7,11 @@ void loop()
     cbpiEventSystem(EM_WLAN); // Check WLAN
     cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
     cbpiEventSystem(EM_MDNS); // MDNS handle
+    if (startTEL)
+      cbpiEventSystem(EM_TELNET); // TELNET
+    if (startOTA)
+      cbpiEventSystem(EM_OTA); // OTA handle
+  
     lastToggledSys = millis();
   }
 
@@ -17,10 +22,7 @@ void loop()
 
     // Test events - ignore!
 #ifdef TEST
-    if (testing  == 1)
-      cbpiEventSensors(EM_SENTEST1);
-    else if (testing == 2)
-      cbpiEventSensors(EM_SENTEST2);
+    testLoop1();
 #endif
   }
   if (millis() > (lastToggledAct + ACT_UPDATE))
@@ -42,16 +44,7 @@ void loop()
       lastToggledDisp = millis();
     }
   }
-  if (startOTA)
-  {
-    cbpiEventSystem(EM_OTA); // OTA handle
-  }
-
-  if (startTEL)
-  {
-    cbpiEventSystem(EM_TELNET); // TELNET
-  }
-    
+ 
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {
     gEM.processEvent();

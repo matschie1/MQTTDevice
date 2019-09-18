@@ -15,7 +15,7 @@ class induction
     //int storePower = 0;
     long powerSampletime = 20000;
     unsigned long powerLast;
-    long powerHigh = powerSampletime; // Dauer des "HIGH"-Anteils im Schaltzyklus
+    long powerHigh = powerSampletime;   // Dauer des "HIGH"-Anteils im Schaltzyklus
     long powerLow = 0;
 
   public:
@@ -24,8 +24,8 @@ class induction
     unsigned char PIN_INTERRUPT = 9;   // EINGABE VON PLATTE
     int power = 0;
     int newPower = 0;
-    //byte CMD_CUR = 0;                 // Aktueller Befehl
-    unsigned char CMD_CUR = 0;                 // Aktueller Befehl
+    //byte CMD_CUR = 0;               // Aktueller Befehl
+    unsigned char CMD_CUR = 0;        // Aktueller Befehl
     boolean isRelayon = false;        // Systemstatus: ist das Relais in der Platte an?
     boolean isInduon = false;         // Systemstatus: ist Power > 0?
     boolean isPower = false;

@@ -12,8 +12,8 @@ class Actor
     String name_actor;
     unsigned char power_actor;
     bool isOn;
-    bool switchable;
-    bool isOnBeforeError = false;
+    bool switchable;                // actors switchable on error events?
+    bool isOnBeforeError = false;   // isOn status before error event
     bool actor_state = true;        // Error state actor
 
     // MQTT Publish

@@ -47,7 +47,7 @@ const char Version[6]  = "1.041";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
-bool setDEBUG = false;
+bool setDEBUG = true;
 /*############ DEBUG ############*/
 
 /*########## KONSTANTEN #########*/
@@ -133,12 +133,12 @@ File fsUploadFile; // a File object to temporarily store the received file
 /*######### FileBrowser #########*/
 
 /*######### EventManager ########*/
-EventManager gEM;        // Eventmanager
-int SEN_UPDATE = 5000;   //  wait this time in ms before a sensor event is raised up - change this value as you need
-int ACT_UPDATE = 10000;  //  actor event
-int IND_UPDATE = 10000;  //  induction cooker event
-int DISP_UPDATE = 5000; //  NTP and display update
-int SYS_UPDATE = 0;      // 0 := keine Verzögerung
+EventManager gEM;         // Eventmanager
+int SEN_UPDATE = 5000;    //  sensors update delay loop
+int ACT_UPDATE = 10000;   //  actors update delay loop
+int IND_UPDATE = 10000;   //  induction update delay loop
+int DISP_UPDATE = 5000;   //  NTP and display update
+int SYS_UPDATE = 0;       // sys update delay - 0 := no delay (every loop)
 
 // System error events
 #define EM_WLANER 1
@@ -185,8 +185,8 @@ int SYS_UPDATE = 0;      // 0 := keine Verzögerung
 #define PAUSE2SEC 2000
 
 // WLAN and MQTT reconnect parameters
-bool StopOnWLANError = false;               // Enabled or disabled event handling actors and induvtion on WLAN error
-bool StopOnMQTTError = false;               // Enabled or disabled event handling actors and induvtion on MQTT error
+bool StopOnWLANError = false;               // Use webif to configure: switch on/off event handling actors and induvtion on WLAN error
+bool StopOnMQTTError = false;               // Use webif to configure: switch on/off event handling actors and induvtion on MQTT error
 int retriesWLAN = 1;                        // Counter WLAN reconnects
 int retriesMQTT = 1;                        // Counter MQTT reconnects
 unsigned long mqttconnectlasttry = 0;       // Timestamp MQTT
@@ -202,21 +202,21 @@ int wait_on_error_wlan = 20000;             // How long should device wait betwe
 int wait_on_Sensor_error_actor = 60000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
 int wait_on_Sensor_error_induction = 60000;  // How long should induction wait between tries to reconnect sensor - approx in ms
 
-bool StopActorsOnError = false;              // Useswitch on/off if you want to stop all actors on error after WAIT_ON_ERROR ms
-bool StopInductionOnError = false;           // Use webif to configure: switch on/off if you want to stop InductionCooker on error after WAIT_ON_ERROR ms
+bool StopActorsOnError = false;              // Use webif to configure: switch on/off event handling actors on sensor error after wait_on_Sensor_error_actor ms
+bool StopInductionOnError = false;           // Use webif to configure: switch on/off event handling Induction on sensor error after wait_on_Sensor_error_induction ms
 
 bool startOTA = false;
 bool startMDNS = false;
 bool startTEL = false;
 char nameMDNS[16];
 
-unsigned long lastToggledSys = 0; // System event delta
-unsigned long lastToggledSen = 0; // Sensor event delta
-unsigned long lastToggledAct = 0; // Actor event delta
-unsigned long lastToggledInd = 0; // Induction event delta
-unsigned long lastToggledDisp = 0;
-unsigned long lastSenAct = 0;
-unsigned long lastSenInd = 0;
+unsigned long lastToggledSys = 0;   // Timestamp system event
+unsigned long lastToggledSen = 0;   // Timestamp sensor event
+unsigned long lastToggledAct = 0;   // Timestamp actors event
+unsigned long lastToggledInd = 0;   // Timestamp induction event
+unsigned long lastToggledDisp = 0;  // Timestamp display event
+unsigned long lastSenAct = 0;       // Timestap actors on sensor error
+unsigned long lastSenInd = 0;       // Timestamp induction on sensor error
 
 int sensorsStatus = 0;
 int actorsStatus = 0;
@@ -243,7 +243,3 @@ const unsigned char DISPLAY_PINS[2] = {D1, D2};
 
 // test events - ignore!
 //#define TEST
-#ifdef TEST
-int testcounter = 1;
-int testing = 0;
-#endif

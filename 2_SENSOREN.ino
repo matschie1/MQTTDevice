@@ -40,9 +40,10 @@ class TemperatureSensor
       DBG_PRINT(sens_value);
       sensorsStatus = 4;
       sens_state = false;
-
-//      if (testing == 0)
-//          sens_state = ;
+      // Test event - ignore!
+#ifdef TEST
+      sens_state = senChanger1();
+#endif
 
       if ( OneWire::crc8( sens_address, 7) != sens_address[7])
       {
@@ -74,47 +75,19 @@ class TemperatureSensor
         sens_state = true;
         DBG_PRINTLN("");
 
-//        if (testing == 0)
-//          sens_state = true;
-
+        // Test event - ignore!
+#ifdef TEST
+        sens_state = senChanger2();
+#endif
       }
 
       // Test event - ignore!
 #ifdef TEST
-      switch (testing)
-      {
-        case 0:
-          break;
-        case 1:
-          testcounter++;
-          sens_state = false;
-          wlan_state = true; // sensor tests only
-          mqtt_state = true; // sensor tests only
-          sensorsStatus = EM_SENTEST1;
-          break;
-        case 2:
-          if (testcounter == 0) {
-            if (sens_state) {
-              sensorsStatus = 4;
-              sens_state = false;
-            }
-            else {
-              sensorsStatus = 0;
-              sens_state = true;
-            }
-          }
-          wlan_state = true; // sensor tests only
-          mqtt_state = true; // sensor tests only
-          testcounter++;
-          break;
-        case 3:
-          sens_state = true;
-          wlan_state = true; // sensor tests only
-          mqtt_state = true; // sensor tests only
-          break;
-        default:
-          break;
-      }
+      sensorsStatus = senChanger3(sens_state);
+      if (sensorsStatus > 0)
+        sens_state = false;
+      else
+        sens_state = true;
 #endif
       sens_err = sensorsStatus;
       publishmqtt();

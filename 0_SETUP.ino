@@ -1,6 +1,9 @@
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial) {
+    ; // wait for serial port to connect. Needed for native USB port only
+  }
 
   gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
   gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
@@ -54,35 +57,35 @@ void setup()
     pins_used[DISPLAY_PINS[1]] = true;
   }
 
-  // WiFi Manager
-  ESP.wdtFeed();
-  WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
-  wifiManager.setSaveConfigCallback(saveConfigCallback);
-  wifiManager.addParameter(&cstm_mqtthost);
-  wifiManager.autoConnect(mqtt_clientid);
-  strcpy(mqtthost, cstm_mqtthost.getValue());
-  
-  // Telnet
-  if (startTEL)
-    cbpiEventSystem(EM_TELSET);   // Telnet
-  
+    // WiFi Manager
+    ESP.wdtFeed();
+    WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
+    wifiManager.setSaveConfigCallback(saveConfigCallback);
+    wifiManager.addParameter(&cstm_mqtthost);
+    wifiManager.autoConnect(mqtt_clientid);
+    strcpy(mqtthost, cstm_mqtthost.getValue());
+
+    // Telnet
+    if (startTEL)
+      cbpiEventSystem(EM_TELSET);   // Telnet
+
   // Save configuration
   ESP.wdtFeed();
   saveConfig();
 
   // Start MQTT
-  ESP.wdtFeed();
+  //ESP.wdtFeed();
   cbpiEventSystem(EM_MQTTCON);   // MQTT connect
   cbpiEventSystem(EM_MQTTSUB);   // MQTT subscribe
 
   // Display Start Screen
-  ESP.wdtFeed();
+  //ESP.wdtFeed();
   dispStartScreen();
 
   // Load mDNS
   if (startMDNS)
   {
-    ESP.wdtFeed();
+    //ESP.wdtFeed();
     cbpiEventSystem(EM_MDNSET);
   }
 
@@ -94,9 +97,8 @@ void setup()
   }
 
   // Start Webserver
-  ESP.wdtFeed();
+  //ESP.wdtFeed();
   setupServer();
-
 
   ESP.wdtFeed();
   cbpiEventSystem(EM_WLAN);   // Check WLAN
@@ -111,9 +113,7 @@ void setup()
 
   // Test events - ignore!
 #ifdef TEST
-  if (testing > 0) {
     startTest();
-  }
 #endif
 }
 
