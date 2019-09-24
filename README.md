@@ -64,6 +64,7 @@ Please note: starting with Version 1.03 you need to install Adafruit SSD1306 and
 * Filebrowser for easy file management (eg backup and restore config.json)
 * DS18B20 temperature offset
 * Serial output via Telnet (Putty)
+* Simulation
 
 ### Misc Menu:
 In misc menu you can

@@ -21,7 +21,6 @@ void handleWebRequests() {
   server.send(404, "text/plain", message);
 }
 
-
 bool loadFromSpiffs(String path) {
   String dataType = "text/plain";
   if (path.endsWith("/")) path += "index.html";
@@ -293,13 +292,13 @@ void handleSetMisc() {
       }
     }
     if (server.argName(i) == "telnet")  {
-      if (server.arg(i) == "1") 
+      if (server.arg(i) == "1")
       {
         startTEL = true;
-      } 
-      else 
+      }
+      else
       {
-        if (Telnet) 
+        if (Telnet)
           Telnet.stop();
         startTEL = false;
       }
