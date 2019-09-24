@@ -15,20 +15,30 @@ void listenerSystem(int event, int parm) // System event listener
 
       oledDisplay.wlanOK = false;
       // try to reconnect
-      if ((millis() > (wlanconnectlasttry + wait_on_error_wlan)) && ( retriesWLAN <= maxRetriesWLAN))
+      //if ((millis() > (wlanconnectlasttry + wait_on_error_wlan) && retriesWLAN <= maxRetriesWLAN))
+      if (millis() > (wlanconnectlasttry + wait_on_error_wlan))
       {
-        WiFi.mode(WIFI_STA);
-        WiFi.begin();
-        //wifiManager.setSaveConfigCallback(saveConfigCallback);
-        //wifiManager.autoConnect(mqtt_clientid);
-        if (WiFi.status() == WL_CONNECTED)
+        if (sim_mode == SIM_NONE)
         {
-          DBG_PRINTLN("EM WLAN: WLAN reconnect successful");
-          retriesWLAN = 1;
-          wlan_state = true;
-          oledDisplay.wlanOK = true;
-          break;
+          WiFi.mode(WIFI_STA);
+          WiFi.begin();
+          //wifiManager.setSaveConfigCallback(saveConfigCallback);
+          //wifiManager.autoConnect(mqtt_clientid);
+          if (WiFi.status() == WL_CONNECTED)
+          {
+            DBG_PRINTLN("EM WLAN: WLAN reconnect successful");
+            retriesWLAN = 1;
+            wlan_state = true;
+            oledDisplay.wlanOK = true;
+            break;
+          }
         }
+        else {
+          DBG_PRINT("SIM: WLAN loop ");
+          DBG_PRINTLN(sim_counter-20);
+          sim_counter++;
+        }
+
         DBG_PRINT("EM WLAN: WLAN error. ");
         DBG_PRINT(retriesWLAN);
         DBG_PRINTLN(". try to reconnect");
@@ -42,7 +52,8 @@ void listenerSystem(int event, int parm) // System event listener
           DBG_PRINTLN(" reached.");
           DBG_PRINT("EM WLANER: StopOnWLANError: ");
           DBG_PRINTLN(StopOnWLANError);
-          if (StopOnWLANError && wlan_state) {
+          if ( (StopOnWLANError && wlan_state && sim_mode == SIM_NONE) || (sim_mode == SIM_WLAN && !wlan_state) )
+          {
             cbpiEventActors(EM_ACTER);
             cbpiEventInduction(EM_INDER);
             wlan_state = false;
@@ -53,25 +64,26 @@ void listenerSystem(int event, int parm) // System event listener
       }
       break;
     case EM_MQTTER: // MQTT Error -> handling
-
-      /*
-         Error Reihenfolge
-         1. WLAN connected?
-         2. MQTT connected
-         Nur wenn WiFi.status() == WL_CONNECTED ist, kann heck mqtt durchgeführt werden
-      */
-
       oledDisplay.mqttOK = false;
-      //if ( (millis() > (mqttconnectlasttry + wait_on_error_mqtt) ) && (retriesMQTT <= maxRetriesMQTT) && WiFi.status() == WL_CONNECTED )
-      if ( (millis() > (mqttconnectlasttry + wait_on_error_mqtt) ) && WiFi.status() == WL_CONNECTED )
+      if ( ((millis() > (mqttconnectlasttry + wait_on_error_mqtt) ) && wlan_state))
       {
-        if (client.connect(mqtt_clientid))
+        if (sim_mode == SIM_NONE)
         {
-          DBG_PRINTLN("MQTT auto reconnect successful. Subscribing.");
-          cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
-          cbpiEventSystem(EM_MQTTRES);
-          break;
+          if ( client.connect(mqtt_clientid)) // in sim mode do not use normal reconnect
+          {
+            DBG_PRINTLN("MQTT auto reconnect successful. Subscribing.");
+            cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
+            cbpiEventSystem(EM_MQTTRES);
+            break;
+          }
         }
+        else
+        {
+          sim_counter++;
+          DBG_PRINT("SIM: MQTT loop ");
+          DBG_PRINTLN(sim_counter-10);
+        }
+
         if ( retriesMQTT <= maxRetriesMQTT )
         {
           DBG_PRINT("EM MQTT: MQTT error. ");
@@ -90,7 +102,7 @@ void listenerSystem(int event, int parm) // System event listener
           DBG_PRINTLN(StopOnMQTTError);
           DBG_PRINT("EM MQTTER: mqtt_state: ");
           DBG_PRINTLN(mqtt_state);
-          if (StopOnMQTTError && mqtt_state)
+          if ( (StopOnMQTTError && mqtt_state && sim_mode == SIM_NONE) || (sim_mode == SIM_MQTT && !mqtt_state) )
           {
             cbpiEventActors(EM_ACTER);
             cbpiEventInduction(EM_INDER);
@@ -109,7 +121,7 @@ void listenerSystem(int event, int parm) // System event listener
 
     // 10-19 System triggered events
     case EM_MQTTRES: // restore saved values after reconnect MQTT (10)
-      if (client.connected())
+      if (client.connected() || sim_mode != SIM_NONE)
       {
         wlan_state = true;
         mqtt_state = true;
@@ -171,17 +183,15 @@ void listenerSystem(int event, int parm) // System event listener
 
     // System run & set events
     case EM_WLAN: // check WLAN (20) and reconnect on error
-      if (WiFi.status() == WL_CONNECTED)
+      if ( (WiFi.status() == WL_CONNECTED) && sim_mode == SIM_NONE )
       {
         oledDisplay.wlanOK = true;
         retriesWLAN = 1;
       }
-      else
-      {
-        //if (testing > 0 && testing < 3) // Test event - ignore! sensor tests only
-        //  break;
+      else if (sim_mode == SIM_WLAN)
+        simWLAN();
+      else if ( (!WiFi.status() == WL_CONNECTED) && sim_mode != SIM_NONE )
         cbpiEventSystem(EM_WLANER);
-      }
       break;
     //         WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
     //        if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
@@ -203,16 +213,21 @@ void listenerSystem(int event, int parm) // System event listener
       }
       break;
     case EM_MQTT: // check MQTT (22)
-      if (client.connected()) {
+      if ( client.connected() && sim_mode == SIM_NONE )
+      {
         oledDisplay.mqttOK = true;
         retriesMQTT = 1;
         client.loop();
       }
-      else
-      {
-        //if (testing > 0 && testing < 3) // Test event - ignore! sensor tests only
-        //  break;
+      else if (sim_mode == SIM_MQTT)
+        simMQTT();
+      else if ( !client.connected() && sim_mode == SIM_NONE )
         cbpiEventSystem(EM_MQTTER);
+      else if ( !client.connected() && sim_mode != SIM_MQTT )
+      {
+        oledDisplay.mqttOK = true;
+        retriesMQTT = 1;
+        mqtt_state = true;
       }
       break;
     case EM_MQTTCON: // MQTT connect (27)
@@ -236,12 +251,6 @@ void listenerSystem(int event, int parm) // System event listener
         mqtt_state = true;                        // MQTT state ok
         retriesMQTT = 1;                          // Reset retries
       }
-      //      else
-      //      {
-      //        DBG_PRINTLN("MQTT error: connect not successful!");
-      //        oledDisplay.mqttOK = false;                // Display MQTT
-      //        mqtt_state = false;                        // MQTT state ok
-      //      }
       break;
     case EM_WEB: // Webserver (23)
       server.handleClient();
@@ -293,9 +302,9 @@ void listenerSystem(int event, int parm) // System event listener
           TelnetServer.available().stop();
         }
       }
-      /* 
-       *  von telnet lesen
-       *  
+      /*
+          von telnet lesen
+
         if (Telnet && Telnet.connected() && Telnet.available()){
         while(Telnet.available())
           Serial.write(Telnet.read());
@@ -321,20 +330,10 @@ void listenerSensors(int event, int parm) // Sensor event listener
     case EM_OK:
       // all sensors ok
 
-      for (int i = 0; i < numberOfSensors; i++)
-      {
-        if (sensors[i].sens_sw && !sensors[i].sens_state)
-        {
-          DBG_PRINTLN("EM OK sensor status false");
-          break;
-        }
-      }
-      
       lastSenInd = 0; // Delete induction timestamp after event
       lastSenAct = 0; // Delete actor timestamp after event
 
-      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected?
-      if (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state)
+      if ( (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state) || (sim_mode != SIM_NONE && wlan_state && mqtt_state) )   // (sim_mode == SIM_SEN_ERR || sim_mode == SIM_SEN_FALSE || sim_mode == SIM_SEN_OK )) )
       {
         for (int i = 0; i < numberOfActors; i++)
         {
@@ -397,9 +396,7 @@ void listenerSensors(int event, int parm) // Sensor event listener
          2. MQTT connected
          Wenn 1 oder 2 false ist, kann kein sensor publishmqtt
       */
-
-      //if ( (WiFi.status() == WL_CONNECTED || (testing > 0 && wlan_state)) && (client.connected() || (testing > 0 && mqtt_state) )) // wlan and mqtt connected?
-      if (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state)
+      if ( (WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state) || (WiFi.status() == WL_CONNECTED && sim_mode != SIM_NONE) )
       {
         for (int i = 0; i < numberOfSensors; i++)
         {
@@ -422,31 +419,16 @@ void listenerSensors(int event, int parm) // Sensor event listener
               DBG_PRINTLN(wait_on_Sensor_error_induction / 1000);
             }
             if (millis() > lastSenAct + wait_on_Sensor_error_actor) // Wait for approx WAIT_ON_ERROR/1000 seconds
-            {
-              //DBG_PRINTLN("EM SENER: error event actors off");
               cbpiEventActors(EM_ACTER);
-            }
             if (millis() > lastSenInd + wait_on_Sensor_error_induction) // Wait for approx WAIT_ON_ERROR/1000 seconds
             {
               if (inductionCooker.isInduon && inductionCooker.powerLevelOnError < 100 && inductionCooker.induction_state)
-              {
-                //DBG_PRINTLN("EM SENER: error event induction off");
                 cbpiEventInduction(EM_INDER);
-              }
             }
           }   // Switchable
         }     // Iterate sensors
       }     // wlan und mqtt state
       break;
-#ifdef TEST
-    case EM_SENTEST1:
-      sentest1();
-      break;
-    case EM_SENTEST2:
-      // Test event - ignore!
-      sentest2();
-      break;
-#endif
     default:
       break;
   }
@@ -471,6 +453,7 @@ void listenerActors(int event, int parm) // Actor event listener
         {
           actors[i].isOnBeforeError = actors[i].isOn;
           actors[i].isOn = false;
+          //actors[i].power_actor = 0;
           actors[i].actor_state = false;
           actors[i].Update();
           DBG_PRINT("EM ACTER: Actor: ");
@@ -494,8 +477,8 @@ void listenerActors(int event, int parm) // Actor event listener
         }
       }
       break;
-    case EM_ACTTEST:        // Test event - ignore!
-      DBG_PRINTLN("*** CAUTION *** EM ACTTEST: actors test event: switch on ALL actors");
+    case SIM_ACT:        // Test event - ignore!
+      DBG_PRINTLN("SIM ACTTEST: actors simulation event: switch on ALL actors");
       for (int i = 0; i < numberOfActors; i++)
       {
         actors[i].isOn = true;
@@ -526,8 +509,6 @@ void listenerInduction(int event, int parm) // Induction event listener
         inductionCooker.powerLevelBeforeError = inductionCooker.power;
         DBG_PRINT("EM INDER: induction power: ");
         DBG_PRINTLN(inductionCooker.power);
-        DBG_PRINT("EM INDER: induction newPower: ");
-        DBG_PRINTLN(inductionCooker.newPower);
 
         DBG_PRINT("EM INDER: Set induction power level to ");
         if (inductionCooker.powerLevelOnError == 0) {
@@ -536,19 +517,14 @@ void listenerInduction(int event, int parm) // Induction event listener
           inductionCooker.isInduon = false;
         }
         else {
-          DBG_PRINTLN(inductionCooker.powerLevelOnError);
+          DBG_PRINT(inductionCooker.powerLevelOnError);
+          DBG_PRINTLN("%");
           inductionCooker.newPower = inductionCooker.powerLevelOnError;
         }
         inductionCooker.newPower = inductionCooker.powerLevelOnError;
         inductionCooker.induction_state = false;
         inductionCooker.Update();
       }
-      // Sollte überflüssig sein. induction_state änderung beachten
-      //      else if (inductionCooker.isInduon && inductionCooker.powerLevelOnError == 100 && !inductionCooker.induction_state)
-      //      {
-      //        DBG_PRINTLN("EM INDER: Induction power level not changed: 100%");
-      //        inductionCooker.induction_state = true;
-      //      }
       break;
     case EM_INDOFF:
       if (inductionCooker.isInduon)
@@ -559,15 +535,18 @@ void listenerInduction(int event, int parm) // Induction event listener
         inductionCooker.Update();
       }
       break;
-    case EM_INDTEST:        // Test event - ignore!
-      DBG_PRINTLN("*** CAUTION *** EM INDTEST: induction test event - switch on induction 100%");
-      inductionCooker.newPower = 100;
-      inductionCooker.isInduon = true;
-      inductionCooker.isRelayon = true;
-      inductionCooker.isPower = true;
-      inductionCooker.isEnabled = true;
-      inductionCooker.induction_state = true;
-      inductionCooker.Update();
+    case SIM_IND:        // Test event - ignore!
+      if (inductionCooker.isEnabled)
+      {
+        DBG_PRINTLN("SIM INDTEST: induction simulation event - switch on induction 100%");
+        inductionCooker.newPower = 100;
+        inductionCooker.isInduon = true;
+        inductionCooker.isRelayon = true;
+        inductionCooker.isPower = true;
+        inductionCooker.isEnabled = true;
+        inductionCooker.induction_state = true;
+        inductionCooker.Update();
+      }
       break;
     default:
       break;

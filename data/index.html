@@ -14,14 +14,14 @@
     <div class="container">
       <div class="row">
         <div class="col">
-		   <h1 class="text-center">MQTT Device V1.042</h1>
+		   <h1 class="text-center">MQTT Device V1.044</h1>
         </div>
         <div class="col-md-auto">
 			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
 			<a href="/update" class="btn btn-outline-danger" id="btn_upd">Update</a>
 			<button type="button" class="btn btn-outline-danger" id="btn_ota">Start OTA</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
-			<button type="button" class="btn btn-outline-danger" id="btn_recon_mqtt">Reconnect MQTT</button>
+			<button type="button" class="btn btn-outline-danger" id="btn_sim">Simulation</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_disable_display">Display on/off</button>
         </div>
       </div>
@@ -1151,9 +1151,9 @@
       });;
     });
 
-    $("#btn_recon_mqtt").click(function () {
+    $("#btn_sim").click(function () {
       $.ajax({
-        url: '/reconmqtt',
+        url: '/simulation',
         type: 'POST',
         async: true,
         cache: false

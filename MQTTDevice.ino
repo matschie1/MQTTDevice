@@ -15,6 +15,7 @@
 //#include <Arduino.h>         // Entfernt: wird automatisch einbezogen -> String does not name a type
 #include <OneWire.h>           // OneWire Bus Kommunikation
 #include <DallasTemperature.h> // Vereinfachte Benutzung der DS18B20 Sensoren
+#include <Math.h>
 
 #include <ESP8266WiFi.h>      // Generelle WiFi Funktionalität
 #include <ESP8266WebServer.h> // Unterstützung Webserver
@@ -43,7 +44,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.041";
+const char Version[6]  = "1.044";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -176,10 +177,6 @@ int SYS_UPDATE = 0;       // sys update delay - 0 := no delay (every loop)
 #define EM_INDER 10 // Induction error
 #define EM_ACTOFF 11 // Actor error
 #define EM_INDOFF 11 // Induction error
-#define EM_ACTTEST 20 // Test event actor error
-#define EM_INDTEST 20 // Test event anduction error
-#define EM_SENTEST1 20 // Test event sensor no error
-#define EM_SENTEST2 21 // Test event sensor no error
 
 #define PAUSE1SEC 1000
 #define PAUSE2SEC 2000
@@ -241,5 +238,12 @@ const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
 // D2 -> SDA Oled Display
 
-// test events - ignore!
-//#define TEST
+// Simulation
+#define SIM_NONE 0
+#define SIM_SEN_ERR 1
+#define SIM_WLAN 2
+#define SIM_MQTT 3
+#define SIM_ACT 20 // SIM event start actors
+#define SIM_IND 20 // SIM event start induction
+int sim_mode = SIM_NONE;
+int sim_counter = 0;

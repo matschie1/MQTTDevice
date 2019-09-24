@@ -27,6 +27,7 @@ class TemperatureSensor
       }
       sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
       sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+
       DBG_PRINT("Sen: ");
       DBG_PRINT(sens_name);
       DBG_PRINT(" connected: ");
@@ -40,55 +41,76 @@ class TemperatureSensor
       DBG_PRINT(sens_value);
       sensorsStatus = 4;
       sens_state = false;
-      // Test event - ignore!
-#ifdef TEST
-      sens_state = senChanger1();
-#endif
-
       if ( OneWire::crc8( sens_address, 7) != sens_address[7])
       {
-        DBG_PRINTLN(" CRC check failed");
-        sensorsStatus = EM_CRCER;
-      }
-      //else DBG_PRINTLN(" CRC check ok");
-      //if (sens_value == -127.0 || sens_value == 85.0) {
-      else if (sens_value == -127.0 || sens_value == 85.0)
-      {
-        if (sens_isConnected && sens_address[0] != 0xFF) { // Sensor connected AND sensor address exists (not default FF)
-          //DBG_PRINT(sens_name);
-          //DBG_PRINTLN(" is connected and has a valid ID, but temperature is -127 -  error, device not found");
-          DBG_PRINTLN(" device error");
-          sensorsStatus = EM_DEVER;
+        if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw) ) {
+          DBG_PRINTLN(" CRC check failed");
+          sensorsStatus = EM_CRCER;
         }
-        else if (!sens_isConnected && sens_address[0] != 0xFF) { // Sensor with valid address not connected
-          //DBG_PRINT(sens_name);
-          //DBG_PRINTLN(" is not connected, has no sensor value and device ID is not valid - unplugged?");
-          DBG_PRINTLN(" unplugged?");
-          sensorsStatus = EM_UNPL;
+        else
+          DBG_PRINTLN("");
+      }
+      else if (sens_value == -127.00 || sens_value == 85.00)
+      {
+        if (sens_isConnected && sens_address[0] != 0xFF)
+        { // Sensor connected AND sensor address exists (not default FF)
+          if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw)) {
+            DBG_PRINTLN(" device error");
+            sensorsStatus = EM_DEVER;
+          }
+          else
+            DBG_PRINTLN("");
+        }
+        else if (!sens_isConnected && sens_address[0] != 0xFF)
+        { // Sensor with valid address not connected
+          if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw))
+          {
+            DBG_PRINTLN(" unplugged?");
+            sensorsStatus = EM_UNPL;
+          }
+          else
+            DBG_PRINTLN("");
         }
         else // not connected and unvalid address
+        {
           sensorsStatus = EM_SENER;
+          DBG_PRINTLN("");
+        }
       } // sens_value -127 || +85
       else
       {
         sensorsStatus = EM_OK;
         sens_state = true;
         DBG_PRINTLN("");
-
-        // Test event - ignore!
-#ifdef TEST
-        sens_state = senChanger2();
-#endif
       }
 
-      // Test event - ignore!
-#ifdef TEST
-      sensorsStatus = senChanger3(sens_state);
-      if (sensorsStatus > 0)
-        sens_state = false;
-      else
-        sens_state = true;
-#endif
+      // Simulation - ignore!
+      if (sim_mode != SIM_NONE && sens_sw) // Simulation und Sensor switchable?
+      {
+        if (sim_mode == SIM_SEN_ERR) 
+          sens_state = simSenChange(sens_state);
+        else
+          sens_state = true;
+
+        DBG_PRINT("SIM: set state for sensor ");
+        DBG_PRINT(sens_name);
+        if (sens_state)
+          DBG_PRINT(" OK");
+        else
+          DBG_PRINT(" Err");
+
+        if (sens_state)
+          sensorsStatus = EM_OK;       // Sende SIM_SEN_OK in die Queue
+        else
+          sensorsStatus = EM_SENER;    // Sende SIM_SEN_FALSE in die Queue
+      }
+      else if (sim_mode == SIM_SEN_ERR && !sens_sw) // Simulation und Sensor switchable?
+      {
+        DBG_PRINT("SIM: no changes for sensor ");
+        DBG_PRINT(sens_name);
+        DBG_PRINTLN(" - not switchable");
+      }
+
       sens_err = sensorsStatus;
       publishmqtt();
     } // void Update
@@ -171,10 +193,16 @@ TemperatureSensor sensors[numberOfSensorsMax] = {
 
 /* Funktion für Loop */
 void handleSensors() {
+  int max_status = 0;
   for (int i = 0; i < numberOfSensors; i++) {
     sensors[i].Update();
-    yield();
+
+    // get max sensorstatus
+    if (sensors[i].sens_sw && max_status < sensors[i].sens_err )
+      max_status = sensors[i].sens_err;
+    //yield();
   }
+  sensorsStatus = max_status;
 }
 
 unsigned char searchSensors() {
@@ -312,9 +340,8 @@ void handleRequestSensors() {
     sensorResponse["sw"] = sensors[i].sens_sw;
     sensorResponse["state"] = sensors[i].sens_state;
 
-    if (sensors[i].sens_value != -127.0) {
+    if (sensors[i].sens_value != -127.0)
       sensorResponse["value"] = sensors[i].getValueString();
-    }
     else
     {
       if (sensors[i].sens_err == 1)

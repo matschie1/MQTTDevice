@@ -11,7 +11,11 @@ void loop()
       cbpiEventSystem(EM_TELNET); // TELNET
     if (startOTA)
       cbpiEventSystem(EM_OTA); // OTA handle
-  
+
+    // Simulation - ignore!
+    if (sim_mode != SIM_NONE)
+      simCheck();
+      
     lastToggledSys = millis();
   }
 
@@ -19,11 +23,6 @@ void loop()
   {
     cbpiEventSensors(sensorsStatus); // Sensor handle
     lastToggledSen = millis();
-
-    // Test events - ignore!
-#ifdef TEST
-    testLoop1();
-#endif
   }
   if (millis() > (lastToggledAct + ACT_UPDATE))
   {
@@ -44,7 +43,7 @@ void loop()
       lastToggledDisp = millis();
     }
   }
- 
+    
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {
     gEM.processEvent();

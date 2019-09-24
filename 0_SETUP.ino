@@ -110,11 +110,6 @@ void setup()
   {
     gEM.processEvent();
   }
-
-  // Test events - ignore!
-#ifdef TEST
-    startTest();
-#endif
 }
 
 void setupServer()
@@ -137,7 +132,8 @@ void setupServer()
   server.on("/delActor", handleDelActor);       // Aktor löschen
   server.on("/reboot", rebootDevice);           // reboots the whole Device
   server.on("/OTA", OTA);
-  server.on("/reconmqtt", reconMQTT);           // Reconnect MQTT
+  //server.on("/reconmqtt", reconMQTT);           // Reconnect MQTT
+  server.on("/simulation", startSIM);           // Simulation
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp);     // Infos Display für WebConfig
   server.on("/setDisp", handleSetDisp);         // Display ändern
