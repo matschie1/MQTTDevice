@@ -193,8 +193,8 @@ bool wlan_state = true;                     // Error state WLAN
 
 #define maxRetriesWLAN 5                    // Max retries before errer event 
 #define maxRetriesMQTT 5                    // Max retries before error event 
-int wait_on_error_mqtt = 20000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
-int wait_on_error_wlan = 20000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_mqtt = 60000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_wlan = 60000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
 // Sensor reconnect parameters
 int wait_on_Sensor_error_actor = 60000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
 int wait_on_Sensor_error_induction = 60000;  // How long should induction wait between tries to reconnect sensor - approx in ms

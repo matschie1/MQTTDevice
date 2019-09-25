@@ -26,9 +26,9 @@ The MQTTDevice is an Arduino Sketch based on the ESP8266 to enable stable commun
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
 
 
-### Requirements: (2019.08)
+### Requirements: (2019.09)
 
-* Arduino IDE 1.8.9 
+* Arduino IDE 1.8.10
 * ESP8266 by ESP8266 Community version 2.5.2
 * download lib folder from repository
   * EventManager
@@ -39,20 +39,17 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
   * Arduino IDE: simply use #include "icons.h".
 * download and install the following libs in your Arduino IDE:  
 
-  * NTPClient by Fabrice Weinberg Version 3.1.0
-  * Adafruit GFX Library by Adafruit Version 1.5.6
+  * NTPClient by Fabrice Weinberg Version 3.2.0
+  * Adafruit GFX Library by Adafruit Version 1.5.7
   * Adafruit SSD1306 by Adafruit Version 1.3.0
   * ArduinoJSON by Benoit Blanchon Version 5.13.4 (only use this version! Do not update this lib!)
   * DallasTemperature by Miles Burton Version 3.8.0
-  * OneWire By Jim Studt Version 2.3.4
+  * OneWire By Jim Studt Version 2.3.5
   * PubSubClient by Nick O'Leary Version 2.7.0
   * Time by Michael Margolis Version 1.5.0
   * Timezone by Jack Christensen Version 1.2.2
-  * WiFiManager by tzapu Version 0.14.0
+  * WiFiManager by tzapu Version 0.15.0
   * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
-
-Please note: starting with Version 1.03 you need to install Adafruit SSD1306 and Adafruit GFX in your Arduino IDE. Libs are removed from repository!
-
 
 ### Main Functions
 
@@ -95,7 +92,12 @@ You can browse, down- an dupload files from/to spiffs. This makes it very easy t
 ArduinoOTA can be activated on webif. Keep in mind to start OTA on ESP before you open Arduino-IDE.
 
 ### Debug information:
-You can enable debug output on serial monitor for testing purpose or to find out working settings for your equipment.
+You can enable debug output on serial monitor or telnet (eg putty) for testing purpose or to find out working settings for your equipment.
+
+### Simulation:
+Simulation will start ALL actors and induction. In loop 0-9 sensors event, in loop 10-19 MQTT and finally in loop 20-29 WLAN events are simulated. Switchable actors and induction are modified. 
+Simulation will use the time for delays configured in webif. At the end simulation will switch off all actors and induction. For simulation enable debug and connect serial monitor or your telnet client.
+The main purpose of simulation is testing your delays and which actors should be event handling enabled or disabled.  
 
 ### OLED Display:
 You can use OLED display. This firmware is tested with monochrom OLED 128x64 I2C 0.96".
