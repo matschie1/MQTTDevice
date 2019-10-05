@@ -12,6 +12,8 @@ class oled
     bool indOK = true;
     bool wlanOK = true;
     bool mqttOK = false;
+    int counter_sen = 0;
+    int counter_act = 0;
 
     oled()
     {
@@ -320,48 +322,54 @@ void showDispSen() // Show Sensor status on the left
   display.setTextSize(1);
   display.setCursor(3, 55);
   display.setTextColor(WHITE);
-  //oledDisplay.senOK ? display.print("Sen:ok") : display.print("Sen:Er");
-  if (sensorsStatus == 0)
-  {
-    display.print("Sen: ");
-    display.print(numberOfSensors);
-  }
+
+  if (oledDisplay.counter_sen >= numberOfSensors)
+    oledDisplay.counter_sen = 0;
+
+  display.print("S");
+  display.print(oledDisplay.counter_sen + 1);
+  display.print(" ");
+  if (sensors[oledDisplay.counter_sen].sens_err == 0)
+    display.print((int)(sensors[oledDisplay.counter_sen].sens_offset + sensors[oledDisplay.counter_sen].sens_value));
   else
-    display.print("Sen:Er");
+    display.print("Err");
+
+  oledDisplay.counter_sen++;
 }
 void showDispAct() // Show actor status in the mid
 {
   display.setCursor(45, 55);
   display.setTextColor(WHITE);
-  if (actorsStatus == 0)
-  {
-    display.print("Act: ");
-    display.print(numberOfActors);
-  }
+  if (oledDisplay.counter_act >= numberOfActors)
+    oledDisplay.counter_act = 0;
+
+  display.print("A");
+  display.print(oledDisplay.counter_act + 1);
+  display.print(" ");
+  if (!actors[oledDisplay.counter_act].isOn)
+    display.print("off");
   else
-    display.print("Act:Er");
+    display.print(actors[oledDisplay.counter_act].power_actor);
+
+  oledDisplay.counter_act++;
 }
 void showDispInd() // Show InductionCooker status on the right
 {
   display.setTextSize(1);
   display.setCursor(87, 55);
   display.setTextColor(WHITE);
-  if (inductionStatus == 1) {
-    if (inductionCooker.isRelayon) {
-      display.print("In:");
+  display.print("I ");
+  if (inductionStatus == 1)
+  {
+    if (inductionCooker.isRelayon)
       display.print(inductionCooker.newPower);
-    }
     else
-    {
-      display.print("In:off");
-    }
+      display.print("off");
   }
   else if (inductionStatus == 0)
-    display.print("In:off");
-  else if (inductionStatus == -1)
-    display.print("In:err");
+    display.print("off");
   else
-    display.print("In:??");
+    display.print("Err");
 }
 
 void showDispTime(String value) // Show time value in the upper left with fontsize 2

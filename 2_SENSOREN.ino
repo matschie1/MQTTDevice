@@ -21,12 +21,20 @@ class TemperatureSensor
 
     void Update() {
       DS18B20.requestTemperatures(); // new conversion to get recent temperatures
-      if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
-        millis2wait(750);
-        DS18B20.requestTemperatures();
-      }
       sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
       sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+
+      if (!sens_isConnected && sens_address[0] != 0xFF && sens_address[0] != 0x00) // double check on !sens_isConnected. Billig Tempfühler ist manchmal für 1-2 loops nicht connected. 0xFF default address. 0x00 virtual test device (adress 00 00 00 00 00)
+      {
+        millis2wait(750); // wait for approx 750ms before recheck connection
+        sens_isConnected = DS18B20.isConnected(sens_address); // attempt to determine if the device at the given address is connected to the bus
+        sens_isConnected ? sens_value = DS18B20.getTempC(sens_address) : sens_value = -127.0;
+      }
+
+      if (sens_value == 85.0) { // can be real 85 degrees or reset default temp or an error value eg cable too long
+        millis2wait(750); // wait for approx 750ms before request temp again
+        DS18B20.requestTemperatures();
+      }
 
       DBG_PRINT("Sen: ");
       DBG_PRINT(sens_name);
@@ -43,10 +51,9 @@ class TemperatureSensor
       sens_state = false;
       if ( OneWire::crc8( sens_address, 7) != sens_address[7])
       {
-        if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw) ) {
+        sensorsStatus = EM_CRCER;
+        if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw) )
           DBG_PRINTLN(" CRC check failed");
-          sensorsStatus = EM_CRCER;
-        }
         else
           DBG_PRINTLN("");
       }
@@ -54,20 +61,18 @@ class TemperatureSensor
       {
         if (sens_isConnected && sens_address[0] != 0xFF)
         { // Sensor connected AND sensor address exists (not default FF)
-          if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw)) {
+          sensorsStatus = EM_DEVER;
+
+          if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw) )
             DBG_PRINTLN(" device error");
-            sensorsStatus = EM_DEVER;
-          }
           else
             DBG_PRINTLN("");
         }
         else if (!sens_isConnected && sens_address[0] != 0xFF)
         { // Sensor with valid address not connected
+          sensorsStatus = EM_UNPL;
           if (sim_mode == SIM_NONE || (sim_mode != SIM_NONE && !sens_sw))
-          {
             DBG_PRINTLN(" unplugged?");
-            sensorsStatus = EM_UNPL;
-          }
           else
             DBG_PRINTLN("");
         }
@@ -87,7 +92,7 @@ class TemperatureSensor
       // Simulation - ignore!
       if (sim_mode != SIM_NONE && sens_sw) // Simulation und Sensor switchable?
       {
-        if (sim_mode == SIM_SEN_ERR) 
+        if (sim_mode == SIM_SEN_ERR)
           sens_state = simSenChange(sens_state);
         else
           sens_state = true;
@@ -95,9 +100,9 @@ class TemperatureSensor
         DBG_PRINT("SIM: set state for sensor ");
         DBG_PRINT(sens_name);
         if (sens_state)
-          DBG_PRINT(" OK");
+          DBG_PRINTLN(" OK");
         else
-          DBG_PRINT(" Err");
+          DBG_PRINTLN(" Err");
 
         if (sens_state)
           sensorsStatus = EM_OK;       // Sende SIM_SEN_OK in die Queue
@@ -110,6 +115,7 @@ class TemperatureSensor
         DBG_PRINT(sens_name);
         DBG_PRINTLN(" - not switchable");
       }
+      // Simmulation
 
       sens_err = sensorsStatus;
       publishmqtt();

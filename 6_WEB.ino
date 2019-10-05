@@ -52,7 +52,7 @@ void mqttcallback(char* topic, unsigned char* payload, unsigned int length) {
   DBG_PRINT("Web: Received MQTT");
   DBG_PRINT(" Topic: ");
   DBG_PRINT(topic);
-  DBG_PRINT("Web: Payload: ");
+  DBG_PRINT(" Payload: ");
   for (int i = 0; i < length; i++) {
     DBG_PRINT((char)payload[i]);
   } DBG_PRINTLN(" ");

@@ -78,7 +78,7 @@ void DBG_PRINTHEX(int value)
     else
       Serial.print(value, HEX);
   }
- 
+
 }
 void DBG_PRINTLN(String value)
 {

@@ -44,7 +44,7 @@
 // architectures=*
 
 /*############ Version ############*/
-const char Version[6]  = "1.044";
+const char Version[6]  = "1.046";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -168,7 +168,6 @@ int SYS_UPDATE = 0;       // sys update delay - 0 := no delay (every loop)
 
 // Sensor, actor and induction
 #define EM_OK 0 // Normal mode
-// Sensor, actor and induction error
 #define EM_CRCER 1 // Sensor CRC failed
 #define EM_DEVER 2 // Sensor device error
 #define EM_UNPL 3  // Sensor unplugged
@@ -177,9 +176,6 @@ int SYS_UPDATE = 0;       // sys update delay - 0 := no delay (every loop)
 #define EM_INDER 10 // Induction error
 #define EM_ACTOFF 11 // Actor error
 #define EM_INDOFF 11 // Induction error
-
-#define PAUSE1SEC 1000
-#define PAUSE2SEC 2000
 
 // WLAN and MQTT reconnect parameters
 bool StopOnWLANError = false;               // Use webif to configure: switch on/off event handling actors and induvtion on WLAN error
@@ -195,17 +191,20 @@ bool wlan_state = true;                     // Error state WLAN
 #define maxRetriesMQTT 5                    // Max retries before error event 
 int wait_on_error_mqtt = 60000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
 int wait_on_error_wlan = 60000;             // How long should device wait between tries to reconnect WLAN      - approx in ms
+
 // Sensor reconnect parameters
+bool StopActorsOnError = false;              // Use webif to configure: switch on/off event handling actors on sensor error after wait_on_Sensor_error_actor ms
+bool StopInductionOnError = false;           // Use webif to configure: switch on/off event handling Induction on sensor error after wait_on_Sensor_error_induction ms
 int wait_on_Sensor_error_actor = 60000;      // How long should actors wait between tries to reconnect sensor    - approx in ms
 int wait_on_Sensor_error_induction = 60000;  // How long should induction wait between tries to reconnect sensor - approx in ms
 
-bool StopActorsOnError = false;              // Use webif to configure: switch on/off event handling actors on sensor error after wait_on_Sensor_error_actor ms
-bool StopInductionOnError = false;           // Use webif to configure: switch on/off event handling Induction on sensor error after wait_on_Sensor_error_induction ms
-
+// System setup parameters
 bool startOTA = false;
 bool startMDNS = false;
 bool startTEL = false;
 char nameMDNS[16];
+#define PAUSE1SEC 1000
+#define PAUSE2SEC 2000
 
 unsigned long lastToggledSys = 0;   // Timestamp system event
 unsigned long lastToggledSen = 0;   // Timestamp sensor event
@@ -221,6 +220,7 @@ int inductionStatus = 0;
 /*######### EventManager ########*/
 
 /*########### DISPLAY ###########*/
+bool useDisplay = false;
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -233,12 +233,11 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include "icons.h"
 // Using VSCode modify absolut path to icons.h
 // #include "C:/Arduino/git/MQTTDevice/icons.h"
-bool useDisplay = false;
 const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
 // D2 -> SDA Oled Display
 
-// Simulation
+/*########## Simulation #########*/
 #define SIM_NONE 0
 #define SIM_SEN_ERR 1
 #define SIM_WLAN 2

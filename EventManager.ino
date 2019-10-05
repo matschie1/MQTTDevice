@@ -35,7 +35,7 @@ void listenerSystem(int event, int parm) // System event listener
         }
         else {
           DBG_PRINT("SIM: WLAN loop ");
-          DBG_PRINTLN(sim_counter-20);
+          DBG_PRINTLN(sim_counter - 20);
           sim_counter++;
         }
 
@@ -81,7 +81,7 @@ void listenerSystem(int event, int parm) // System event listener
         {
           sim_counter++;
           DBG_PRINT("SIM: MQTT loop ");
-          DBG_PRINTLN(sim_counter-10);
+          DBG_PRINTLN(sim_counter - 10);
         }
 
         if ( retriesMQTT <= maxRetriesMQTT )

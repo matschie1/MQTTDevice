@@ -14,7 +14,7 @@
     <div class="container">
       <div class="row">
         <div class="col">
-		   <h1 class="text-center">MQTT Device V1.044</h1>
+		   <h1 class="text-center">MQTT Device V1.046</h1>
         </div>
         <div class="col-md-auto">
 			<a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
@@ -410,7 +410,6 @@
 		  {
             actor += " badge-dark'>OFF";
           }
-		  actor += "</span> ";
 		  actor += "</span><span class='badge badge-light'>PIN";
           actor += element.pin;
 		  actor += "</span> ";
@@ -531,7 +530,6 @@
         else {
           miscRender += " badge-dark'> OFF";
         }
-		miscRender += " </span> </li>";
 		miscRender += "</span> </li> <li class='list-group-item d-flex justify-content-between align-items-center'> Debug output serial monitor <span class='badge ";
         if (data.debug) {
           miscRender += " badge-success'> ON";

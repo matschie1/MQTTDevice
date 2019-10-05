@@ -57,17 +57,17 @@ void setup()
     pins_used[DISPLAY_PINS[1]] = true;
   }
 
-    // WiFi Manager
-    ESP.wdtFeed();
-    WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
-    wifiManager.setSaveConfigCallback(saveConfigCallback);
-    wifiManager.addParameter(&cstm_mqtthost);
-    wifiManager.autoConnect(mqtt_clientid);
-    strcpy(mqtthost, cstm_mqtthost.getValue());
+  // WiFi Manager
+  ESP.wdtFeed();
+  WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+  wifiManager.addParameter(&cstm_mqtthost);
+  wifiManager.autoConnect(mqtt_clientid);
+  strcpy(mqtthost, cstm_mqtthost.getValue());
 
-    // Telnet
-    if (startTEL)
-      cbpiEventSystem(EM_TELSET);   // Telnet
+  // Telnet
+  if (startTEL)
+    cbpiEventSystem(EM_TELSET);   // Telnet
 
   // Save configuration
   ESP.wdtFeed();

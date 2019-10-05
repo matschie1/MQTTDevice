@@ -100,7 +100,7 @@ void simMQTT()
 bool simSenChange(bool val) // val hat aktuellen sensor status
 {
   val = true;
-  
+
   if (sim_mode == SIM_SEN_ERR) // FlipFlop Sensor Status nach 20sek
   {
     if (sim_counter == 0)     // sen sim starts all actors and induction on

@@ -465,7 +465,7 @@ bool saveConfig()
     jsmisc["telnet"] = "1";
   else
     jsmisc["telnet"] = "0";
-    
+
   if (setDEBUG)
     jsmisc["debug"] = "1";
   else
