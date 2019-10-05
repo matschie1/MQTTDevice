@@ -42,7 +42,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
   * NTPClient by Fabrice Weinberg Version 3.2.0
   * Adafruit GFX Library by Adafruit Version 1.5.7
   * Adafruit SSD1306 by Adafruit Version 1.3.0
-  * ArduinoJSON by Benoit Blanchon Version 5.13.4 (only use this version! Do not update this lib!)
+  * ArduinoJSON by Benoit Blanchon Version 5.13.5 (only use this version! Do not update this lib!)
   * DallasTemperature by Miles Burton Version 3.8.0
   * OneWire By Jim Studt Version 2.3.5
   * PubSubClient by Nick O'Leary Version 2.7.0
@@ -106,10 +106,7 @@ WLAN and MQTT icon will automatically disappear, if an error raises up.
 Sensors, actors and induction are displayed with their configured number. In an error event the number is replaced with "Er".
 
 
-![oled1](/img/display3.jpg)
-![oled2](/img/display2.jpg)
-![oled3](/img/display.jpg)
-![oled4](/img/display1.jpg)
+![oled1](/img/display4.jpg)
 
 Wiring ESP8266 D1 Mini, AZ-Delivery 0.96 i2c 128x64 OLED display (use this information on your own risk!)
 
