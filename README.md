@@ -104,8 +104,8 @@ The main purpose of simulation is testing your delays and which actors should be
 You can use OLED display. This firmware is tested with monochrom OLED 128x64 I2C 0.96".
 OLED display is activated in WebIf Display menu. Pins D1 and D2 are used for OLED.
 WLAN and MQTT icon will automatically disappear, if an error raises up.
-Sensors, actors and induction are displayed with their actual values. Display output "S1 78 | A2 100 | I off" means: sensor1 temperature is 78°C, actor2 is on 100% power and induction off. 
-Every loop (see DISP_UPDATE) next sensor or actor items value will be shown. In an sensor error event the temperature value is replaced with "Err".
+Sensors, actors and induction are displayed with their actual values. Display output "S1 78 | A2 100 | I off" means: sensor1 temperature is 78°C, actor2 is on with power 100% and induction is turned off. 
+Every loop (see DISP_UPDATE) next sensor or actor items value will be shown. In a sensor error event the temperature value is replaced with "Err".
 
 
 ![oled1](/img/display4.jpg)
