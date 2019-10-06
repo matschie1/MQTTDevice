@@ -21,8 +21,7 @@
 			<a href="/update" class="btn btn-outline-danger" id="btn_upd">Update</a>
 			<button type="button" class="btn btn-outline-danger" id="btn_ota">Start OTA</button>
 			<button type="button" class="btn btn-outline-danger" id="btn_reboot">Reboot</button>
-			<button type="button" class="btn btn-outline-danger" id="btn_sim">Simulation</button>
-			<button type="button" class="btn btn-outline-danger" id="btn_disable_display">Display on/off</button>
+			<button type="button" class="btn btn-outline-dark" id="btn_sim">Simulation</button>
         </div>
       </div>
     </div>
@@ -1061,7 +1060,7 @@
 	  if (enable_mqtt == "1") { modal.find('#modal_misc_onErrorMQTT').prop("checked", true) }
       else { modal.find('#modal_misc_onErrorMQTT').prop("checked", false) }
 	  if (enable_wlan == "1") { modal.find('#modal_misc_onErrorWLAN').prop("checked", true) }
-      else { modal.find('#modal_misc_onErrorInduction').prop("checked", false) }
+      else { modal.find('#modal_misc_onErrorWLAN').prop("checked", false) }
 	  if (telnet == "1") { modal.find('#modal_misc_telnet').prop("checked", true) }
       else { modal.find('#modal_misc_telnet').prop("checked", false) }
 	  if (debug == "1") { modal.find('#modal_misc_debug').prop("checked", true) }
@@ -1158,14 +1157,6 @@
       });
     });
 
-	$("#btn_disable_display").click(function () {
-      $.ajax({
-        url: '/displayOff',
-        type: 'POST',
-        async: true,
-        cache: false
-      });
-    });
 	$("#btn_ota").click(function () {
       $.ajax({
         url: '/OTA',
