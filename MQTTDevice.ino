@@ -231,8 +231,6 @@ bool useDisplay = false;
 #define OLED_RESET LED_BUILTIN //4
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include "icons.h"
-// Using VSCode modify absolut path to icons.h
-// #include "C:/Arduino/git/MQTTDevice/icons.h"
 const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D1 -> SDL Oled Dispay
 // D2 -> SDA Oled Display
