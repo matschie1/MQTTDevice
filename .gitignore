@@ -1,10 +1,8 @@
 .DS_Store
-testing.ino
 .vscode/
 .vscode/c_cpp_properties.json
 .vscode/arduino.json
 .vscode/settings.json
-.vscode/Upload_SPIFFS.cmd
 /data/config.json
 /build/core
 /build/preproc

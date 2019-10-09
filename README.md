@@ -21,6 +21,7 @@ The MQTTDevice is an Arduino Sketch based on the ESP8266 to enable stable commun
   * Power Percentage: If a Value between 0 and 100% is sent, the ESP "pulses" with a duty cycle of 1000ms
 * Induction
   * Control of a GGM Induction Cooker via serial communication
+* OLED display integration
 
 
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
@@ -29,16 +30,12 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 ### Requirements: (2019.10)
 
 * Arduino IDE 1.8.10
+* Optional but recommended: Microsoft VSCode + Arduino + ESP8266FS
 * ESP8266 by ESP8266 Community version 2.5.2
 * download lib folder from repository
   * EventManager
   * ESP8266HTTPUpdateServer
-* modify MQTTDevice.ino as you prefer:
-  * set useDisplay true or false
-  * VSCode change path: #include "C:/Arduino/git/MQTTDevice/icons.h". 
-  * Arduino IDE: simply use #include "icons.h".
 * download and install the following libs in your Arduino IDE:  
-
   * NTPClient by Fabrice Weinberg Version 3.2.0
   * Adafruit GFX Library by Adafruit Version 1.5.7
   * Adafruit SSD1306 by Adafruit Version 1.3.0
@@ -51,31 +48,36 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
   * WiFiManager by tzapu Version 0.15.0
   * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
 
-### How to flash
+### How to flash without compile
 
-Download binary files (build folder) and use esptool.exe to flash
+* Download binary files from build folder or ZIP and use esptool.exe (see https://github.com/igrr/esptool-ck/releases ) to flash
+
 Example ESP8266 D1 mini 4MB flash size connected to COM3
-* open cmd.exe
-* navigate into build folder
-	* flash firmware: esptool.exe -ca 0x000000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.ino.bin
-	* flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
-* reset ESP8266 device
+	* open cmd.exe
+	* navigate into build folder
+		* flash firmware: esptool.exe -ca 0x000000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.ino.bin
+		* flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
+        * alternativ: flash SPIFFS after your device is connected to your WLAN using WebIf <ip-address>/update
+	* reset ESP8266 device
+	* ESP8266 device will reboot in AP mode with IP 192.168.4.1
+	* Connect ESP8266 device to your WLAN
 
+* Updates
+	To install updates (firmware an SPIFFS) open the buildin WebIf: <ip address esp device>/update
 
 ### Main Functions
 
 * Add, edit and remove sensors, actors and induction
 * Configure OLED display
 * Configure misc settings
-* Firmware and SPIFFS Over the Air Update
-* Firmware and SPIFFS update by file upload 
+* Firmware and SPIFFS update by file upload or OTA (Over The Air)
 * Filebrowser for easy file management (eg backup and restore config.json)
 * DS18B20 temperature offset
 * Serial output via Telnet (Putty)
 * Simulation
 
 ### Misc Menu:
-In misc menu you can
+
 * configure time period to update sensor, actor, induction, system and display data
 * reset WiFi settings		-> ESP device will reboot in AP mode!
 * clear all settings		-> ESP device will reboot in AP mode!
@@ -83,7 +85,7 @@ In misc menu you can
 * configure event handling (actors and induction on/off with delay)
 * configure Debug output serial monitor
 * activate Telnet
-* configure mDNS. Recommended: 
+* configure mDNS 
 
 ### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
@@ -94,13 +96,14 @@ Configured are 4 event queues: system, sensors, actors and induction. For exampl
 * IND_UPDATE  10000	-> Induction data read/write should be queued approx. every 10s. Recommended: values between 2000-10000 (2-10sec)
 * DISP_UPDATE 2000	-> Display screen update queued approx. every 2s.  Recommended: values between 1000-5000 (1-5sec)
 
-Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. 
+Beside those read and write events (normally handled by loop) also error events are queued. For example a sensors fails. If this event is queued you can if enabled in webif automatically switch off all actors and/or induction after a configured delay. Enter a value for delay on error as you want to delay the event switch off. The logic behind this delay is, that a single error event should not immediately turn off your brewery, but if an error event is still queued after some time, then you might prefer a turn off. For induction instead of turn off you can set a power state. For example 15% power to hold actual temperature in your kettle. 
 
 ### FileBrowser:
-You can browse, down- and upload files from or into spiffs. This makes it very easy to safe or restore configuration (config.json)
+You can browse, down- and upload files from btw. into SPIFFS. This makes it very easy to safe or restore configuration (config.json)
 
-### Over the Air Updates:
-ArduinoOTA can be activated on webif. Keep in mind to start OTA on ESP before you open Arduino-IDE.
+### Updates:
+Firmware has a buildin update modul. Open <ip-address esp8266>/update in your browser. 
+Alternativly ArduinoOTA can be activated on webif. Keep in mind to start OTA on ESP before you open Arduino-IDE.
 Updates by file instead of OTA is recommended.
 
 ### Debug information:
@@ -128,4 +131,4 @@ Wiring ESP8266 D1 Mini, AZ-Delivery 0.96 i2c 128x64 OLED display (use this infor
  * SCL -> D1
  * SDA -> D2
 
-This repo is based on https://github.com/matschie1/MQTTDevice Main work is done by matschie! 
+This repo is based on https://github.com/matschie1/MQTTDevice

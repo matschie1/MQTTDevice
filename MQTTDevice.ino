@@ -88,9 +88,9 @@ int CMD[6][33] = {
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0},  // P2
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0},  // P3
   {1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},  // P4
-  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}
-}; // P5
-unsigned char PWR_STEPS[] = {0, 20, 40, 60, 80, 100};                                                              // Prozentuale Abstufung zwischen den Stufen
+  {1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0}   // P5
+};
+unsigned char PWR_STEPS[] = {0, 20, 40, 60, 80, 100};   // Prozentuale Abstufung zwischen den Stufen
 String errorMessages[10] = {
   "E0",
   "E1",
@@ -110,21 +110,21 @@ const unsigned char pins[numberOfPins] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 const String pin_names[numberOfPins] = {"D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"};
 
 /*########## VARIABLEN #########*/
-unsigned char numberOfSensors = 0;           // Gesamtzahl der Sensoren
-const unsigned char numberOfSensorsMax = 10; // Maximale Gesamtzahl Sensoren
-unsigned char addressesFound[numberOfSensorsMax][8];
+unsigned char numberOfSensors = 0;                    // Gesamtzahl der Sensoren
+const unsigned char numberOfSensorsMax = 10;          // Maximale Gesamtzahl Sensoren
+unsigned char addressesFound[numberOfSensorsMax][8];  
 unsigned char numberOfSensorsFound = 0;
-unsigned char numberOfActors = 0;              // Gesamtzahl der Aktoren
-char mqtthost[16] = "192.168.100.30"; // Default Value für MQTT Server
+unsigned char numberOfActors = 0;                     // Gesamtzahl der Aktoren
+char mqtthost[16] = "192.168.100.30";                 // Default Value für MQTT Server
 
 // Set device name
 int mqtt_chip_key = ESP.getChipId();
 char mqtt_clientid[25];
 
 /* ## Define NTP properties ## */
-#define NTP_OFFSET 60 * 60         // NTP in seconds
-#define NTP_INTERVAL 60 * 1000     // NTP in miliseconds
-#define NTP_ADDRESS "pool.ntp.org" // NTP change this to whatever pool is closest (see ntp.org)
+#define NTP_OFFSET 60 * 60                            // NTP in seconds
+#define NTP_INTERVAL 60 * 1000                        // NTP in miliseconds
+#define NTP_ADDRESS "pool.ntp.org"                    // NTP change this to whatever pool is closest (see ntp.org)
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, NTP_ADDRESS, NTP_OFFSET, NTP_INTERVAL);
 /*########## VARIABLEN #########*/
@@ -167,15 +167,15 @@ int SYS_UPDATE = 0;       // sys update delay - 0 := no delay (every loop)
 #define EM_TELNET  32
 
 // Sensor, actor and induction
-#define EM_OK 0 // Normal mode
-#define EM_CRCER 1 // Sensor CRC failed
-#define EM_DEVER 2 // Sensor device error
-#define EM_UNPL 3  // Sensor unplugged
-#define EM_SENER 4 // Sensor all errors
-#define EM_ACTER 10 // Actor error
-#define EM_INDER 10 // Induction error
-#define EM_ACTOFF 11 // Actor error
-#define EM_INDOFF 11 // Induction error
+#define EM_OK 0         // Normal mode
+#define EM_CRCER 1      // Sensor CRC failed
+#define EM_DEVER 2      // Sensor device error
+#define EM_UNPL 3       // Sensor unplugged
+#define EM_SENER 4      // Sensor error
+#define EM_ACTER 10     // Actor error
+#define EM_INDER 10     // Induction error
+#define EM_ACTOFF 11    // Actor off
+#define EM_INDOFF 11    // Induction off
 
 // WLAN and MQTT reconnect parameters
 bool StopOnWLANError = false;               // Use webif to configure: switch on/off event handling actors and induvtion on WLAN error
@@ -236,11 +236,11 @@ const unsigned char DISPLAY_PINS[2] = {D1, D2};
 // D2 -> SDA Oled Display
 
 /*########## Simulation #########*/
-#define SIM_NONE 0
-#define SIM_SEN_ERR 1
-#define SIM_WLAN 2
-#define SIM_MQTT 3
-#define SIM_ACT 20 // SIM event start actors
-#define SIM_IND 20 // SIM event start induction
-int sim_mode = SIM_NONE;
-int sim_counter = 0;
+#define SIM_NONE 0          // No simulation (default)
+#define SIM_SEN_ERR 1       // Simulation step 1: sensors
+#define SIM_WLAN 2          // Simulation step 3: WLAN
+#define SIM_MQTT 3          // Simulation step 2: MQTT
+#define SIM_ACT 20          // SIM event start actors
+#define SIM_IND 20          // SIM event start induction
+int sim_mode = SIM_NONE;    // Sim indicator (default SIM_NONE)
+int sim_counter = 0;        // Sim loop counter
