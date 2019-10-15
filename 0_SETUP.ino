@@ -1,14 +1,15 @@
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+  while (!Serial)
+  {
+    yield(); // wait for serial port to connect. Needed for native USB port only
   }
 
-  gEM.addListener(EventManager::cbpiEventSystem, listenerSystem);
-  gEM.addListener(EventManager::cbpiEventSensors, listenerSensors);
-  gEM.addListener(EventManager::cbpiEventActors, listenerActors);
-  gEM.addListener(EventManager::cbpiEventInduction, listenerInduction);
+  gEM.addListener(EventManager::kEventUser0, listenerSystem);
+  gEM.addListener(EventManager::kEventUser1, listenerSensors);
+  gEM.addListener(EventManager::kEventUser2, listenerActors);
+  gEM.addListener(EventManager::kEventUser3, listenerInduction);
 
   // Set device name
   snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
@@ -41,7 +42,6 @@ void setup()
   // Load configuration
   if (SPIFFS.exists("/config.json"))
   {
-    ESP.wdtFeed();
     DBG_PRINT("Firmware version: ");
     DBG_PRINTLN(Version);
     loadConfig();
@@ -53,8 +53,8 @@ void setup()
   pins_used[ONE_WIRE_BUS] = true;
   if (useDisplay)
   {
-    pins_used[DISPLAY_PINS[0]] = true;
-    pins_used[DISPLAY_PINS[1]] = true;
+    pins_used[SDA] = true;
+    pins_used[SDL] = true;
   }
 
   // WiFi Manager
@@ -67,44 +67,40 @@ void setup()
 
   // Telnet
   if (startTEL)
-    cbpiEventSystem(EM_TELSET);   // Telnet
+    cbpiEventSystem(EM_TELSET); // Telnet
 
   // Save configuration
   ESP.wdtFeed();
   saveConfig();
 
   // Start MQTT
-  //ESP.wdtFeed();
-  cbpiEventSystem(EM_MQTTCON);   // MQTT connect
-  cbpiEventSystem(EM_MQTTSUB);   // MQTT subscribe
+  ESP.wdtFeed();
+  cbpiEventSystem(EM_MQTTCON); // MQTT connect
+  cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
 
   // Display Start Screen
-  //ESP.wdtFeed();
   dispStartScreen();
 
   // Load mDNS
   if (startMDNS)
   {
-    //ESP.wdtFeed();
     cbpiEventSystem(EM_MDNSET);
   }
 
   // Init Arduino Over The Air
   if (startOTA)
   {
-    ESP.wdtFeed();
     setupOTA();
   }
 
   // Start Webserver
-  //ESP.wdtFeed();
   setupServer();
 
   ESP.wdtFeed();
-  cbpiEventSystem(EM_WLAN);   // Check WLAN
-  cbpiEventSystem(EM_MQTT);   // Check MQTT
-  cbpiEventSystem(EM_NTP);    // NTP handle
-  cbpiEventSystem(EM_MDNS);   // MDNS handle
+  cbpiEventSystem(EM_WLAN); // Check WLAN
+  cbpiEventSystem(EM_MQTT); // Check MQTT
+  cbpiEventSystem(EM_NTP);  // NTP handle
+  cbpiEventSystem(EM_MDNS); // MDNS handle
 
   while (gEM.getNumEventsInQueue()) // Eventmanager process all queued events
   {
@@ -133,14 +129,14 @@ void setupServer()
   server.on("/reboot", rebootDevice);           // reboots the whole Device
   server.on("/OTA", OTA);
   //server.on("/reconmqtt", reconMQTT);           // Reconnect MQTT
-  server.on("/simulation", startSIM);           // Simulation
+  server.on("/simulation", startSIM); // Simulation
   server.on("/reqDisplay", handleRequestDisplay);
-  server.on("/reqDisp", handleRequestDisp);     // Infos Display für WebConfig
-  server.on("/setDisp", handleSetDisp);         // Display ändern
-  server.on("/displayOff", turnDisplayOff);     // Display on / off
+  server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
+  server.on("/setDisp", handleSetDisp);     // Display ändern
+  server.on("/displayOff", turnDisplayOff); // Display on / off
   server.on("/reqMiscSet", handleRequestMiscSet);
-  server.on("/reqMisc", handleRequestMisc);     // Misc Infos für WebConfig
-  server.on("/setMisc", handleSetMisc);         // Misc ändern
+  server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
+  server.on("/setMisc", handleSetMisc);     // Misc ändern
 
   // FSBrowser initialisieren
   server.on("/list", HTTP_GET, handleFileList); // list directory
@@ -155,7 +151,7 @@ void setupServer()
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
   },
-  handleFileUpload);
+            handleFileUpload);
 
   server.onNotFound(handleWebRequests); // Sonstiges
 

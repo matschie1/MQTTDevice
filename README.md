@@ -1,4 +1,11 @@
 ![ov1](/img/fw104x.jpg)
+# Changelog
+Version 1.048
+- Fixed: 	Sensor search
+- Reworked:	EventManager (reverted back to original lib)
+- Reworked: Sensor handling
+- Fixed:	WebIf 
+- Cleanup code and minor changes
 
 # MQTTDevice
 
@@ -33,24 +40,35 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 * Optional but recommended: Microsoft VSCode + Arduino + ESP8266FS
 * ESP8266 by ESP8266 Community version 2.5.2
 * download lib folder from repository
-  * EventManager
-  * ESP8266HTTPUpdateServer
+  * ESP8266HTTPUpdateServer (modified lib: add web SPIFFS updates https://github.com/esp8266/Arduino/pull/3732/files )
 * download and install the following libs in your Arduino IDE:  
-  * NTPClient by Fabrice Weinberg Version 3.2.0
-  * Adafruit GFX Library by Adafruit Version 1.5.7
-  * Adafruit SSD1306 by Adafruit Version 1.3.0
-  * ArduinoJSON by Benoit Blanchon Version 5.13.5 (only use this version! Do not update this lib!)
-  * DallasTemperature by Miles Burton Version 3.8.0
-  * OneWire By Jim Studt Version 2.3.5
-  * PubSubClient by Nick O'Leary Version 2.7.0
-  * Time by Michael Margolis Version 1.5.0
-  * Timezone by Jack Christensen Version 1.2.2
-  * WiFiManager by tzapu Version 0.15.0
-  * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+  * Standard libs with Arduino IDE
+    * ESP8266WiFi 1.0 
+    * ESP8266WebServer 1.0
+    * DNSServer 1.1.1
+    * ESP8266mDNS Version 1.2
+    * SPI 1.0
+    * Wire 1.0
+  * Check and add the following libs
+    * NTPClient by Fabrice Weinberg Version 3.2.0
+    * Adafruit GFX Library by Adafruit Version 1.5.7
+    * Adafruit SSD1306 by Adafruit Version 1.3.0
+    * ArduinoJSON by Benoit Blanchon Version 5.13.5 (only use this version! Do not update this lib!)
+    * DallasTemperature by Miles Burton Version 3.8.0
+    * OneWire By Jim Studt Version 2.3.5
+    * PubSubClient by Nick O'Leary Version 2.7.0
+    * Time by Michael Margolis Version 1.5.0
+    * Timezone by Jack Christensen Version 1.2.2
+    * WiFiManager by tzapu Version 0.15.0
+    * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+    * EventManager https://github.com/igormiktor/arduino-EventManager
+
+    -> starting with firmware 1.048 EventManager lib reverted to standard. 
+    -> Please remove modified EventManager lib.
 
 ### How to flash without compile
 
-* Download binary files from build folder or ZIP and use esptool.exe (see https://github.com/igrr/esptool-ck/releases ) to flash
+* Use esptool.exe (see https://github.com/igrr/esptool-ck/releases ) to flash from tools folder
 
 Example ESP8266 D1 mini 4MB flash size connected to COM3
 	* open cmd.exe
@@ -64,6 +82,9 @@ Example ESP8266 D1 mini 4MB flash size connected to COM3
 
 * Updates
 	To install updates (firmware an SPIFFS) open the buildin WebIf: <ip address esp device>/update
+
+* Backup and restore configuration
+    Open the buildin FileBrowser <ip address esp device>/edit and download or upload config.json 
 
 ### Main Functions
 

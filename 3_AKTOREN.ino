@@ -1,113 +1,112 @@
 class Actor
 {
-    unsigned long powerLast; // Zeitmessung für High oder Low
-    bool isInverted = false;
-    int dutycycle_actor = 5000;
-    unsigned char OFF;
-    unsigned char ON;
+  unsigned long powerLast; // Zeitmessung für High oder Low
+  bool isInverted = false;
+  int dutycycle_actor = 5000;
+  unsigned char OFF;
+  unsigned char ON;
 
-  public:
-    unsigned char pin_actor = 9; // the number of the LED pin
-    String argument_actor;
-    String name_actor;
-    unsigned char power_actor;
-    bool isOn;
-    bool switchable;                // actors switchable on error events?
-    bool isOnBeforeError = false;   // isOn status before error event
-    bool actor_state = true;        // Error state actor
+public:
+  unsigned char pin_actor = 9; // the number of the LED pin
+  String argument_actor;
+  String name_actor;
+  unsigned char power_actor;
+  bool isOn;
+  bool switchable;              // actors switchable on error events?
+  bool isOnBeforeError = false; // isOn status before error event
+  bool actor_state = true;      // Error state actor
 
-    // MQTT Publish
-    char actor_mqtttopic[50]; // Für MQTT Kommunikation
+  // MQTT Publish
+  char actor_mqtttopic[50]; // Für MQTT Kommunikation
 
-    Actor(String pin, String argument, String aname, String ainverted, String aswitchable)
+  Actor(String pin, String argument, String aname, String ainverted, String aswitchable)
+  {
+    change(pin, argument, aname, ainverted, aswitchable);
+  }
+
+  void Update()
+  {
+    if (isPin(pin_actor))
     {
-      change(pin, argument, aname, ainverted, aswitchable);
-    }
-
-    void Update()
-    {
-      if (isPin(pin_actor))
+      if (isOn && power_actor > 0)
       {
-        if (isOn && power_actor > 0)
+        if (millis() > powerLast + dutycycle_actor)
         {
-          if (millis() > powerLast + dutycycle_actor)
-          {
-            powerLast = millis();
-          }
-          if (millis() > powerLast + (dutycycle_actor * power_actor / 100L))
-          {
-            digitalWrite(pin_actor, OFF);
-          }
-          else
-          {
-            digitalWrite(pin_actor, ON);
-          }
+          powerLast = millis();
         }
-        else
+        if (millis() > powerLast + (dutycycle_actor * power_actor / 100L))
         {
           digitalWrite(pin_actor, OFF);
         }
-      }
-    }
-
-    void change(String pin, String argument, String aname, String ainverted, String aswitchable)
-    {
-      // Set PIN
-      if (isPin(pin_actor))
-      {
-        digitalWrite(pin_actor, HIGH);
-        pins_used[pin_actor] = false;
-        millis2wait(10);
-      }
-
-      pin_actor = StringToPin(pin);
-      if (isPin(pin_actor))
-      {
-        pinMode(pin_actor, OUTPUT);
-        digitalWrite(pin_actor, HIGH);
-        pins_used[pin_actor] = true;
-      }
-
-      isOn = false;
-
-      name_actor = aname;
-
-      if (argument_actor != argument)
-      {
-        mqtt_unsubscribe();
-        argument_actor = argument;
-        mqtt_subscribe();
-
-        // MQTT Publish - not yet ready
-        // argument.toCharArray(actor_mqtttopic, argument.length() + 1);
-      }
-
-      if (ainverted == "1")
-      {
-        isInverted = true;
-        ON = HIGH;
-        OFF = LOW;
-      }
-      if (ainverted == "0")
-      {
-        isInverted = false;
-        ON = LOW;
-        OFF = HIGH;
-      }
-      if (aswitchable == "1")
-      {
-        switchable = true;
+        else
+        {
+          digitalWrite(pin_actor, ON);
+        }
       }
       else
       {
-        switchable = false;
+        digitalWrite(pin_actor, OFF);
       }
-      actor_state = true;
-      isOnBeforeError = false;
+    }
+  }
 
+  void change(String pin, String argument, String aname, String ainverted, String aswitchable)
+  {
+    // Set PIN
+    if (isPin(pin_actor))
+    {
+      digitalWrite(pin_actor, HIGH);
+      pins_used[pin_actor] = false;
+      millis2wait(10);
     }
 
-    /*    //    Not yet ready
+    pin_actor = StringToPin(pin);
+    if (isPin(pin_actor))
+    {
+      pinMode(pin_actor, OUTPUT);
+      digitalWrite(pin_actor, HIGH);
+      pins_used[pin_actor] = true;
+    }
+
+    isOn = false;
+
+    name_actor = aname;
+
+    if (argument_actor != argument)
+    {
+      mqtt_unsubscribe();
+      argument_actor = argument;
+      mqtt_subscribe();
+
+      // MQTT Publish - not yet ready
+      // argument.toCharArray(actor_mqtttopic, argument.length() + 1);
+    }
+
+    if (ainverted == "1")
+    {
+      isInverted = true;
+      ON = HIGH;
+      OFF = LOW;
+    }
+    if (ainverted == "0")
+    {
+      isInverted = false;
+      ON = LOW;
+      OFF = HIGH;
+    }
+    if (aswitchable == "1")
+    {
+      switchable = true;
+    }
+    else
+    {
+      switchable = false;
+    }
+    actor_state = true;
+    isOnBeforeError = false;
+  }
+
+  /*    //    Not yet ready
           void publishmqtt() {
             if (client.connected()) {
               StaticJsonBuffer<256> jsonBuffer;
@@ -125,94 +124,93 @@ class Actor
             }
           }
     */
-    void mqtt_subscribe()
+  void mqtt_subscribe()
+  {
+    if (client.connected())
     {
-      if (client.connected())
-      {
-        char subscribemsg[50];
-        argument_actor.toCharArray(subscribemsg, 50);
-        DBG_PRINT("Act: ");
-        DBG_PRINT("Subscribing to ");
-        DBG_PRINTLN(subscribemsg);
-        client.subscribe(subscribemsg);
-      }
+      char subscribemsg[50];
+      argument_actor.toCharArray(subscribemsg, 50);
+      DBG_PRINT("Act: ");
+      DBG_PRINT("Subscribing to ");
+      DBG_PRINTLN(subscribemsg);
+      client.subscribe(subscribemsg);
+    }
+  }
+
+  void mqtt_unsubscribe()
+  {
+    if (client.connected())
+    {
+      char subscribemsg[50];
+      argument_actor.toCharArray(subscribemsg, 50);
+      DBG_PRINT("Act: ");
+      DBG_PRINT("Unsubscribing from ");
+      DBG_PRINTLN(subscribemsg);
+      client.unsubscribe(subscribemsg);
+    }
+  }
+
+  void handlemqtt(char *payload)
+  {
+    StaticJsonBuffer<128> jsonBuffer;
+    JsonObject &json = jsonBuffer.parseObject(payload);
+
+    if (!json.success())
+    {
+      return;
     }
 
-    void mqtt_unsubscribe()
+    String state = json["state"];
+
+    if (state == "off")
     {
-      if (client.connected())
-      {
-        char subscribemsg[50];
-        argument_actor.toCharArray(subscribemsg, 50);
-        DBG_PRINT("Act: ");
-        DBG_PRINT("Unsubscribing from ");
-        DBG_PRINTLN(subscribemsg);
-        client.unsubscribe(subscribemsg);
-      }
+      isOn = false;
+      power_actor = 0;
+      return;
     }
 
-    void handlemqtt(char *payload)
+    if (state == "on")
     {
-      StaticJsonBuffer<128> jsonBuffer;
-      JsonObject &json = jsonBuffer.parseObject(payload);
-
-      if (!json.success())
-      {
-        return;
-      }
-
-      String state = json["state"];
-
-      if (state == "off")
-      {
-        isOn = false;
-        power_actor = 0;
-        return;
-      }
-
-      if (state == "on")
-      {
-        int newpower = atoi(json["power"]);
-        isOn = true;
-        power_actor = min(100, newpower);
-        power_actor = max(0, newpower);
-        return;
-      }
+      int newpower = atoi(json["power"]);
+      isOn = true;
+      power_actor = min(100, newpower);
+      power_actor = max(0, newpower);
+      return;
     }
+  }
 
-    String getInverted()
+  String getInverted()
+  {
+    if (isInverted)
     {
-      if (isInverted)
-      {
-        return "1";
-      }
-      else
-      {
-        return "0";
-      }
-    };
-    String getSwitchable()
-    {
-      if (switchable)
-      {
-        return "1";
-      }
-      else
-      {
-        return "0";
-      }
+      return "1";
     }
+    else
+    {
+      return "0";
+    }
+  };
+  String getSwitchable()
+  {
+    if (switchable)
+    {
+      return "1";
+    }
+    else
+    {
+      return "0";
+    }
+  }
 };
 
 /* Initialisierung des Arrays */
-Actor actors[6] = {
-  Actor("", "", "", "", ""),
-  Actor("", "", "", "", ""),
-  Actor("", "", "", "", ""),
-  Actor("", "", "", "", ""),
-  Actor("", "", "", "", ""),
-  Actor("", "", "", "", "")
-};
+Actor actors[numberOfActorsMax] = {
+    Actor("", "", "", "", ""),
+    Actor("", "", "", "", ""),
+    Actor("", "", "", "", ""),
+    Actor("", "", "", "", ""),
+    Actor("", "", "", "", ""),
+    Actor("", "", "", "", "")};
 
 /* Funktionen für Loop */
 void handleActors()

@@ -6,16 +6,16 @@ void loop()
   {
     cbpiEventSystem(EM_WLAN); // Check WLAN
     cbpiEventSystem(EM_MQTT); // Loop or Check MQTT
-    if (startMDNS)
-      cbpiEventSystem(EM_MDNS); // MDNS handle
+    cbpiEventSystem(EM_MDNS); // MDNS handle
     if (startTEL)
       cbpiEventSystem(EM_TELNET); // TELNET
     if (startOTA)
       cbpiEventSystem(EM_OTA); // OTA handle
 
+    // Simulation - ignore!
     if (sim_mode != SIM_NONE)
       simCheck();
-
+      
     lastToggledSys = millis();
   }
 
@@ -43,7 +43,6 @@ void loop()
       lastToggledDisp = millis();
     }
   }
-
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {
     gEM.processEvent();
