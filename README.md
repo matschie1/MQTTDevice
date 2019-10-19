@@ -11,7 +11,9 @@ Version 1.050
 - Reworked:	Read/Write configFile
 
 -> before you update backup your config.json! (or write down pins and mqtt topics)
+
 -> check your config after update! 
+
 -> I recommend to build a new config from scratch!!!
 
 Version 1.048
@@ -53,6 +55,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 * ESP8266 by ESP8266 Community version 2.5.2
 * download lib folder from repository
   * ESP8266HTTPUpdateServer (modified lib: add web SPIFFS updates https://github.com/esp8266/Arduino/pull/3732/files )
+
   -> copy ./lib/ESP8266HTTPUpdateServer into your sketchfolder/libraries folder
 * download and install the following libs in your Arduino IDE:  
   * Standard libs with Arduino IDE
@@ -74,13 +77,18 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
     * Timezone by Jack Christensen Version 1.2.2
     * WiFiManager by tzapu Version 0.15.0
     * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
+
     -> see ./lib/Timezone_library.properties.txt
     * EventManager Download from https://github.com/igormiktor/arduino-EventManager
+
     -> copy lib into your sketchfolder/libraries folder
 
     Important note:
+
 	-> starting with firmware 1.050 ArduinoJson 6 required
+
     -> starting with firmware 1.048 modified EventManager lib reverted to original lib
+    
 
 ### How to flash without compile
 
