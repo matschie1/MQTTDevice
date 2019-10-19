@@ -12,7 +12,6 @@
 */
 
 /*########## INCLUDES ##########*/
-//#include <Arduino.h>         // Entfernt: wird automatisch einbezogen -> String does not name a type
 #include <OneWire.h>           // OneWire Bus Kommunikation
 #include <DallasTemperature.h> // Vereinfachte Benutzung der DS18B20 Sensoren
 #include <Math.h>
@@ -32,6 +31,7 @@
 #include <WiFiUdp.h>      // WiFi
 #include <ArduinoOTA.h>   // OTA
 #include <EventManager.h> // Eventmanager
+// #include <ESP8266_TCP.h> // Test Tozzi Server
 
 #include <NTPClient.h> // NTP
 #include <Time.h>
@@ -45,7 +45,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[6] = "1.048";
+const char Version[6] = "1.050";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -65,11 +65,9 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 MDNSResponder mdns;
 ESP8266HTTPUpdateServer httpUpdate;
-
-// declare telnet server (do NOT put in setup())
-WiFiServer TelnetServer(23);
+WiFiServer TelnetServer(23); // declare telnet server
 WiFiClient Telnet;
-
+// ESP8266_TCP TCP; // Test Tozzi Server
 // Induktion
 /*  Signallaufzeiten */
 const int SIGNAL_HIGH = 5120;
@@ -136,8 +134,8 @@ File fsUploadFile; // a File object to temporarily store the received file
 /*######### EventManager ########*/
 EventManager gEM;       //  Eventmanager
 int SEN_UPDATE = 5000;  //  sensors update delay loop
-int ACT_UPDATE = 5000; //  actors update delay loop
-int IND_UPDATE = 5000; //  induction update delay loop
+int ACT_UPDATE = 5000;  //  actors update delay loop
+int IND_UPDATE = 5000;  //  induction update delay loop
 int DISP_UPDATE = 5000; //  NTP and display update
 int SYS_UPDATE = 0;     //  sys update delay - 0 means no delay (handle every loop)
 
@@ -221,6 +219,8 @@ int actorsStatus = 0;
 int inductionStatus = 0;
 /*######### EventManager ########*/
 
+#define serverPort 9501
+
 /*########### DISPLAY ###########*/
 #include <SPI.h>
 #include <Wire.h>
@@ -235,6 +235,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 bool useDisplay = false;
 #define SDL D1
 #define SDA D2
+const unsigned char numberOfAddress = 2;
+const int address[numberOfAddress] = {0x3C, 0x3D};
 
 // Simulation
 #define SIM_NONE 0

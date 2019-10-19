@@ -4,7 +4,7 @@ class oled
   unsigned long lastNTPupdate = 0;
 
 public:
-  bool dispEnabled = 0;
+  bool dispEnabled = false;
   int address;
 
   bool senOK = true;
@@ -86,13 +86,16 @@ public:
 
 oledDisplay = oled();
 
-void turnDisplayOff()
+void turnDisplay()
 {
-  if (oledDisplay.dispEnabled)
+  if (!oledDisplay.dispEnabled)
   {
-    DBG_PRINTLN("Disp: Switch OLED display off");
-    display.ssd1306_command(SSD1306_DISPLAYOFF);
-    oledDisplay.dispEnabled = 0;
+    if (oledDisplay.address != 0)
+    {
+      DBG_PRINTLN("Disp: Switch OLED display off");
+      display.ssd1306_command(SSD1306_DISPLAYOFF);
+      oledDisplay.dispEnabled = 0;
+    }
   }
   else
   {
@@ -107,23 +110,18 @@ void turnDisplayOff()
 
 void handleRequestDisplay()
 {
-  StaticJsonBuffer<1024> jsonBuffer;
-  JsonObject &displayResponse = jsonBuffer.createObject();
-  displayResponse["enabled"] = 0;
-  displayResponse["displayOn"] = 0;
-  displayResponse["enabled"] = oledDisplay.dispEnabled;
-  displayResponse["updisp"] = DISP_UPDATE;
+  StaticJsonDocument<128> doc;
+  doc["enabled"] = 0;
+  doc["displayOn"] = 0;
+  doc["enabled"] = oledDisplay.dispEnabled;
+  doc["updisp"] = DISP_UPDATE;
   if (oledDisplay.dispEnabled == 1)
-  {
-    displayResponse["displayOn"] = 1;
-  }
+    doc["displayOn"] = 1;
   else
-  {
-    displayResponse["displayOn"] = 0;
-  }
+    doc["displayOn"] = 0;
 
   String response;
-  displayResponse.printTo(response);
+  serializeJson(doc, response);
   server.send(200, "application/json", response);
 }
 
@@ -142,9 +140,22 @@ void handleRequestDisp()
   }
   if (request == "address")
   {
-    message = "0";
-    message = String(decToHex(oledDisplay.address, 2));
+    if (isAddress(oledDisplay.address))
+    {
+      message += F("<option>");
+      message += String(decToHex(oledDisplay.address, 2));
+      message += F("</option><option disabled>──────────</option>");
+    }
+
+    for (int i = 0; i < numberOfAddress; i++)
+    {
+        message += F("<option>");
+        message += String(decToHex(address[i], 2));
+        message += F("</option>");
+    }
     goto SendMessage;
+  
+  
   }
   if (request == "updisp")
   {
@@ -153,6 +164,21 @@ void handleRequestDisp()
   }
 SendMessage:
   server.send(200, "text/plain", message);
+}
+
+bool isAddress(int value)
+{
+  bool returnValue = false;
+  for (int i = 0; i < numberOfAddress; i++)
+  {
+    if (address[i] == value)
+    {
+      returnValue = true;
+      goto Ende;
+    }
+  }
+Ende:
+  return returnValue;
 }
 
 void handleSetDisp()
@@ -322,7 +348,11 @@ void showDispSen() // Show Sensor status on the left
   display.setTextSize(1);
   display.setCursor(3, 55);
   display.setTextColor(WHITE);
-
+  if (numberOfSensors == 0)
+  {
+    display.print("S off");
+    return;
+  }
   if (oledDisplay.counter_sen >= numberOfSensors)
     oledDisplay.counter_sen = 0;
 

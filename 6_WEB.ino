@@ -74,7 +74,7 @@ void mqttcallback(char *topic, unsigned char *payload, unsigned int length)
 {
   DBG_PRINT("Web: Received MQTT");
   DBG_PRINT(" Topic: ");
-  DBG_PRINT(topic);
+  DBG_PRINTLN(topic);
   DBG_PRINT("Web: Payload: ");
   for (int i = 0; i < length; i++)
   {
@@ -116,22 +116,22 @@ void mqttcallback(char *topic, unsigned char *payload, unsigned int length)
 
 void handleRequestMiscSet()
 {
-  StaticJsonBuffer<1024> jsonBuffer;
-  JsonObject &miscResponse = jsonBuffer.createObject();
-  miscResponse["MQTTHOST"] = mqtthost;
-  miscResponse["del_sen_act"] = wait_on_Sensor_error_actor / 1000;
-  miscResponse["del_sen_ind"] = wait_on_Sensor_error_induction / 1000;
-  miscResponse["enable_mqtt"] = StopOnMQTTError;
-  miscResponse["enable_wlan"] = StopOnWLANError;
-  miscResponse["mqtt_state"] = mqtt_state;
-  miscResponse["wlan_state"] = wlan_state;
-  miscResponse["delay_mqtt"] = wait_on_error_mqtt / 1000;
-  miscResponse["delay_wlan"] = wait_on_error_wlan / 1000;
-  miscResponse["debug"] = setDEBUG;
-  miscResponse["telnet"] = startTEL;
+  StaticJsonDocument<512> doc;
+
+  doc["MQTTHOST"] = mqtthost;
+  doc["del_sen_act"] = wait_on_Sensor_error_actor / 1000;
+  doc["del_sen_ind"] = wait_on_Sensor_error_induction / 1000;
+  doc["enable_mqtt"] = StopOnMQTTError;
+  doc["enable_wlan"] = StopOnWLANError;
+  doc["mqtt_state"] = mqtt_state;
+  doc["wlan_state"] = wlan_state;
+  doc["delay_mqtt"] = wait_on_error_mqtt / 1000;
+  doc["delay_wlan"] = wait_on_error_wlan / 1000;
+  doc["debug"] = setDEBUG;
+  doc["telnet"] = startTEL;
 
   String response;
-  miscResponse.printTo(response);
+  serializeJson(doc, response);
   server.send(200, "application/json", response);
 }
 

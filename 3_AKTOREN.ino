@@ -107,22 +107,22 @@ public:
   }
 
   /*    //    Not yet ready
-          void publishmqtt() {
-            if (client.connected()) {
-              StaticJsonBuffer<256> jsonBuffer;
-              JsonObject& json = jsonBuffer.createObject();
-              if (isOn) {
-                json["State"] = "on";
-                json["power"] = String(power_actor);
-              }
-              else
-                json["State"] = "off";
+            void publishmqtt() {
+              if (client.connected()) {
+                StaticJsonBuffer<256> jsonBuffer;
+                JsonObject& json = jsonBuffer.createObject();
+                if (isOn) {
+                  json["State"] = "on";
+                  json["power"] = String(power_actor);
+                }
+                else
+                  json["State"] = "off";
 
-              char jsonMessage[100];
-              json.printTo(jsonMessage);
-              client.publish(actor_mqtttopic, jsonMessage);
+                char jsonMessage[100];
+                json.printTo(jsonMessage);
+                client.publish(actor_mqtttopic, jsonMessage);
+              }
             }
-          }
     */
   void mqtt_subscribe()
   {
@@ -148,33 +148,35 @@ public:
       DBG_PRINTLN(subscribemsg);
       client.unsubscribe(subscribemsg);
     }
+
   }
 
   void handlemqtt(char *payload)
   {
-    StaticJsonBuffer<128> jsonBuffer;
-    JsonObject &json = jsonBuffer.parseObject(payload);
-
-    if (!json.success())
+    StaticJsonDocument<128> doc;
+    DeserializationError error = deserializeJson(doc, payload);
+    if (error)
     {
+      DBG_PRINT("Act: handlemqtt deserialize Json error ");
+      DBG_PRINTLN(error.c_str());
       return;
     }
-
-    String state = json["state"];
-
+    String state = doc["state"];
     if (state == "off")
     {
+      DBG_PRINTLN("Act: received mqtt actor off");
       isOn = false;
       power_actor = 0;
       return;
     }
-
     if (state == "on")
     {
-      int newpower = atoi(json["power"]);
+      int newpower = doc["power"];
       isOn = true;
       power_actor = min(100, newpower);
       power_actor = max(0, newpower);
+      DBG_PRINT("Act: received mqtt actor on power ");
+      DBG_PRINTLN(newpower);
       return;
     }
   }
@@ -225,26 +227,25 @@ void handleActors()
 /* Funktionen für Web */
 void handleRequestActors()
 {
-  StaticJsonBuffer<1024> jsonBuffer;
-  JsonArray &actorsResponse = jsonBuffer.createArray();
+  StaticJsonDocument<1024> doc;
+  JsonArray actorsArray = doc.to<JsonArray>();
 
   for (int i = 0; i < numberOfActors; i++)
   {
-    JsonObject &actorResponse = jsonBuffer.createObject();
-    ;
-    actorResponse["name"] = actors[i].name_actor;
-    actorResponse["status"] = actors[i].isOn;
-    actorResponse["power"] = actors[i].power_actor;
-    actorResponse["mqtt"] = actors[i].argument_actor;
-    actorResponse["pin"] = PinToString(actors[i].pin_actor);
-    actorResponse["sw"] = actors[i].switchable;
-    actorResponse["state"] = actors[i].actor_state;
-    actorsResponse.add(actorResponse);
+    JsonObject actorsObj = doc.createNestedObject();
+
+    actorsObj["name"] = actors[i].name_actor;
+    actorsObj["status"] = actors[i].isOn;
+    actorsObj["power"] = actors[i].power_actor;
+    actorsObj["mqtt"] = actors[i].argument_actor;
+    actorsObj["pin"] = PinToString(actors[i].pin_actor);
+    actorsObj["sw"] = actors[i].switchable;
+    actorsObj["state"] = actors[i].actor_state;
     yield();
   }
 
   String response;
-  actorsResponse.printTo(response);
+  serializeJson(doc, response);
   server.send(200, "application/json", response);
 }
 

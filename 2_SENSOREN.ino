@@ -124,6 +124,7 @@ public:
 
     sens_err = sensorsStatus;
     publishmqtt();
+    //publishTCP(); // Test Tozzi Server
   } // void Update
 
   void change(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw)
@@ -163,26 +164,43 @@ public:
   {
     if (client.connected())
     {
-      StaticJsonBuffer<256> jsonBuffer;
-      JsonObject &json = jsonBuffer.createObject();
-
-      json["Name"] = sens_name;
-      JsonObject &Sensor = json.createNestedObject("Sensor");
+      StaticJsonDocument<256> doc;
+      JsonObject sensorsObj = doc.createNestedObject("Sensor");
+      sensorsObj["Name"] = sens_name;
       if (sensorsStatus == 0)
       {
-        Sensor["Value"] = (sens_value + sens_offset);
+        sensorsObj["Value"] = (sens_value + sens_offset);
       }
       else
       {
-        Sensor["Value"] = sens_value;
+        sensorsObj["Value"] = sens_value;
       }
-      Sensor["Type"] = "1-wire";
+      sensorsObj["Type"] = "1-wire";
       char jsonMessage[100];
-      json.printTo(jsonMessage);
+      serializeJson(doc, jsonMessage);
       client.publish(sens_mqtttopic, jsonMessage);
     }
   }
-
+/*
+  void publishTCP() // Test Tozzi Server
+  {
+    if (client.connected())
+    {
+      StaticJsonDocument<256> doc;
+      JsonObject sensorsObj = doc.createNestedObject("Sensor");
+      sensorsObj["NAME"] = sens_name;
+      sensorsObj["ADDRESS"] = sens_address;
+      if (sensorsStatus == 0)
+        sensorsObj["VALUE"] = (sens_value + sens_offset);
+      else
+        sensorsObj["VALUE"] = 0;
+      char jsonMessage[100];
+      serializeJson(doc, jsonMessage);
+      TCP.connectTCP(mqtthost, serverPort);
+      TCP.send(jsonMessage);
+    }
+  }
+*/
   char *getValueString()
   {
     char buf[5];
@@ -250,7 +268,7 @@ unsigned char searchSensors()
 String SensorAddressToString(unsigned char addr[8])
 {
   char charbuffer[50];
-  String AddressString;
+  //String AddressString;
 
   sprintf(charbuffer, "%02x%02x%02x%02x%02x%02x%02x%02x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7]);
   //  for (int i = 0; i < 8; i++) {
@@ -364,38 +382,39 @@ void handleRequestSensorAddresses()
 
 void handleRequestSensors()
 {
-  StaticJsonBuffer<1024> jsonBuffer;
-  JsonArray &sensorsResponse = jsonBuffer.createArray();
+  StaticJsonDocument<1024> doc;
+  JsonArray sensorsArray = doc.to<JsonArray>();
 
   for (int i = 0; i < numberOfSensors; i++)
   {
-    JsonObject &sensorResponse = jsonBuffer.createObject();
-    ;
-    sensorResponse["name"] = sensors[i].sens_name;
-    sensorResponse["offset"] = sensors[i].sens_offset;
-    sensorResponse["sw"] = sensors[i].sens_sw;
-    sensorResponse["state"] = sensors[i].sens_state;
+    JsonObject sensorsObj = doc.createNestedObject();
+    sensorsObj["name"] = sensors[i].sens_name;
+    sensorsObj["offset"] = sensors[i].sens_offset;
+    sensorsObj["sw"] = sensors[i].sens_sw;
+    sensorsObj["state"] = sensors[i].sens_state;
 
     if (sensors[i].sens_value != -127.0)
-      sensorResponse["value"] = sensors[i].getValueString();
+      sensorsObj["value"] = sensors[i].getValueString();
     else
     {
       if (sensors[i].sens_err == 1)
-        sensorResponse["value"] = "CRC";
+        sensorsObj["value"] = "CRC";
       if (sensors[i].sens_err == 2)
-        sensorResponse["value"] = "DER";
+        sensorsObj["value"] = "DER";
       if (sensors[i].sens_err == 3)
-        sensorResponse["value"] = "UNP";
+        sensorsObj["value"] = "UNP";
       else
-        sensorResponse["value"] = "ERR";
+        sensorsObj["value"] = "ERR";
     }
-    sensorResponse["mqtt"] = sensors[i].sens_mqtttopic;
-    sensorsResponse.add(sensorResponse);
+    sensorsObj["mqtt"] = sensors[i].sens_mqtttopic;
+    //sensorsArray.add(sensorsObj);
+    //sensorsResponse.add(sensorResponse);
     yield();
   }
 
   String response;
-  sensorsResponse.printTo(response);
+  //sensorsResponse.printTo(response);
+  serializeJson(doc, response);
   server.send(200, "application/json", response);
 }
 

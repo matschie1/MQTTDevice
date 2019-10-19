@@ -1,13 +1,25 @@
 ![ov1](/img/fw104x.jpg)
-# Changelog
+
+# MQTTDevice
+
+## Changelog
+
+Version 1.050
+- Update: 	Update ArduinoJson Version 6
+- Update:	bootstrap
+- Update:	jquery
+- Reworked:	Read/Write configFile
+
+-> before you update backup your config.json! (or write down pins and mqtt topics)
+-> check your config after update! 
+-> I recommend to build a new config from scratch!!!
+
 Version 1.048
 - Fixed: 	Sensor search
 - Reworked:	EventManager (reverted back to original lib)
 - Reworked: Sensor handling
 - Fixed:	WebIf 
 - Cleanup code and minor changes
-
-# MQTTDevice
 
 ## General Introduction
 ### What is is?
@@ -41,6 +53,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 * ESP8266 by ESP8266 Community version 2.5.2
 * download lib folder from repository
   * ESP8266HTTPUpdateServer (modified lib: add web SPIFFS updates https://github.com/esp8266/Arduino/pull/3732/files )
+  -> copy ./lib/ESP8266HTTPUpdateServer into your sketchfolder/libraries folder
 * download and install the following libs in your Arduino IDE:  
   * Standard libs with Arduino IDE
     * ESP8266WiFi 1.0 
@@ -53,7 +66,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
     * NTPClient by Fabrice Weinberg Version 3.2.0
     * Adafruit GFX Library by Adafruit Version 1.5.7
     * Adafruit SSD1306 by Adafruit Version 1.3.0
-    * ArduinoJSON by Benoit Blanchon Version 5.13.5 (only use this version! Do not update this lib!)
+    * ArduinoJSON by Benoit Blanchon Version 6.12.0 
     * DallasTemperature by Miles Burton Version 3.8.0
     * OneWire By Jim Studt Version 2.3.5
     * PubSubClient by Nick O'Leary Version 2.7.0
@@ -61,10 +74,13 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
     * Timezone by Jack Christensen Version 1.2.2
     * WiFiManager by tzapu Version 0.15.0
     * TimeZone lib: open file library.properties and change the line architectures=avr into architectures=*
-    * EventManager https://github.com/igormiktor/arduino-EventManager
+    -> see ./lib/Timezone_library.properties.txt
+    * EventManager Download from https://github.com/igormiktor/arduino-EventManager
+    -> copy lib into your sketchfolder/libraries folder
 
-    -> starting with firmware 1.048 EventManager lib reverted to standard. 
-    -> Please remove modified EventManager lib.
+    Important note:
+	-> starting with firmware 1.050 ArduinoJson 6 required
+    -> starting with firmware 1.048 modified EventManager lib reverted to original lib
 
 ### How to flash without compile
 
@@ -89,9 +105,12 @@ Example ESP8266 D1 mini 4MB flash size connected to COM3
 ### Main Functions
 
 * Add, edit and remove sensors, actors and induction
+* Auto reconnect MQTT
+* Auto reconnect WLAN
 * Configure OLED display
 * Configure misc settings
-* Firmware and SPIFFS update by file upload or OTA (Over The Air)
+* Firmware and SPIFFS update by file upload
+* Firmware update OTA (Over The Air)
 * Filebrowser for easy file management (eg backup and restore config.json)
 * DS18B20 temperature offset
 * Serial output via Telnet (Putty)
@@ -111,7 +130,7 @@ Example ESP8266 D1 mini 4MB flash size connected to COM3
 ### EventManager:
 Configured are 4 event queues: system, sensors, actors and induction. For example everything regarding the system will be thrown into the system queue, telling the eventmanager to proccess them by FIFO.
 
-* SYS_UPDATE  0		-> System update events should be queued with no delay (every loop). Recommended: 0
+* SYS_UPDATE  0		-> System update events should be queued with no delay (every loop). Recommended: values between 0-1000(0-1sec)
 * SEN_UPDATE  5000	-> Sensor data read should be queued approx. every 5s.  Recommended: values between 2000-5000 (2-5sec)
 * ACT_UPDATE  10000	-> Actor data read/write should be queued approx. every 10s.  Recommended: values between 2000-10000 (2-10sec)
 * IND_UPDATE  10000	-> Induction data read/write should be queued approx. every 10s. Recommended: values between 2000-10000 (2-10sec)

@@ -83,15 +83,11 @@ void setup()
 
   // Load mDNS
   if (startMDNS)
-  {
     cbpiEventSystem(EM_MDNSET);
-  }
 
   // Init Arduino Over The Air
   if (startOTA)
-  {
     setupOTA();
-  }
 
   // Start Webserver
   setupServer();
@@ -133,7 +129,7 @@ void setupServer()
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
   server.on("/setDisp", handleSetDisp);     // Display ändern
-  server.on("/displayOff", turnDisplayOff); // Display on / off
+  //server.on("/displayOff", turnDisplayOff); // Display on / off
   server.on("/reqMiscSet", handleRequestMiscSet);
   server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
   server.on("/setMisc", handleSetMisc);     // Misc ändern
@@ -151,7 +147,7 @@ void setupServer()
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
   },
-            handleFileUpload);
+  handleFileUpload);
 
   server.onNotFound(handleWebRequests); // Sonstiges
 

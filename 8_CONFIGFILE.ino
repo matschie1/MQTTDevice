@@ -1,6 +1,5 @@
 bool loadConfig()
 {
-
   DBG_PRINTLN("------ loadConfig started ------");
   File configFile = SPIFFS.open("/config.json", "r");
   if (!configFile)
@@ -20,23 +19,17 @@ bool loadConfig()
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
 
-  StaticJsonBuffer<1400> jsonBuffer;
-  JsonObject &json = jsonBuffer.parseObject(buf.get());
-  if (!json.success())
+  StaticJsonDocument<1400> doc;
+  DeserializationError error = deserializeJson(doc, buf.get());
+  if (error)
   {
-    DBG_PRINTLN("JSON buffer unsuccessful: aborted");
+    DBG_PRINT("Conf: Error Json ");
+    DBG_PRINTLN(error.c_str());
     return false;
   }
 
-  // JSON 6
-  //StaticJsonDocument<1400> jsonDoc;
-  //auto error = deserializeJson(jsonDoc, buf.get());
-
-  JsonArray &jsonactors = json["actors"];
-
-  // JSON 6
-  // JsonArray jsonactors = jsonDoc["actors"];
-  numberOfActors = jsonactors.size();
+  JsonArray actorsArray = doc["actors"];
+  numberOfActors = actorsArray.size();
   if (numberOfActors > numberOfActorsMax)
   {
     numberOfActors = numberOfActorsMax;
@@ -46,23 +39,24 @@ bool loadConfig()
   {
     if (i < numberOfActors)
     {
-      JsonObject &jsonactor = jsonactors[i];
-      String pin = jsonactor["PIN"];
-      String script = jsonactor["SCRIPT"];
-      String aname = jsonactor["NAME"];
-      String ainverted = jsonactor["INV"];
-      String aswitchable = jsonactor["SW"];
-      actors[i].change(pin, script, aname, ainverted, aswitchable);
+      JsonObject actorObj = actorsArray[i];
+      //String pin = actorObj["PIN"];
+      const char *actorPin = actorObj["PIN"];
+      const char *actorScript = actorObj["SCRIPT"];
+      const char *actorName = actorObj["NAME"];
+      const char *actorInv = actorObj["INV"];
+      const char *actorSwitch = actorObj["SW"];
+      actors[i].change(actorPin, actorScript, actorName, actorInv, actorSwitch);
       DBG_PRINT("Actor name: ");
-      DBG_PRINTLN(aname);
+      DBG_PRINTLN(*actorName);
       DBG_PRINT("Actor MQTT topic: ");
-      DBG_PRINTLN(script);
+      DBG_PRINTLN(*actorScript);
       DBG_PRINT("Actor PIN: ");
-      DBG_PRINTLN(pin);
+      DBG_PRINTLN(*actorPin);
       DBG_PRINT("Actor inverted: ");
-      DBG_PRINTLN(ainverted);
+      DBG_PRINTLN(*actorInv);
       DBG_PRINT("Actor switchable: ");
-      DBG_PRINTLN(aswitchable);
+      DBG_PRINTLN(*actorSwitch);
       DBG_PRINT("Actor no. ");
       DBG_PRINT(i + 1);
       DBG_PRINTLN(" loaded from config file");
@@ -77,8 +71,8 @@ bool loadConfig()
     DBG_PRINTLN("No actors loaded from config file");
   DBG_PRINTLN("--------------------");
 
-  JsonArray &jsonsensors = json["sensors"];
-  numberOfSensors = jsonsensors.size();
+  JsonArray sensorsArray = doc["sensors"];
+  numberOfSensors = sensorsArray.size();
 
   if (numberOfSensors > numberOfSensorsMax)
   {
@@ -88,28 +82,26 @@ bool loadConfig()
   {
     if (i < numberOfSensors)
     {
-      JsonObject &jsonsensor = jsonsensors[i];
-      String aadress = jsonsensor["ADDRESS"];
-      String ascript = jsonsensor["SCRIPT"];
-      String aname = jsonsensor["NAME"];
-      float aoffset = 0.0;
-      bool asw = false;
-      if ((jsonsensor.containsKey("OFFSET")) && (jsonsensor["OFFSET"].is<float>()))
-        aoffset = jsonsensor["OFFSET"];
-      if (jsonsensor.containsKey("SW"))
-        asw = jsonsensor["SW"];
+      JsonObject sensorsObj = sensorsArray[i];
+      const char *sensorsAddress = sensorsObj["ADDRESS"];
+      const char *sensorsScript = sensorsObj["SCRIPT"];
+      const char *sensorsName = sensorsObj["NAME"];
+      float sensorsOffset = 0.0;
+      const char *sensorsSwitch = sensorsObj["SW"];
+      if ((sensorsObj.containsKey("OFFSET")) && (sensorsObj["OFFSET"].is<float>())) // falls falsche Zeichen eingegeben werden
+        sensorsOffset = sensorsObj["OFFSET"];
 
-      sensors[i].change(aadress, ascript, aname, aoffset, asw);
+      sensors[i].change(sensorsAddress, sensorsScript, sensorsName, sensorsOffset, sensorsSwitch);
       DBG_PRINT("Sensor name: ");
-      DBG_PRINTLN(aname);
+      DBG_PRINTLN(*sensorsName);
       DBG_PRINT("Sensor address: ");
-      DBG_PRINTLN(aadress);
+      DBG_PRINTLN(*sensorsAddress);
       DBG_PRINT("Sensor MQTT topic: ");
-      DBG_PRINTLN(ascript);
+      DBG_PRINTLN(*sensorsScript);
       DBG_PRINT("Sensor offset: ");
-      DBG_PRINTLN(aoffset);
+      DBG_PRINTLN(sensorsOffset);
       DBG_PRINT("Sensor switchable: ");
-      DBG_PRINTLN(asw);
+      DBG_PRINTLN(sensorsSwitch);
       DBG_PRINT("Sensor no. ");
       DBG_PRINT(i + 1);
       DBG_PRINTLN(" loaded from config file");
@@ -128,67 +120,64 @@ bool loadConfig()
 
   DBG_PRINTLN("--------------------");
 
-  JsonArray &jsinductions = json["induction"];
-  JsonObject &jsinduction = jsinductions[0];
-  String pin_white = jsinduction["PINWHITE"];
-  String pin_yellow = jsinduction["PINYELLOW"];
-  String pin_blue = jsinduction["PINBLUE"];
-  String is_enabled_str = jsinduction["ENABLED"];
-  bool is_enabled_bl = false;
-  inductionStatus = 0;
-  String js_mqtttopic = jsinduction["TOPIC"];
-  long delayoff = DEF_DELAY_IND; //default delay
-  int pl = 100;
-
-  if ((jsinduction.containsKey("PL")) && (jsinduction["PL"].is<int>()))
-    pl = jsinduction["PL"];
-
-  if ((jsinduction.containsKey("DELAY")) && (jsinduction["DELAY"].is<long>()))
-    delayoff = jsinduction["DELAY"];
-
   DBG_PRINT("Induction status: ");
-  if (is_enabled_str == "1")
+  JsonArray indArray = doc["induction"];
+  JsonObject indObj = indArray[0];
+  if (indObj.containsKey("ENABLED"))
   {
-    is_enabled_bl = true;
     inductionStatus = 1;
+    const char *indEnabled = indObj["ENABLED"];
+    const char *indPinWhite = indObj["PINWHITE"];
+    const char *indPinYellow = indObj["PINYELLOW"];
+    const char *indPinBlue = indObj["PINBLUE"];
+    const char *indScript = indObj["TOPIC"];
+    long indDelayOff = DEF_DELAY_IND; //default delay
+    int indPowerLevel = 100;
+    if ((indObj.containsKey("PL")) && (indObj["PL"].is<int>()))
+      indPowerLevel = indObj["PL"];
+
+    if ((indObj.containsKey("DELAY")) && (indObj["DELAY"].is<long>()))
+      indDelayOff = indObj["DELAY"];
+
+    inductionCooker.change(StringToPin(indPinWhite), StringToPin(indPinYellow), StringToPin(indPinBlue), indScript, indDelayOff, indEnabled, indPowerLevel);
+
     DBG_PRINTLN(inductionStatus);
-    //DBG_PRINTLN(is_enabled_bl);
     DBG_PRINT("Induction MQTT topic: ");
-    DBG_PRINTLN(js_mqtttopic);
+    DBG_PRINTLN(*indScript);
     DBG_PRINT("Induction relais (WHITE): ");
-    DBG_PRINTLN(pin_white);
+    DBG_PRINTLN(*indPinWhite);
     DBG_PRINT("Induction command channel (YELLOW): ");
-    DBG_PRINTLN(pin_yellow);
+    DBG_PRINTLN(*indPinYellow);
     DBG_PRINT("Induction backchannel (BLUE): ");
-    DBG_PRINTLN(pin_blue);
+    DBG_PRINTLN(*indPinBlue);
     DBG_PRINT("Induction delay after power off: ");
-    DBG_PRINT(delayoff / 1000);
+    DBG_PRINT(indDelayOff / 1000);
     DBG_PRINTLN("sec");
     DBG_PRINT("Induction power level on error: ");
-    DBG_PRINTLN(pl);
+    DBG_PRINTLN(indPowerLevel);
   }
   else
+  {
+    inductionStatus = 0;
     DBG_PRINTLN(inductionStatus);
-
+  }
   DBG_PRINTLN("--------------------");
-  inductionCooker.change(StringToPin(pin_white), StringToPin(pin_yellow), StringToPin(pin_blue), js_mqtttopic, delayoff, is_enabled_bl, pl);
 
-  JsonArray &jsodisplay = json["display"];
-  JsonObject &jsdisplay = jsodisplay[0];
-  String dispAddress = jsdisplay["ADDRESS"];
-  dispAddress.remove(0, 2);
-  char copy[4];
-  dispAddress.toCharArray(copy, 4);
-  int address = strtol(copy, 0, 16);
-  if ((jsdisplay.containsKey("updisp")) && (jsdisplay["updisp"].is<int>())) // else use default
-    DISP_UPDATE = jsdisplay["updisp"];
-
-  if (jsdisplay.containsKey("ENABLED"))
-    useDisplay = jsdisplay["ENABLED"];
-
+  JsonArray displayArray = doc["display"];
+  JsonObject displayObj = displayArray[0];
+  useDisplay = displayObj["ENABLED"] | "0";
   if (useDisplay)
   {
-    oledDisplay.dispEnabled = 1;
+    String dispAddress = displayObj["ADDRESS"];
+    dispAddress.remove(0, 2);
+    char copy[4];
+    dispAddress.toCharArray(copy, 4);
+    int address = strtol(copy, 0, 16);
+    if ((displayObj.containsKey("updisp")) && (displayObj["updisp"].is<int>())) // else use default
+      DISP_UPDATE = displayObj["updisp"];
+
+    oledDisplay.dispEnabled = true;
+    oledDisplay.change(address, oledDisplay.dispEnabled);
     DBG_PRINT("OLED display status: ");
     DBG_PRINTLN(oledDisplay.dispEnabled);
     DBG_PRINT("Display address: ");
@@ -200,24 +189,24 @@ bool loadConfig()
   else
   {
     useDisplay = false;
-    oledDisplay.dispEnabled = 0;
+    oledDisplay.dispEnabled = false;
     DBG_PRINTLN(oledDisplay.dispEnabled);
   }
-  oledDisplay.change(address, oledDisplay.dispEnabled);
+
   DBG_PRINTLN("--------------------");
 
   // Misc Settings
-  JsonArray &jsomisc = json["misc"];
-  JsonObject &jsmisc = jsomisc[0];
+  JsonArray miscArray = doc["misc"];
+  JsonObject miscObj = miscArray[0];
 
-  if ((jsmisc.containsKey("del_sen_act")) && (jsmisc["del_sen_act"].is<int>()))
-    wait_on_Sensor_error_actor = jsmisc["del_sen_act"];
+  if ((miscObj.containsKey("del_sen_act")) && (miscObj["del_sen_act"].is<int>()))
+    wait_on_Sensor_error_actor = miscObj["del_sen_act"];
 
-  if ((jsmisc.containsKey("del_sen_ind")) && (jsmisc["del_sen_ind"].is<int>()))
-    wait_on_Sensor_error_induction = jsmisc["del_sen_ind"];
+  if ((miscObj.containsKey("del_sen_ind")) && (miscObj["del_sen_ind"].is<int>()))
+    wait_on_Sensor_error_induction = miscObj["del_sen_ind"];
 
-  if ((jsmisc.containsKey("delay_mqtt")) && (jsmisc["delay_mqtt"].is<int>()))
-    wait_on_error_mqtt = jsmisc["delay_mqtt"];
+  if ((miscObj.containsKey("delay_mqtt")) && (miscObj["delay_mqtt"].is<int>()))
+    wait_on_error_mqtt = miscObj["delay_mqtt"];
 
   DBG_PRINT("Wait on sensor error actors: ");
   DBG_PRINTLN(wait_on_Sensor_error_actor);
@@ -225,54 +214,55 @@ bool loadConfig()
   DBG_PRINTLN(wait_on_Sensor_error_induction);
 
   DBG_PRINT("Switch off actors on error ");
-  if (jsmisc.containsKey("enable_mqtt"))
-    StopOnMQTTError = jsmisc["enable_mqtt"];
-
-  if (StopOnMQTTError == 1)
+  if (miscObj["enable_mqtt"] == "1")
   {
+    StopOnMQTTError = true;
     DBG_PRINT("enabled after ");
     DBG_PRINT(wait_on_error_mqtt / 1000);
     DBG_PRINTLN("sec");
   }
   else
-    DBG_PRINTLN("disabled");
-
-  DBG_PRINT("Switch off induction on error ");
-  if (jsmisc.containsKey("enable_wlan"))
-    StopOnWLANError = jsmisc["enable_wlan"];
-
-  if ((jsmisc.containsKey("delay_wlan")) && (jsmisc["delay_wlan"].is<int>()))
-    wait_on_error_wlan = jsmisc["delay_wlan"];
-
-  if (StopOnWLANError == 1)
   {
+    StopOnMQTTError = false;
+    DBG_PRINTLN("disabled");
+  }
+  DBG_PRINT("Switch off induction on error ");
+  if ((miscObj.containsKey("delay_wlan")) && (miscObj["delay_wlan"].is<int>()))
+    wait_on_error_wlan = miscObj["delay_wlan"];
+
+  if (miscObj["enable_wlan"] == "1")
+  {
+    StopOnWLANError = true;
     DBG_PRINT("enabled after ");
     DBG_PRINT(wait_on_error_wlan / 1000);
     DBG_PRINTLN("sec");
   }
   else
+  {
+    StopOnWLANError = false;
     DBG_PRINTLN("disabled");
-
-  if (jsmisc.containsKey("mdns"))
-  {
-    startMDNS = jsmisc["mdns"];
   }
-  String jsmisc_nameMDNS = jsmisc["mdns_name"];
-  jsmisc_nameMDNS.toCharArray(nameMDNS, 16);
-  if (startMDNS)
+
+  String nameMDNS_Str = miscObj["mdns_name"];
+  nameMDNS_Str.toCharArray(nameMDNS, 16);
+  if (miscObj["mdns"] == "1")
   {
+    startMDNS = true;
     DBG_PRINT("mDNS activated: ");
     DBG_PRINTLN(nameMDNS);
   }
   else
+  {
+    startMDNS = false;
     DBG_PRINTLN("mDNS disabled");
+  }
 
-  if ((jsmisc.containsKey("upsen")) && (jsmisc["upsen"].is<int>()))
-    SEN_UPDATE = jsmisc["upsen"];
-  if ((jsmisc.containsKey("upact")) && (jsmisc["upact"].is<int>()))
-    ACT_UPDATE = jsmisc["upact"];
-  if ((jsmisc.containsKey("upind")) && (jsmisc["upind"].is<int>()))
-    IND_UPDATE = jsmisc["upind"];
+  if ((miscObj.containsKey("upsen")) && (miscObj["upsen"].is<int>()))
+    SEN_UPDATE = miscObj["upsen"];
+  if ((miscObj.containsKey("upact")) && (miscObj["upact"].is<int>()))
+    ACT_UPDATE = miscObj["upact"];
+  if ((miscObj.containsKey("upind")) && (miscObj["upind"].is<int>()))
+    IND_UPDATE = miscObj["upind"];
 
   DBG_PRINT("Sensors update intervall: ");
   DBG_PRINT(SEN_UPDATE / 1000);
@@ -284,10 +274,10 @@ bool loadConfig()
   DBG_PRINT(IND_UPDATE / 1000);
   DBG_PRINTLN("sec");
 
-  if (jsmisc.containsKey("MQTTHOST"))
+  if (miscObj.containsKey("MQTTHOST"))
   {
-    String json_mqtthost = jsmisc["MQTTHOST"];
-    json_mqtthost.toCharArray(mqtthost, 16);
+    String mqtthost_Str = miscObj["MQTTHOST"];
+    mqtthost_Str.toCharArray(mqtthost, 16);
     DBG_PRINT("MQTT server IP: ");
     DBG_PRINTLN(mqtthost);
   }
@@ -296,16 +286,25 @@ bool loadConfig()
     DBG_PRINT("MQTT server not found in config file. Using default server address: ");
     DBG_PRINTLN(mqtthost);
   }
+  if (miscObj["telnet"] == "1")
+  {
+    startTEL = true;
+    DBG_PRINT("Telnet activated");
+  }
+  else
+  {
+    startTEL = false;
+    DBG_PRINTLN("Telnet disabled");
+  }
+  if (miscObj["debug"] == "1")
+    {
+      setDEBUG = true;
+      DBG_PRINT("Debug output on serial monitor enabled");
+    }
+  else
+    setDEBUG = false;
 
-  if (jsmisc.containsKey("telnet"))
-    startTEL = jsmisc["telnet"];
-  if (jsmisc.containsKey("debug"))
-    setDEBUG = jsmisc["debug"];
-
-  DBG_PRINT("Debug output on serial monitor: ");
-  DBG_PRINTLN(setDEBUG);
   DBG_PRINTLN("------ loadConfig finished ------");
-
   configFile.close();
   return true;
 }
@@ -319,8 +318,7 @@ void saveConfigCallback()
 bool saveConfig()
 {
   DBG_PRINTLN("------ saveConfig started ------");
-  StaticJsonBuffer<1400> jsonBuffer;
-  JsonObject &json = jsonBuffer.createObject();
+  StaticJsonDocument<1400> doc;
   File configFile = SPIFFS.open("/config.json", "w");
   if (!configFile)
   {
@@ -330,15 +328,15 @@ bool saveConfig()
   }
 
   // Write Actors
-  JsonArray &jsactors = json.createNestedArray("actors");
+  JsonArray actorsArray = doc.createNestedArray("actors");
   for (int i = 0; i < numberOfActors; i++)
   {
-    JsonObject &jsactor = jsactors.createNestedObject();
-    jsactor["PIN"] = PinToString(actors[i].pin_actor);
-    jsactor["NAME"] = actors[i].name_actor;
-    jsactor["SCRIPT"] = actors[i].argument_actor;
-    jsactor["INV"] = actors[i].getInverted();
-    jsactor["SW"] = actors[i].getSwitchable();
+    JsonObject actorsObj = actorsArray.createNestedObject();
+    actorsObj["PIN"] = PinToString(actors[i].pin_actor);
+    actorsObj["NAME"] = actors[i].name_actor;
+    actorsObj["SCRIPT"] = actors[i].argument_actor;
+    actorsObj["INV"] = actors[i].getInverted();
+    actorsObj["SW"] = actors[i].getSwitchable();
     DBG_PRINT("Actor name: ");
     DBG_PRINTLN(actors[i].name_actor);
     DBG_PRINT("Actor PIN: ");
@@ -364,15 +362,15 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Sensors
-  JsonArray &jssensors = json.createNestedArray("sensors");
+  JsonArray sensorsArray = doc.createNestedArray("sensors");
   for (int i = 0; i < numberOfSensors; i++)
   {
-    JsonObject &jssensor = jssensors.createNestedObject();
-    jssensor["ADDRESS"] = sensors[i].getSens_adress_string();
-    jssensor["NAME"] = sensors[i].sens_name;
-    jssensor["OFFSET"] = sensors[i].sens_offset;
-    jssensor["SCRIPT"] = sensors[i].sens_mqtttopic;
-    jssensor["SW"] = sensors[i].sens_sw;
+    JsonObject sensorsObj = sensorsArray.createNestedObject();
+    sensorsObj["ADDRESS"] = sensors[i].getSens_adress_string();
+    sensorsObj["NAME"] = sensors[i].sens_name;
+    sensorsObj["OFFSET"] = sensors[i].sens_offset;
+    sensorsObj["SCRIPT"] = sensors[i].sens_mqtttopic;
+    sensorsObj["SW"] = sensors[i].sens_sw;
     DBG_PRINT("Sensor Name: ");
     DBG_PRINTLN(sensors[i].sens_name);
     DBG_PRINT("Sensor address: ");
@@ -398,19 +396,19 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Induction
-  JsonArray &jsinductions = json.createNestedArray("induction");
-  JsonObject &jsinduction = jsinductions.createNestedObject();
-  jsinduction["PINWHITE"] = PinToString(inductionCooker.PIN_WHITE);
-  jsinduction["PINYELLOW"] = PinToString(inductionCooker.PIN_YELLOW);
-  jsinduction["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT);
-  jsinduction["TOPIC"] = inductionCooker.mqtttopic;
-  jsinduction["DELAY"] = inductionCooker.delayAfteroff;
-  jsinduction["ENABLED"] = "0";
-  jsinduction["PL"] = inductionCooker.powerLevelOnError;
+  JsonArray indArray = doc.createNestedArray("induction");
   DBG_PRINT("Induction status: ");
   if (inductionCooker.isEnabled)
   {
-    jsinduction["ENABLED"] = "1";
+    JsonObject indObj = indArray.createNestedObject();
+    indObj["PINWHITE"] = PinToString(inductionCooker.PIN_WHITE);
+    indObj["PINYELLOW"] = PinToString(inductionCooker.PIN_YELLOW);
+    indObj["PINBLUE"] = PinToString(inductionCooker.PIN_INTERRUPT);
+    indObj["TOPIC"] = inductionCooker.mqtttopic;
+    indObj["DELAY"] = inductionCooker.delayAfteroff;
+    indObj["ENABLED"] = "1";
+    indObj["PL"] = inductionCooker.powerLevelOnError;
+
     DBG_PRINTLN(inductionCooker.isEnabled);
     DBG_PRINT("Induction MQTT topic: ");
     DBG_PRINTLN(inductionCooker.mqtttopic);
@@ -431,89 +429,94 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Display
-  JsonArray &jsodisplay = json.createNestedArray("display");
-  JsonObject &jsdisplay = jsodisplay.createNestedObject();
-  jsdisplay["ENABLED"] = "0";
-  jsdisplay["ADDRESS"] = "0";
-  jsdisplay["ADDRESS"] = String(decToHex(oledDisplay.address, 2));
-  jsdisplay["updisp"] = DISP_UPDATE;
-  jsdisplay["ENABLED"] = "0";
+  JsonArray displayArray = doc.createNestedArray("display");
+
   DBG_PRINT("OLED display status: ");
   DBG_PRINTLN(oledDisplay.dispEnabled);
   if (oledDisplay.dispEnabled)
   {
-    jsdisplay["ENABLED"] = "1";
+    JsonObject displayObj = displayArray.createNestedObject();
+    displayObj["ENABLED"] = "1";
+    displayObj["ADDRESS"] = String(decToHex(oledDisplay.address, 2));
+    displayObj["updisp"] = DISP_UPDATE;
+
     DBG_PRINT("Display address ");
     DBG_PRINTLN(String(decToHex(oledDisplay.address, 2)));
     DBG_PRINT("Display update interval ");
     DBG_PRINT(DISP_UPDATE / 1000);
     DBG_PRINTLN("sec");
+    if (oledDisplay.address == 0x3C || oledDisplay.address == 0x3D)
+    {
+      display.ssd1306_command(SSD1306_DISPLAYON);
+      cbpiEventSystem(EM_DISPUP);
+    }
   }
+  else
+    display.ssd1306_command(SSD1306_DISPLAYOFF);
 
   DBG_PRINTLN("--------------------");
 
   // Write Misc Stuff
-  JsonArray &jsomisc = json.createNestedArray("misc");
-  JsonObject &jsmisc = jsomisc.createNestedObject();
+  JsonArray miscArray = doc.createNestedArray("misc");
+  JsonObject miscObj = miscArray.createNestedObject();
 
-  jsmisc["del_sen_act"] = wait_on_Sensor_error_actor;
-  jsmisc["del_sen_ind"] = wait_on_Sensor_error_induction;
+  miscObj["del_sen_act"] = wait_on_Sensor_error_actor;
+  miscObj["del_sen_ind"] = wait_on_Sensor_error_induction;
   DBG_PRINT("Wait on sensor error actors: ");
   DBG_PRINTLN(wait_on_Sensor_error_actor);
   DBG_PRINT("Wait on sensor error induction: ");
   DBG_PRINTLN(wait_on_Sensor_error_induction);
-  jsmisc["delay_mqtt"] = wait_on_error_mqtt;
-  jsmisc["enable_mqtt"] = StopOnMQTTError;
+  miscObj["delay_mqtt"] = wait_on_error_mqtt;
+
   DBG_PRINT("Switch off actors on error ");
   if (StopOnMQTTError)
   {
-    jsmisc["enable_mqtt"] = "1";
+    miscObj["enable_mqtt"] = "1";
     DBG_PRINT("enabled after ");
     DBG_PRINT(wait_on_error_mqtt / 1000);
     DBG_PRINTLN("sec");
   }
   else
+  {
+    miscObj["enable_mqtt"] = "0";
     DBG_PRINTLN("disabled");
+  }
 
-  jsmisc["delay_wlan"] = wait_on_error_wlan;
-  jsmisc["enable_wlan"] = StopOnWLANError;
+  miscObj["delay_wlan"] = wait_on_error_wlan;
+
   DBG_PRINT("Switch off induction on error ");
-
   if (StopOnWLANError)
   {
-    jsmisc["enable_wlan"] = "1";
+    miscObj["enable_wlan"] = "1";
     DBG_PRINT("enabled after ");
     DBG_PRINT(wait_on_error_wlan / 1000);
     DBG_PRINTLN("sec");
   }
   else
+  {
+    miscObj["enable_wlan"] = "0";
     DBG_PRINTLN("disabled");
-
+  }
   if (startTEL)
-    jsmisc["telnet"] = "1";
+    miscObj["telnet"] = "1";
   else
-    jsmisc["telnet"] = "0";
+    miscObj["telnet"] = "0";
 
   if (setDEBUG)
-    jsmisc["debug"] = "1";
+    miscObj["debug"] = "1";
   else
-    jsmisc["debug"] = "0";
+    miscObj["debug"] = "0";
 
-  jsmisc["mdns_name"] = nameMDNS;
-  jsmisc["mdns"] = "0";
+  miscObj["mdns_name"] = nameMDNS;
   if (startMDNS)
-  {
-    jsmisc["mdns"] = "1";
-    DBG_PRINT("mDNS enabled: ");
-    DBG_PRINTLN(nameMDNS);
-  }
+    miscObj["mdns"] = "1";
   else
-    DBG_PRINTLN("mDNS disabled");
+    miscObj["mdns"] = "0";
 
-  jsmisc["MQTTHOST"] = mqtthost;
-  jsmisc["upsen"] = SEN_UPDATE;
-  jsmisc["upact"] = ACT_UPDATE;
-  jsmisc["upind"] = IND_UPDATE;
+  miscObj["MQTTHOST"] = mqtthost;
+  miscObj["upsen"] = SEN_UPDATE;
+  miscObj["upact"] = ACT_UPDATE;
+  miscObj["upind"] = IND_UPDATE;
 
   DBG_PRINT("Sensor update interval ");
   DBG_PRINT(SEN_UPDATE / 1000);
@@ -530,13 +533,13 @@ bool saveConfig()
   DBG_PRINT("MQTT broker IP: ");
   DBG_PRINTLN(mqtthost);
 
-  json.printTo(configFile);
+  serializeJson(doc, configFile);
   configFile.close();
 
-  size_t len = json.measureLength();
+  size_t len = measureJson(doc);
   DBG_PRINT("JSON config length: ");
   DBG_PRINTLN(len);
-  if (len > 1500)
+  if (len > 1400)
     DBG_PRINTLN("Error: JSON config too big!");
 
   DBG_PRINTLN("------ saveConfig finished ------");
