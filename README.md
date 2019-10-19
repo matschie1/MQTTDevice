@@ -10,7 +10,7 @@ Version 1.050
 - Update:	jquery
 - Reworked:	Read/Write configFile
 
--> before you update backup your config.json! (or write down pins and mqtt topics)
+-> before you update backup your config.json!
 
 -> check your config after update! 
 
