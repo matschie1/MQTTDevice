@@ -1,4 +1,4 @@
-![ov1](/img/fw104x.jpg)
+![ov1](/img/fw105x.jpg)
 
 # MQTTDevice
 
@@ -88,7 +88,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 	-> starting with firmware 1.050 ArduinoJson 6 required
 
     -> starting with firmware 1.048 modified EventManager lib reverted to original lib
-    
+
 
 ### How to flash without compile
 
