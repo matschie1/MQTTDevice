@@ -5,7 +5,7 @@ class oled
 
 public:
   bool dispEnabled = false;
-  int address;
+  int address = 0x3C;
 
   bool senOK = true;
   bool actOK = true;

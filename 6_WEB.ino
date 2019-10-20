@@ -129,7 +129,6 @@ void handleRequestMiscSet()
   doc["delay_wlan"] = wait_on_error_wlan / 1000;
   doc["debug"] = setDEBUG;
   doc["telnet"] = startTEL;
-
   String response;
   serializeJson(doc, response);
   server.send(200, "application/json", response);
@@ -139,7 +138,6 @@ void handleRequestMisc()
 {
   String request = server.arg(0);
   String message;
-
   if (request == "MQTTHOST")
   {
     message = mqtthost;
@@ -254,6 +252,28 @@ void handleRequestMisc()
     }
     goto SendMessage;
   }
+  if (request == "tcp")
+  {
+    if (startTCP)
+    {
+      message = "1";
+    }
+    else
+    {
+      message = "0";
+    }
+    goto SendMessage;
+  }
+  if (request == "tcphost")
+  {
+    message = tcpHost;
+    goto SendMessage;
+  }
+  if (request == "tcpport")
+  {
+    message = tcpPort;
+    goto SendMessage;
+  }
   if (request == "upsen")
   {
     message = SEN_UPDATE / 1000;
@@ -267,6 +287,16 @@ void handleRequestMisc()
   if (request == "upind")
   {
     message = IND_UPDATE / 1000;
+    goto SendMessage;
+  }
+  if (request == "upsys")
+  {
+    message = SYS_UPDATE / 1000;
+    goto SendMessage;
+  }
+  if (request == "uptcp")
+  {
+    message = TCP_UPDATE / 1000;
     goto SendMessage;
   }
 
@@ -302,90 +332,55 @@ void handleSetMisc()
         SPIFFS.remove("/config.json");
         WiFi.disconnect();
         wifiManager.resetSettings();
-
-        unsigned long last = millis();
-        while (millis() < last + PAUSE2SEC)
-        {
-          // just wait for approx 2sec
-          yield();
-        }
+        millis2wait(PAUSE2SEC);
         ESP.reset();
       }
     }
     if (server.argName(i) == "MQTTHOST")
-    {
       server.arg(i).toCharArray(mqtthost, 16);
-    }
     if (server.argName(i) == "mdns_name")
-    {
       server.arg(i).toCharArray(nameMDNS, 16);
-    }
     if (server.argName(i) == "mdns")
     {
       if (server.arg(i) == "1")
-      {
         startMDNS = true;
-      }
       else
-      {
         startMDNS = false;
-      }
     }
     if (server.argName(i) == "enable_mqtt")
     {
       if (server.arg(i) == "1")
-      {
         StopOnMQTTError = true;
-      }
       else
-      {
         StopOnMQTTError = false;
-      }
     }
     if (server.argName(i) == "delay_mqtt")
-    {
       wait_on_error_mqtt = server.arg(i).toInt() * 1000;
-    }
     if (server.argName(i) == "enable_wlan")
     {
       if (server.arg(i) == "1")
-      {
         StopOnWLANError = true;
-      }
       else
-      {
         StopOnWLANError = false;
-      }
     }
     if (server.argName(i) == "delay_wlan")
-    {
       wait_on_error_wlan = server.arg(i).toInt() * 1000;
-    }
     if (server.argName(i) == "del_sen_act")
-    {
       wait_on_Sensor_error_actor = server.arg(i).toInt() * 1000;
-    }
     if (server.argName(i) == "del_sen_ind")
-    {
       wait_on_Sensor_error_induction = server.arg(i).toInt() * 1000;
-    }
+
     if (server.argName(i) == "debug")
     {
       if (server.arg(i) == "1")
-      {
         setDEBUG = true;
-      }
       else
-      {
         setDEBUG = false;
-      }
     }
     if (server.argName(i) == "telnet")
     {
       if (server.arg(i) == "1")
-      {
         startTEL = true;
-      }
       else
       {
         if (Telnet)
@@ -393,29 +388,52 @@ void handleSetMisc()
         startTEL = false;
       }
     }
+    if (server.argName(i) == "tcp")
+    {
+      if (server.arg(i) == "1")
+        startTCP = true;
+      else
+        startTCP = false;
+    }
+    if (server.argName(i) == "tcphost")
+    {
+      server.arg(i).toCharArray(tcpHost, 16);
+    }
+    if (server.argName(i) == "tcpport")
+    {
+      int newPort = server.arg(i).toInt();
+      if (newPort > 0)
+        tcpPort = newPort;
+    }
     if (server.argName(i) == "upsen")
     {
       int newsup = server.arg(i).toInt();
       if (newsup > 0)
-      {
         SEN_UPDATE = newsup * 1000;
-      }
     }
     if (server.argName(i) == "upact")
     {
       int newaup = server.arg(i).toInt();
       if (newaup > 0)
-      {
         ACT_UPDATE = newaup * 1000;
-      }
     }
     if (server.argName(i) == "upind")
     {
       int newiup = server.arg(i).toInt();
       if (newiup > 0)
-      {
         IND_UPDATE = newiup * 1000;
-      }
+    }
+    if (server.argName(i) == "upsys")
+    {
+      int newsys = server.arg(i).toInt();
+      if (newsys > 0)
+         SYS_UPDATE = newsys * 1000;
+    }
+    if (server.argName(i) == "uptcp")
+    {
+      int newtcp = server.arg(i).toInt();
+      if (newtcp > 0)
+        TCP_UPDATE = newtcp * 1000;
     }
     yield();
   }
@@ -425,13 +443,11 @@ void handleSetMisc()
 // Some helper functions WebIf
 void rebootDevice()
 {
-  //cbpiEventSystem(11);
   cbpiEventSystem(EM_REBOOT);
 }
 
 void reconMQTT()
 {
-  //cbpiEventSystem(10);
   retriesMQTT = 1;
   mqttconnectlasttry = 0;
   cbpiEventSystem(EM_MQTTER);
@@ -439,6 +455,5 @@ void reconMQTT()
 
 void OTA()
 {
-  //cbpiEventSystem(9);
   cbpiEventSystem(EM_OTASET);
 }

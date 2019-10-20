@@ -14,7 +14,7 @@
     <div class="container">
       <div class="row">
         <div class="col">
-          <h1 class="text-center">MQTT Device V1.050</h1>
+          <h1 class="text-center">MQTT Device V1.051</h1>
         </div>
         <div class="col-md-auto">
           <a href="/edit" class="btn btn-outline-primary" id="btn_edit">FileBrowser</a>
@@ -158,8 +158,7 @@
               <label for="modal_sensor_address">Address</label>
               <select class="form-control" id="modal_sensor_address">
               </select>
-              <button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i
-                  class="fa fa-fw fa-refresh"></i>
+              <button type="button" class="btn btn-primary" id="modal_sensor_address_refresh"><i class="fa fa-fw fa-refresh"></i>
               </button>
             </div>
             <div class="form-group">
@@ -180,8 +179,8 @@
             </div>
           </form>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_sensor_btn_save">Save
-            changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_sensor_btn_save">Save changes</button> 
+		  <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
           <button type="button" class="btn btn-danger" id="modal_sensor_btn_delete">Delete Sensor</button> </div>
       </div>
     </div>
@@ -220,13 +219,12 @@
             <input type="text" class="form-control" placeholder="" id="modal_induction_delay">
           </div>
           <div class="form-group">
-            <label for="modal_induction_pl">Set Induction event power level (0 = switch off ... 100 = no
-              changes)</label>
+            <label for="modal_induction_pl">Set Induction event power level (0 = switch off ... 100 = no changes)</label>
             <input type="text" class="form-control" placeholder="" id="modal_induction_pl">
           </div>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_induction_btn_save">Save
-            changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_induction_btn_save">Save changes</button> 
+		   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
       </div>
     </div>
   </div>
@@ -252,8 +250,8 @@
             <input type="text" class="form-control" placeholder="" id="modal_display_update">
           </div>
         </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_display_btn_save">Save
-            changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
+        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_display_btn_save">Save changes</button> 
+		    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
       </div>
     </div>
   </div>
@@ -261,8 +259,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Misc</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span>
-          </button>
+          <h5 class="modal-title">Misc</h5> <button type="button" class="close" data-dismiss="modal"> <span>×</span></button>
         </div>
         <div class="modal-body">
           <div class="form-group">
@@ -282,6 +279,10 @@
             <input type="text" class="form-control" placeholder="" id="modal_misc_upind">
           </div>
           <div class="form-group">
+            <label for="modal_misc_upsys">Sys update interval (sec)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_upsys">
+          </div>
+          <div class="form-group">
             <label for="modal_misc_del_sen_act">Delay actors before sensor event handling (sec)</label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_del_sen_act">
           </div>
@@ -291,8 +292,7 @@
           </div>
           <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_onErrorMQTT">
-            <label class="form-check-label" for="modal_misc_onErrorMQTT">Activate MQTT event handling on selected actors
-              or induction</label>
+            <label class="form-check-label" for="modal_misc_onErrorMQTT">Activate MQTT event handling</label>
           </div>
           <div class="form-group">
             <label for="modal_misc_delay_mqtt">Delay between max 5 MQTT reconnects before event handling (sec)</label>
@@ -300,8 +300,7 @@
           </div>
           <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_onErrorWLAN">
-            <label class="form-check-label" for="modal_misc_onErrorWLAN">Activate WLAN event handling on selected actors
-              or induction</label>
+            <label class="form-check-label" for="modal_misc_onErrorWLAN">Activate WLAN event handling</label>
           </div>
           <div class="form-group">
             <label for="modal_misc_delay_wlan">Delay between max 5 WLAN reconnects before event handling (sec)</label>
@@ -315,15 +314,23 @@
             <label for="modal_misc_mdns_name">mDNS name</label>
             <input type="text" class="form-control" placeholder="" id="modal_misc_mdns_name">
           </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="" id="modal_misc_reset">
-            <label class="form-check-label" for="modal_misc_reset">Clear WiFi (Reset to AP Mode)</label>
+		  <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_misc_tcp">
+            <label class="form-check-label" for="modal_misc_tcp">Enable TCP Server</label>
           </div>
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" value="" id="modal_misc_clear">
-            <label class="form-check-label" for="modal_misc_clear">Clear all settings and reset to defaults</label>
+		  <div class="form-group">
+            <label for="modal_misc_tcp_host">TCP Server IP</label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_tcp_host">
           </div>
-          <div class="form-check">
+		  <div class="form-group">
+            <label for="modal_misc_tcp_port">TCP Server Port</label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_tcp_port">
+          </div>
+		  <div class="form-group">
+            <label for="modal_misc_tcp_interval">TCP Server update interval (sec)</label>
+            <input type="text" class="form-control" placeholder="" id="modal_misc_tcp_interval">
+          </div>
+		  <div class="form-check">
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_telnet">
             <label class="form-check-label" for="modal_misc_telnet">Enable Telnet</label>
           </div>
@@ -331,9 +338,17 @@
             <input class="form-check-input" type="checkbox" value="" id="modal_misc_debug">
             <label class="form-check-label" for="modal_misc_debug">Enable Debug</label>
           </div>
-        </div>
-        <div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_misc_btn_save">Save
-            changes</button> <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
+		  <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_misc_reset">
+            <label class="form-check-label" for="modal_misc_reset">Clear WiFi (Reset to AP Mode)</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="modal_misc_clear">
+            <label class="form-check-label" for="modal_misc_clear">Clear all settings and reset to defaults</label>
+          </div>
+	    </div>
+		<div class="modal-footer"> <button type="button" class="btn btn-primary" id="modal_misc_btn_save">Save changes</button> 
+		    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button> </div>
       </div>
     </div>
   </div>
@@ -892,6 +907,11 @@
       var upsen;
       var upact;
       var upind;
+	  var upsys;
+	  var uptcp;
+	  var tcphost;
+	  var tcpport;
+	  var tcp;
 
       $.ajax({
         url: '/reqMisc?req=MQTTHOST',
@@ -1032,6 +1052,56 @@
           upind = data;
         }
       });
+	  $.ajax({
+        url: '/reqMisc?req=upsys',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          upsys = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=uptcp',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          uptcp = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=tcphost',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          tcphost = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=tcpport',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          tcpport = data;
+        }
+      });
+	  $.ajax({
+        url: '/reqMisc?req=tcp',
+        type: 'get',
+        dataType: 'html',
+        async: false,
+        cache: false,
+        success: function (data) {
+          tcp = data;
+        }
+      });
 
       var modal = $(this)
       modal.find('#modal_misc_address').val(mqttaddress)
@@ -1046,6 +1116,8 @@
       else { modal.find('#modal_misc_telnet').prop("checked", false) }
       if (debug == "1") { modal.find('#modal_misc_debug').prop("checked", true) }
       else { modal.find('#modal_misc_debug').prop("checked", false) }
+	  if (tcp == "1") { modal.find('#modal_misc_tcp').prop("checked", true) }
+      else { modal.find('#modal_misc_tcp').prop("checked", false) }
       modal.find('#modal_misc_delay_mqtt').val(delay_mqtt)
       modal.find('#modal_misc_delay_wlan').val(delay_wlan)
       modal.find('#modal_misc_del_sen_act').val(del_sen_act)
@@ -1055,6 +1127,10 @@
       modal.find('#modal_misc_upsen').val(upsen)
       modal.find('#modal_misc_upact').val(upact)
       modal.find('#modal_misc_upind').val(upind)
+	  modal.find('#modal_misc_upsys').val(upsys)
+	  modal.find('#modal_misc_tcp_interval').val(uptcp)
+	  modal.find('#modal_misc_tcp_host').val(tcphost)
+	  modal.find('#modal_misc_tcp_port').val(tcpport)
 
       var modal = $(this)
     });
@@ -1070,6 +1146,11 @@
       var upsen = modal.find('#modal_misc_upsen').val()
       var upact = modal.find('#modal_misc_upact').val()
       var upind = modal.find('#modal_misc_upind').val()
+	  var upsys = modal.find('#modal_misc_upsys').val()
+	  var uptcp = modal.find('#modal_misc_tcp_interval').val()
+	  var tcphost = modal.find('#modal_misc_tcp_host').val()
+	  var tcpport = modal.find('#modal_misc_tcp_port').val()
+	  
 
       if (modal.find('#modal_misc_mdns').prop("checked") == true) {
         var mdns = "1"
@@ -1101,14 +1182,18 @@
       } else {
         var telnet = "0"
       }
+	  if (modal.find('#modal_misc_tcp').prop("checked") == true) {
+        var tcp = "1"
+      } else {
+        var tcp = "0"
+      }
       if (modal.find('#modal_misc_debug').prop("checked") == true) {
         var debug = "1"
       } else {
         var debug = "0"
       }
-
       $.ajax({
-        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_mqtt=' + enable_mqtt + '&delay_mqtt=' + delay_mqtt + '&enable_wlan=' + enable_wlan + '&delay_wlan=' + delay_wlan + '&del_sen_act=' + del_sen_act + '&del_sen_ind=' + del_sen_ind + '&telnet=' + telnet + '&debug=' + debug + '&mdns=' + mdns + '&mdns_name=' + mdns_name + '&upsen=' + upsen + '&upact=' + upact + '&upind=' + upind,
+        url: '/setMisc?reset=' + reset + '&clear=' + clear + '&MQTTHOST=' + mqttaddress + '&enable_mqtt=' + enable_mqtt + '&delay_mqtt=' + delay_mqtt + '&enable_wlan=' + enable_wlan + '&delay_wlan=' + delay_wlan + '&del_sen_act=' + del_sen_act + '&del_sen_ind=' + del_sen_ind + '&telnet=' + telnet + '&debug=' + debug + '&mdns=' + mdns + '&mdns_name=' + mdns_name + '&upsen=' + upsen + '&upact=' + upact + '&upind=' + upind + '&upsys=' + upsys + '&tcp=' + tcp + '&tcphost=' + tcphost + '&tcpport=' + tcpport + '&uptcp=' + uptcp,
         type: 'POST',
         dataType: 'html',
         async: false,

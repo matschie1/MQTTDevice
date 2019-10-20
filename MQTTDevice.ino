@@ -31,7 +31,6 @@
 #include <WiFiUdp.h>      // WiFi
 #include <ArduinoOTA.h>   // OTA
 #include <EventManager.h> // Eventmanager
-// #include <ESP8266_TCP.h> // Test Tozzi Server
 
 #include <NTPClient.h> // NTP
 #include <Time.h>
@@ -45,7 +44,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[6] = "1.050";
+const char Version[6] = "1.051";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -62,12 +61,12 @@ DallasTemperature DS18B20(&oneWire);
 ESP8266WebServer server(80);
 WiFiManager wifiManager;
 WiFiClient espClient;
+WiFiClient tcpClient;
 PubSubClient client(espClient);
 MDNSResponder mdns;
 ESP8266HTTPUpdateServer httpUpdate;
 WiFiServer TelnetServer(23); // declare telnet server
 WiFiClient Telnet;
-// ESP8266_TCP TCP; // Test Tozzi Server
 // Induktion
 /*  Signallaufzeiten */
 const int SIGNAL_HIGH = 5120;
@@ -219,7 +218,13 @@ int actorsStatus = 0;
 int inductionStatus = 0;
 /*######### EventManager ########*/
 
-#define serverPort 9501
+/*########## TCP Server #########*/
+int tcpPort = 9501;                  // Server Port Tozzi Server
+char tcpHost[16] = "192.168.100.30"; // Default Value für Tozzi Server
+unsigned long lastToggledTCP = 0;  // Timestamp system event
+bool startTCP = false;
+int TCP_UPDATE = 60000;            // Update interval Tozzi server
+/*########## TCP Server #########*/
 
 /*########### DISPLAY ###########*/
 #include <SPI.h>

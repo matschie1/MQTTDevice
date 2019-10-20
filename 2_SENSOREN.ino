@@ -124,8 +124,9 @@ public:
 
     sens_err = sensorsStatus;
     publishmqtt();
-    //publishTCP(); // Test Tozzi Server
-  } // void Update
+    if (startTCP)
+      publishTCP(); // TCP Server
+  }               // void Update
 
   void change(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw)
   {
@@ -181,26 +182,47 @@ public:
       client.publish(sens_mqtttopic, jsonMessage);
     }
   }
-/*
-  void publishTCP() // Test Tozzi Server
+
+  void publishTCP()
   {
-    if (client.connected())
+    if (millis() > (lastToggledTCP + TCP_UPDATE))
     {
-      StaticJsonDocument<256> doc;
-      JsonObject sensorsObj = doc.createNestedObject("Sensor");
-      sensorsObj["NAME"] = sens_name;
-      sensorsObj["ADDRESS"] = sens_address;
-      if (sensorsStatus == 0)
-        sensorsObj["VALUE"] = (sens_value + sens_offset);
-      else
-        sensorsObj["VALUE"] = 0;
-      char jsonMessage[100];
-      serializeJson(doc, jsonMessage);
-      TCP.connectTCP(mqtthost, serverPort);
-      TCP.send(jsonMessage);
+      if (tcpClient.connect(tcpHost, tcpPort))
+      {
+        DBG_PRINTLN("Sen: TCP server connected");
+        StaticJsonDocument<256> doc;
+        doc["name"] = sens_name;
+        doc["ID"] = SensorAddressToString(sens_address);
+        if (sensorsStatus == 0)
+          doc["temperature"] = (sens_value + sens_offset);
+        else
+          doc["temperature"] = 0;
+        
+        doc["temp_units"] = "C";
+        doc["RSSI"] = WiFi.RSSI();
+        doc["interval"] = TCP_UPDATE;
+        // Send additional but sensless data to act as an iSpindle device
+        // json from iSpindle:  
+        // Input Str is now:{"name":"iSpindle","ID":1234567,"angle":22.21945,"temperature":15.6875,
+        // "temp_units":"C","battery":4.207508,"gravity":1.019531,"interval":900,"RSSI":-59}
+        
+        doc["angle"] = 0;
+        doc["battery"] = 0;
+        doc["gravity"] = 0;
+        
+        char jsonMessage[256];
+        serializeJson(doc, jsonMessage);
+        tcpClient.write(jsonMessage);
+        DBG_PRINT("SEN: TCP message ");
+        DBG_PRINTLN(jsonMessage);
+        size_t len = measureJson(doc);
+        DBG_PRINT("SEN: TCP message size ");
+        DBG_PRINTLN(len);
+        lastToggledTCP = millis();
+      }
     }
   }
-*/
+
   char *getValueString()
   {
     char buf[5];
@@ -407,13 +429,10 @@ void handleRequestSensors()
         sensorsObj["value"] = "ERR";
     }
     sensorsObj["mqtt"] = sensors[i].sens_mqtttopic;
-    //sensorsArray.add(sensorsObj);
-    //sensorsResponse.add(sensorResponse);
     yield();
   }
 
   String response;
-  //sensorsResponse.printTo(response);
   serializeJson(doc, response);
   server.send(200, "application/json", response);
 }

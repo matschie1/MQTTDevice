@@ -165,7 +165,11 @@ bool loadConfig()
 
   JsonArray displayArray = doc["display"];
   JsonObject displayObj = displayArray[0];
-  useDisplay = displayObj["ENABLED"] | "0";
+  if (displayObj["ENABLED"] == "1")
+    useDisplay = true;
+  else
+    useDisplay = false;
+
   if (useDisplay)
   {
     String dispAddress = displayObj["ADDRESS"];
@@ -263,6 +267,8 @@ bool loadConfig()
     ACT_UPDATE = miscObj["upact"];
   if ((miscObj.containsKey("upind")) && (miscObj["upind"].is<int>()))
     IND_UPDATE = miscObj["upind"];
+  if ((miscObj.containsKey("upsys")) && (miscObj["upsys"].is<int>()))
+    SYS_UPDATE = miscObj["upsys"];
 
   DBG_PRINT("Sensors update intervall: ");
   DBG_PRINT(SEN_UPDATE / 1000);
@@ -273,6 +279,39 @@ bool loadConfig()
   DBG_PRINT("Induction update intervall: ");
   DBG_PRINT(IND_UPDATE / 1000);
   DBG_PRINTLN("sec");
+  if (miscObj["tcp"] == "1")
+    startTCP = true;
+  else
+    startTCP = false;
+  if ((miscObj.containsKey("uptcp")) && (miscObj["uptcp"].is<int>()))
+    TCP_UPDATE = miscObj["uptcp"];
+
+  if (miscObj.containsKey("TCPHOST"))
+  {
+    String tcpHost_Str = miscObj["TCPHOST"];
+    tcpHost_Str.toCharArray(tcpHost, 16);
+    DBG_PRINT("TCP server IP: ");
+    DBG_PRINTLN(tcpHost);
+  }
+  else
+  {
+
+    if (startTCP)
+      DBG_PRINTLN("TCP Server disabled (no host)");
+    startTCP = false;
+  }
+  if (miscObj.containsKey("TCPPORT"))
+  {
+    tcpPort = miscObj["TCPPORT"];
+    DBG_PRINT("TCP server Port ");
+    DBG_PRINTLN(tcpPort);
+  }
+  else
+  {
+    if (startTCP)
+      DBG_PRINTLN("TCP Server disabled (no port)");
+    startTCP = false;
+  }
 
   if (miscObj.containsKey("MQTTHOST"))
   {
@@ -289,7 +328,7 @@ bool loadConfig()
   if (miscObj["telnet"] == "1")
   {
     startTEL = true;
-    DBG_PRINT("Telnet activated");
+    DBG_PRINTLN("Telnet activated");
   }
   else
   {
@@ -297,10 +336,10 @@ bool loadConfig()
     DBG_PRINTLN("Telnet disabled");
   }
   if (miscObj["debug"] == "1")
-    {
-      setDEBUG = true;
-      DBG_PRINT("Debug output on serial monitor enabled");
-    }
+  {
+    setDEBUG = true;
+    DBG_PRINTLN("Debug output on serial monitor enabled");
+  }
   else
     setDEBUG = false;
 
@@ -450,6 +489,12 @@ bool saveConfig()
       display.ssd1306_command(SSD1306_DISPLAYON);
       cbpiEventSystem(EM_DISPUP);
     }
+    else
+    {
+      displayObj["ENABLED"] = "0";
+      oledDisplay.dispEnabled = false;
+      useDisplay = false;
+    }
   }
   else
     display.ssd1306_command(SSD1306_DISPLAYOFF);
@@ -497,11 +542,17 @@ bool saveConfig()
     miscObj["enable_wlan"] = "0";
     DBG_PRINTLN("disabled");
   }
+  DBG_PRINT("Telnet Server ");
   if (startTEL)
+  {
     miscObj["telnet"] = "1";
+    DBG_PRINTLN("enabled");
+  }
   else
+  {
     miscObj["telnet"] = "0";
-
+    DBG_PRINTLN("disabled");
+  }
   if (setDEBUG)
     miscObj["debug"] = "1";
   else
@@ -513,11 +564,33 @@ bool saveConfig()
   else
     miscObj["mdns"] = "0";
 
+  miscObj["TCPHOST"] = tcpHost;
+  miscObj["TCPPORT"] = tcpPort;
+  miscObj["uptcp"] = TCP_UPDATE;
+  DBG_PRINT("TCP Server ");
+  if (startTCP)
+  {
+    miscObj["tcp"] = "1";
+    DBG_PRINT("enabled ");
+    DBG_PRINT(tcpHost);
+    DBG_PRINT(" ");
+    DBG_PRINT(tcpPort);
+    DBG_PRINT(" ");
+    DBG_PRINT(TCP_UPDATE/1000);
+    DBG_PRINTLN("sec");
+  }
+  else
+  {
+    miscObj["tcp"] = "0";
+    DBG_PRINTLN("disabled");
+  }
+
   miscObj["MQTTHOST"] = mqtthost;
   miscObj["upsen"] = SEN_UPDATE;
   miscObj["upact"] = ACT_UPDATE;
   miscObj["upind"] = IND_UPDATE;
-
+  miscObj["upsys"] = SYS_UPDATE;
+  
   DBG_PRINT("Sensor update interval ");
   DBG_PRINT(SEN_UPDATE / 1000);
   DBG_PRINTLN("sec");
