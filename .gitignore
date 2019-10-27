@@ -1,4 +1,6 @@
 .DS_Store
+.gitattributes
+.gitignore
 .vscode/launch.json
 data/config.json
 data/tozzi.jpg
