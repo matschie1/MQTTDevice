@@ -3,6 +3,10 @@
 # MQTTDevice
 
 ## Changelog
+Version 1.055
+- Fix:      DeserializationError Json6
+- Added:    TCP Server Support
+
 
 Version 1.050
 - Update: 	Update ArduinoJson Version 6
@@ -43,6 +47,8 @@ The MQTTDevice is an Arduino Sketch based on the ESP8266 to enable stable commun
 * Induction
   * Control of a GGM Induction Cooker via serial communication
 * OLED display integration
+* TCP Server Support
+![tcp](/img/TCPServer.jpg)
 
 
 Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p309196 (german)
