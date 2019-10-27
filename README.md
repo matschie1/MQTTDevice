@@ -74,7 +74,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
   * Check and add the following libs
     * NTPClient by Fabrice Weinberg Version 3.2.0
     * Adafruit GFX Library by Adafruit Version 1.5.7
-    * Adafruit SSD1306 by Adafruit Version 1.3.0
+    * Adafruit SSD1306 by Adafruit Version 2.0.1
     * ArduinoJSON by Benoit Blanchon Version 6.12.0 
     * DallasTemperature by Miles Burton Version 3.8.0
     * OneWire By Jim Studt Version 2.3.5
