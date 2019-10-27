@@ -101,14 +101,23 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 * Use esptool.exe (see https://github.com/igrr/esptool-ck/releases ) to flash from tools folder
 
 Example ESP8266 D1 mini 4MB flash size connected to COM3
+
 	* open cmd.exe
+
 	* navigate into build folder
+
 		* flash firmware: esptool.exe -ca 0x000000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.ino.bin
-		* flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
-        * alternativ: flash SPIFFS after your device is connected to your WLAN using WebIf <ip-address>/update
+
 	* reset ESP8266 device
+
 	* ESP8266 device will reboot in AP mode with IP 192.168.4.1
+
 	* Connect ESP8266 device to your WLAN
+
+    * flash SPIFFS after your device is connected to your WLAN using WebIf <ip-address>/update
+
+    * flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
+
 
 * Updates
 	To install updates (firmware an SPIFFS) open the buildin WebIf: <ip address esp device>/update
