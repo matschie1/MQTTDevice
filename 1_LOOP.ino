@@ -40,10 +40,28 @@ void loop()
   if (startOTA)
     cbpiEventSystem(EM_OTA); // OTA handle
 
+  if (startTCP)
+  {
+    if (millis() > (lastToggledTCP + TCP_UPDATE))
+    {
+      cbpiEventSystem(EM_TCP); // TCP Server Update
+      lastToggledTCP = millis();
+    }
+  }
+
   // Simulation - ignore!
   if (sim_mode != SIM_NONE)
     simCheck();
 
+  // Debug output event queue
+  // if (millis() > (lastToggledEvent + 5000))
+  // {
+  //   DBG_PRINT("Event queue status: ");
+  //   DBG_PRINTLN(gEM.getNumEventsInQueue());
+  //   lastToggledEvent = millis();
+  // }
+  //gEM.processAllEvents();
+  
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {
     gEM.processEvent();

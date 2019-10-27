@@ -14,104 +14,92 @@ void listenerSystem(int event, int parm) // System event listener
       */
 
     oledDisplay.wlanOK = false;
-    // try to reconnect
-    if (millis() > (wlanconnectlasttry + wait_on_error_wlan))
+    if (sim_mode == SIM_NONE)
     {
-      if (sim_mode == SIM_NONE)
+      WiFi.mode(WIFI_STA);
+      WiFi.begin();
+      if (WiFi.status() == WL_CONNECTED)
       {
-        WiFi.mode(WIFI_STA);
-        WiFi.begin();
-        // Testen!
-        wifiManager.setSaveConfigCallback(saveConfigCallback);
-        wifiManager.autoConnect(mqtt_clientid);
-        if (WiFi.status() == WL_CONNECTED)
-        {
-          DBG_PRINTLN("EM WLAN: WLAN reconnect successful");
-          retriesWLAN = 1;
-          wlan_state = true;
-          oledDisplay.wlanOK = true;
-          break;
-        }
+        DBG_PRINTLN("EM WLAN: WLAN reconnect successful");
+        retriesWLAN = 1;
+        wlan_state = true;
+        oledDisplay.wlanOK = true;
+        break;
       }
-      else
-      {
-        DBG_PRINT("SIM: WLAN loop ");
-        DBG_PRINTLN(sim_counter - 20);
-        sim_counter++;
-      }
-
-      DBG_PRINT("EM WLAN: WLAN error. ");
-      DBG_PRINT(retriesWLAN);
-      DBG_PRINTLN(". try to reconnect");
-
-      wlanconnectlasttry = millis();
-      if (retriesWLAN == maxRetriesWLAN)
-      {
-        // reconnect fails after maxtries and delay
-        DBG_PRINT("EM WLAN: WLAN connection lost. Max retries ");
-        DBG_PRINT(retriesWLAN);
-        DBG_PRINTLN(" reached.");
-        DBG_PRINT("EM WLANER: StopOnWLANError: ");
-        DBG_PRINTLN(StopOnWLANError);
-        if ((StopOnWLANError && wlan_state && sim_mode == SIM_NONE) || (sim_mode == SIM_WLAN && !wlan_state))
-        {
-          cbpiEventActors(EM_ACTER);
-          cbpiEventInduction(EM_INDER);
-          wlan_state = false;
-          mqtt_state = false; // MQTT in error state - required to restore values
-        }
-      }
-      retriesWLAN++;
     }
+    else
+    {
+      DBG_PRINT("SIM: WLAN loop ");
+      DBG_PRINTLN(sim_counter - 20);
+      sim_counter++;
+    }
+
+    DBG_PRINT("EM WLAN: WLAN error. ");
+    DBG_PRINT(retriesWLAN);
+    DBG_PRINTLN(". try to reconnect");
+
+    if (retriesWLAN == maxRetriesWLAN)
+    {
+      // reconnect fails after maxtries and delay
+      DBG_PRINT("EM WLAN: WLAN connection lost. Max retries ");
+      DBG_PRINT(retriesWLAN);
+      DBG_PRINTLN(" reached.");
+      DBG_PRINT("EM WLANER: StopOnWLANError: ");
+      DBG_PRINTLN(StopOnWLANError);
+      if ((StopOnWLANError && wlan_state && sim_mode == SIM_NONE) || (sim_mode == SIM_WLAN && !wlan_state))
+      {
+        cbpiEventActors(EM_ACTER);
+        cbpiEventInduction(EM_INDER);
+        wlan_state = false;
+        mqtt_state = false; // MQTT in error state - required to restore values
+      }
+    }
+    retriesWLAN++;
     break;
   case EM_MQTTER: // MQTT Error -> handling
     oledDisplay.mqttOK = false;
-    if (((millis() > (mqttconnectlasttry + wait_on_error_mqtt)) && wlan_state))
+    if (sim_mode == SIM_NONE)
     {
-      if (sim_mode == SIM_NONE)
+      if (client.connect(mqtt_clientid))
       {
-        if (client.connect(mqtt_clientid)) // in sim mode do not use normal reconnect
-        {
-          DBG_PRINTLN("MQTT auto reconnect successful. Subscribing.");
-          cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
-          cbpiEventSystem(EM_MQTTRES);
-          break;
-        }
+        DBG_PRINTLN("MQTT auto reconnect successful. Subscribing..");
+        cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
+        cbpiEventSystem(EM_MQTTRES);
+        break;
       }
-      else
-      {
-        sim_counter++;
-        DBG_PRINT("SIM: MQTT loop ");
-        DBG_PRINTLN(sim_counter - 10);
-      }
-
-      if (retriesMQTT <= maxRetriesMQTT)
-      {
-        DBG_PRINT("EM MQTT: MQTT error. ");
-        DBG_PRINT(retriesMQTT);
-        DBG_PRINTLN(". try to reconnect");
-      }
-      mqttconnectlasttry = millis();
-      if (retriesMQTT == maxRetriesMQTT)
-      {
-        DBG_PRINT("EM MQTTER: MQTT server ");
-        DBG_PRINT(mqtthost);
-        DBG_PRINT(" unavailable. Max retries ");
-        DBG_PRINT(maxRetriesMQTT);
-        DBG_PRINTLN(" reached.");
-        DBG_PRINT("EM MQTTER: StopOnMQTTError: ");
-        DBG_PRINTLN(StopOnMQTTError);
-        DBG_PRINT("EM MQTTER: mqtt_state: ");
-        DBG_PRINTLN(mqtt_state);
-        if ((StopOnMQTTError && mqtt_state && sim_mode == SIM_NONE) || (sim_mode == SIM_MQTT && !mqtt_state))
-        {
-          cbpiEventActors(EM_ACTER);
-          cbpiEventInduction(EM_INDER);
-          mqtt_state = false; // MQTT in error state
-        }
-      }
-      retriesMQTT++;
     }
+    else
+    {
+      sim_counter++;
+      DBG_PRINT("SIM: MQTT loop ");
+      DBG_PRINTLN(sim_counter - 10);
+    }
+
+    if (retriesMQTT <= maxRetriesMQTT)
+    {
+      DBG_PRINT("EM MQTT: MQTT error. ");
+      DBG_PRINT(retriesMQTT);
+      DBG_PRINTLN(". try to reconnect");
+    }
+    if (retriesMQTT == maxRetriesMQTT)
+    {
+      DBG_PRINT("EM MQTTER: MQTT server ");
+      DBG_PRINT(mqtthost);
+      DBG_PRINT(" unavailable. Max retries ");
+      DBG_PRINT(maxRetriesMQTT);
+      DBG_PRINTLN(" reached.");
+      DBG_PRINT("EM MQTTER: StopOnMQTTError: ");
+      DBG_PRINTLN(StopOnMQTTError);
+      DBG_PRINT("EM MQTTER: mqtt_state: ");
+      DBG_PRINTLN(mqtt_state);
+      if ((StopOnMQTTError && mqtt_state && sim_mode == SIM_NONE) || (sim_mode == SIM_MQTT && !mqtt_state))
+      {
+        cbpiEventActors(EM_ACTER);
+        cbpiEventInduction(EM_INDER);
+        mqtt_state = false; // MQTT in error state
+      }
+    }
+    retriesMQTT++;
     break;
   case EM_SPIFFS: // SPIFFS error (6)
     DBG_PRINTLN("EM SPIFFS: SPIFFS Mount failed");
@@ -192,39 +180,135 @@ void listenerSystem(int event, int parm) // System event listener
     }
     else if (sim_mode == SIM_WLAN)
       simWLAN();
-    else if ((!WiFi.status() == WL_CONNECTED) && sim_mode != SIM_NONE)
-      cbpiEventSystem(EM_WLANER);
+    else if ((!WiFi.status() == WL_CONNECTED) && sim_mode == SIM_NONE)
+      if (millis() > (wlanconnectlasttry + wait_on_error_wlan))
+      {
+        DBG_PRINT("EM: WLAN error rc=");
+        DBG_PRINT(WiFi.status());
+        switch (WiFi.status())
+        {
+        case 0: // WL_IDLE_STATUS
+          DBG_PRINTLN(" WLAN idle status");
+          break;
+        case 1: // WL_NO_SSID_AVAIL
+          DBG_PRINTLN(" WLAN no SSID availible");
+          break;
+        case 2: // WL_SCAN_COMPLETED
+          DBG_PRINTLN(" WLAN scan completed");
+          break;
+        case 3: // WL_CONNECTED
+          DBG_PRINTLN(" WLAN connected");
+          break;
+        case 4: // WL_CONNECT_FAILED
+          DBG_PRINTLN(" WLAN connect failed");
+          cbpiEventSystem(EM_WLANER);
+          break;
+        case 5: // WL_CONNECTION_LOST
+          DBG_PRINTLN(" WLAN connection lost");
+          cbpiEventSystem(EM_WLANER);
+          break;
+        case 6: // WL_DISCONNECTED
+          DBG_PRINTLN(" WLAN disconnected");
+          cbpiEventSystem(EM_WLANER);
+          break;
+        case 255: // WL_NO_SHIELD
+          DBG_PRINTLN(" WLAN no shield");
+          break;
+        default:
+          break;
+        }
+        wlanconnectlasttry = millis();
+      }
     break;
-    //         WiFi.status response code: WL_DISCONNECTED appears not to be precise, notified connection result 6 when connected - no clue about NO_SHIELD
-    //        if      (WiFi.status() == WL_NO_SHIELD)       DBG_PRINTLN("Wifi Status: WL_NO_SHIELD");       // connection result 255
-    //        else if (WiFi.status() == WL_IDLE_STATUS)     DBG_PRINTLN("Wifi Status: WL_IDLE_STATUS");     // connection result 0
-    //        else if (WiFi.status() == WL_NO_SSID_AVAIL)   DBG_PRINTLN("Wifi Status: WL_NO_SSID_AVAIL");   // connection result 1
-    //        else if (WiFi.status() == WL_SCAN_COMPLETED)  DBG_PRINTLN("Wifi Status: WL_SCAN_COMPLETED");  // connection result 2
-    //        else if (WiFi.status() == WL_CONNECTED)       DBG_PRINTLN("Wifi Status: WL_CONNECTED");       // connection result 3
-    //        else if (WiFi.status() == WL_CONNECT_FAILED)  DBG_PRINTLN("Wifi Status: WL_CONNECT_FAILED");  // connection result 4
-    //        else if (WiFi.status() == WL_CONNECTION_LOST) DBG_PRINTLN("Wifi Status: WL_CONNECTION_LOST"); // connection result 5
-    //        else if (WiFi.status() == WL_DISCONNECTED)    DBG_PRINTLN("Wifi Status: WL_DISCONNECTED");    // connection result 6
-    //        if (WiFi.status() == WL_DISCONNECTED) cbpiEventSystem(1);
-    //        if (WiFi.status() == WL_CONNECTION_LOST) cbpiEventSystem(1);
-    //        if (WiFi.status() == WL_CONNECT_FAILED) cbpiEventSystem(1);
-
   case EM_OTA: // check OTA (21)
     if (startOTA)
     {
       ArduinoOTA.handle();
     }
     break;
-  case EM_MQTT: // check MQTT (22)
+  case EM_MQTT:                                                   // check MQTT (22)
+    if ((!WiFi.status() == WL_CONNECTED) && sim_mode == SIM_NONE) // Kein WLAN und keine Simulation
+      break;
     if (client.connected() && sim_mode == SIM_NONE)
     {
       oledDisplay.mqttOK = true;
       retriesMQTT = 1;
+      mqttconnectlasttry = 0;
       client.loop();
     }
-    else if (sim_mode == SIM_MQTT)
-      simMQTT();
     else if (!client.connected() && sim_mode == SIM_NONE)
-      cbpiEventSystem(EM_MQTTER);
+    {
+      /*
+        MQTT typischer Fehlerverlauf
+        RC -3 Connection lost
+        mosquitto meldet zeitgleich: Socket error on client ESP8266-002CAAA9, disconnecting.
+
+        next loop
+        RC -2 Connect Failed
+      */
+
+      if (millis() > (mqttconnectlasttry + wait_on_error_mqtt))
+      {
+
+        /*
+        // Debug output queued MQTT events
+        unsigned long allSeconds=millis()/1000;
+        int runHours= allSeconds/3600;
+        int secsRemaining=allSeconds%3600;
+        int runMinutes=secsRemaining/60;
+        int runSeconds=secsRemaining%60;
+        char buf[21];
+        sprintf(buf,"EM_MQTT: MQTT delay %02d:%02d:%02d",runHours,runMinutes,runSeconds);
+        DBG_PRINTLN(buf);
+        */
+
+        DBG_PRINT("EM: MQTT error rc=");
+        DBG_PRINT(client.state());
+        switch (client.state())
+        {
+        case -4: // MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
+          DBG_PRINTLN(" MQTT_CONNECTION_TIMEOUT");
+          //cbpiEventSystem(EM_MQTTER);
+          break;
+        case -3: // MQTT_CONNECTION_LOST - the network connection was broken
+          DBG_PRINTLN(" MQTT_CONNECTION_LOST");
+          cbpiEventSystem(EM_MQTTER);
+          break;
+        case -2: // MQTT_CONNECT_FAILED - the network connection failed
+          DBG_PRINTLN(" MQTT_CONNECT_FAILED");
+          cbpiEventSystem(EM_MQTTER);
+          break;
+        case -1: // MQTT_DISCONNECTED - the client is disconnected cleanly
+          DBG_PRINTLN(" MQTT_DISCONNECTED");
+          cbpiEventSystem(EM_MQTTER);
+          break;
+        case 0: // MQTT_CONNECTED - the client is connected
+          // kann hier nicht vorkommen: MQTT connected
+          client.loop();
+          break;
+        case 1: // MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT
+          DBG_PRINTLN(" MQTT_CONNECT_BAD_PROTOCOL");
+          break;
+        case 2: // MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier
+          DBG_PRINTLN(" MQTT_CONNECT_BAD_CLIENT_ID");
+          break;
+        case 3: // MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection
+          DBG_PRINTLN(" MQTT_CONNECT_UNAVAILABLE");
+          break;
+        case 4: // MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected
+          DBG_PRINTLN(" MQTT_CONNECT_BAD_CREDENTIALS");
+          break;
+        case 5: // MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect
+          DBG_PRINTLN(" MQTT_CONNECT_UNAUTHORIZED");
+          break;
+        default:
+          break;
+        }
+        mqttconnectlasttry = millis();
+      }
+      else if (sim_mode == SIM_MQTT)
+        simMQTT();
+    }
     else if (!client.connected() && sim_mode != SIM_MQTT)
     {
       oledDisplay.mqttOK = true;
@@ -250,6 +334,18 @@ void listenerSystem(int event, int parm) // System event listener
       }
       if (inductionCooker.isEnabled)
         inductionCooker.mqtt_subscribe();
+
+      if (startTCP)
+      {
+        for (int i = 1; i < 10; i++)
+        {
+          if (tcpServer[i].kettle_id != "0")
+          {
+            tcpServer[i].mqtt_subscribe();
+          }
+        }
+      }
+
       oledDisplay.mqttOK = true; // Display MQTT
       mqtt_state = true;         // MQTT state ok
       retriesMQTT = 1;           // Reset retries
@@ -306,12 +402,13 @@ void listenerSystem(int event, int parm) // System event listener
         TelnetServer.available().stop();
       }
     }
-    /* von telnet lesen
-        if (Telnet && Telnet.connected() && Telnet.available())
-        {
-        while(Telnet.available())
-          Serial.write(Telnet.read());
-        }*/
+    /* ToDo: von telnet lesen
+    if (Telnet && Telnet.connected() && Telnet.available())
+    {
+    while(Telnet.available())
+      Serial.write(Telnet.read());
+    }
+    */
     break;
   case EM_DISPUP: // Display screen output update (30)
     if (oledDisplay.dispEnabled)
@@ -319,6 +416,9 @@ void listenerSystem(int event, int parm) // System event listener
       oledDisplay.digClock();
       oledDisplay.dispUpdate();
     }
+    break;
+  case EM_TCP: // Telnet setup
+    publishTCP();
     break;
   default:
     break;
@@ -395,12 +495,6 @@ void listenerSensors(int event, int parm) // Sensor event listener
   //break;  // sensor handling in EM_SENER
   case EM_SENER:
     // all other errors
-    /*
-           Error Reihenfolge
-           1. WLAN connected?
-           2. MQTT connected
-           Wenn 1 oder 2 false ist, kann kein sensor publishmqtt
-      */
     if ((WiFi.status() == WL_CONNECTED && client.connected() && wlan_state && mqtt_state) || (WiFi.status() == WL_CONNECTED && sim_mode != SIM_NONE))
     {
       for (int i = 0; i < numberOfSensors; i++)
@@ -495,18 +589,18 @@ void listenerActors(int event, int parm) // Actor event listener
     break;
   }
   handleActors();
+  //setTCPPowerAct();
 }
 void listenerInduction(int event, int parm) // Induction event listener
 {
   switch (parm)
   {
-  case EM_OK:
+  case EM_OK: // Induction off
     break;
-  case 1:
-    //DBG_PRINTLN("EM IND1: received induction event - relay on"); // bislang keine Verwendung
+  case 1: // Induction on
     break;
   case 2:
-    //DBG_PRINTLN("EM IND2: received induction event - error"); // bislang keine Verwendung
+    //DBG_PRINTLN("EM IND2: received induction event"); // bislang keine Verwendung
     break;
   case EM_INDER:
     if (inductionCooker.isInduon && inductionCooker.powerLevelOnError < 100 && inductionCooker.induction_state) // powerlevelonerror == 100 -> kein event handling
@@ -559,12 +653,12 @@ void listenerInduction(int event, int parm) // Induction event listener
     break;
   }
   handleInduction();
+  //setTCPPowerInd();
 }
 
 // EventManer Queues
-// starting with firmware 1.048 unmodified EventManager library is needed
+// starting with firmware 1.048 original unmodified EventManager library required
 // Remove modified lib from older versions an download from https://github.com/igormiktor/arduino-EventManager
-
 void cbpiEventSystem(int parm) // System events
 {
   gEM.queueEvent(EventManager::kEventUser0, parm);

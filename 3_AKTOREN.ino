@@ -15,13 +15,14 @@ public:
   bool switchable;              // actors switchable on error events?
   bool isOnBeforeError = false; // isOn status before error event
   bool actor_state = true;      // Error state actor
+  String kettle_id = "0";
 
   // MQTT Publish
   char actor_mqtttopic[50]; // Für MQTT Kommunikation
 
-  Actor(String pin, String argument, String aname, String ainverted, String aswitchable)
+  Actor(String pin, String argument, String aname, String ainverted, String aswitchable, String akettle_id)
   {
-    change(pin, argument, aname, ainverted, aswitchable);
+    change(pin, argument, aname, ainverted, aswitchable, akettle_id);
   }
 
   void Update()
@@ -50,7 +51,7 @@ public:
     }
   }
 
-  void change(String pin, String argument, String aname, String ainverted, String aswitchable)
+  void change(String pin, String argument, String aname, String ainverted, String aswitchable, String akettle_id)
   {
     // Set PIN
     if (isPin(pin_actor))
@@ -104,6 +105,7 @@ public:
     }
     actor_state = true;
     isOnBeforeError = false;
+    kettle_id = akettle_id;
   }
 
   /*    //    Not yet ready
@@ -148,13 +150,12 @@ public:
       DBG_PRINTLN(subscribemsg);
       client.unsubscribe(subscribemsg);
     }
-
   }
 
   void handlemqtt(char *payload)
   {
     StaticJsonDocument<128> doc;
-    DeserializationError error = deserializeJson(doc, payload);
+    DeserializationError error = deserializeJson(doc, (const char*)payload);
     if (error)
     {
       DBG_PRINT("Act: handlemqtt deserialize Json error ");
@@ -207,12 +208,12 @@ public:
 
 /* Initialisierung des Arrays */
 Actor actors[numberOfActorsMax] = {
-    Actor("", "", "", "", ""),
-    Actor("", "", "", "", ""),
-    Actor("", "", "", "", ""),
-    Actor("", "", "", "", ""),
-    Actor("", "", "", "", ""),
-    Actor("", "", "", "", "")};
+    Actor("", "", "", "", "", "0"),
+    Actor("", "", "", "", "", "0"),
+    Actor("", "", "", "", "", "0"),
+    Actor("", "", "", "", "", "0"),
+    Actor("", "", "", "", "", "0"),
+    Actor("", "", "", "", "", "0")};
 
 /* Funktionen für Loop */
 void handleActors()
@@ -220,6 +221,12 @@ void handleActors()
   for (int i = 0; i < numberOfActors; i++)
   {
     actors[i].Update();
+    // TCP Server
+    if (startTCP)
+    {
+      if (actors[i].kettle_id.toInt() > 0)
+        setTCPPowerAct(actors[i].kettle_id, actors[i].power_actor);
+    }
     yield();
   }
 }
@@ -241,6 +248,7 @@ void handleRequestActors()
     actorsObj["pin"] = PinToString(actors[i].pin_actor);
     actorsObj["sw"] = actors[i].switchable;
     actorsObj["state"] = actors[i].actor_state;
+    actorsObj["kettle_id"] = actors[i].kettle_id;
     yield();
   }
 
@@ -287,6 +295,11 @@ void handleRequestActor()
       message = actors[id].getSwitchable();
       goto SendMessage;
     }
+    if (request == "kettle_id")
+    {
+      message = actors[id].kettle_id;
+      goto SendMessage;
+    }
     message = "not found";
   }
   saveConfig();
@@ -309,7 +322,7 @@ void handleSetActor()
   String ac_name = actors[id].name_actor;
   String ac_isinverted = actors[id].getInverted();
   String ac_switchable = actors[id].getSwitchable();
-
+  String ac_kettle_id = actors[id].kettle_id;
   for (int i = 0; i < server.args(); i++)
   {
     if (server.argName(i) == "name")
@@ -332,10 +345,14 @@ void handleSetActor()
     {
       ac_switchable = server.arg(i);
     }
+    if (server.argName(i) == "kettle_id")
+    {
+      ac_kettle_id = server.arg(i);
+    }
     yield();
   }
 
-  actors[id].change(ac_pin, ac_argument, ac_name, ac_isinverted, ac_switchable);
+  actors[id].change(ac_pin, ac_argument, ac_name, ac_isinverted, ac_switchable, ac_kettle_id);
 
   saveConfig();
   server.send(201, "text/plain", "created");
@@ -349,11 +366,11 @@ void handleDelActor()
   {
     if (i == 5)
     {
-      actors[i].change("", "", "", "", "");
+      actors[i].change("", "", "", "", "", "");
     }
     else
     {
-      actors[i].change(PinToString(actors[i + 1].pin_actor), actors[i + 1].argument_actor, actors[i + 1].name_actor, actors[i + 1].getInverted(), actors[i + 1].getSwitchable());
+      actors[i].change(PinToString(actors[i + 1].pin_actor), actors[i + 1].argument_actor, actors[i + 1].name_actor, actors[i + 1].getInverted(), actors[i + 1].getSwitchable(), actors[i + 1].kettle_id);
     }
   }
 

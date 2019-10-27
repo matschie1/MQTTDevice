@@ -44,7 +44,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[6] = "1.051";
+const char Version[6] = "1.055";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -137,6 +137,7 @@ int ACT_UPDATE = 5000;  //  actors update delay loop
 int IND_UPDATE = 5000;  //  induction update delay loop
 int DISP_UPDATE = 5000; //  NTP and display update
 int SYS_UPDATE = 0;     //  sys update delay - 0 means no delay (handle every loop)
+int TCP_UPDATE = 60000; //  TCP server Update interval
 
 // System error events
 #define EM_WLANER 1
@@ -162,6 +163,7 @@ int SYS_UPDATE = 0;     //  sys update delay - 0 means no delay (handle every lo
 #define EM_DISPUP 30
 #define EM_TELSET 31
 #define EM_TELNET 32
+#define EM_TCP 33
 
 // Sensor, actor and induction
 #define EM_OK 0 // Normal mode
@@ -191,7 +193,7 @@ bool wlan_state = true;               // Error state WLAN
 
 #define maxRetriesWLAN 5        // Max retries before errer event
 #define maxRetriesMQTT 5        // Max retries before error event
-int wait_on_error_mqtt = 25000; // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_mqtt = 25000;  // How long should device wait between tries to reconnect WLAN      - approx in ms
 int wait_on_error_wlan = 25000; // How long should device wait between tries to reconnect WLAN      - approx in ms
 // Sensor reconnect parameters
 int wait_on_Sensor_error_actor = 120000;     // How long should actors wait between tries to reconnect sensor    - approx in ms
@@ -203,6 +205,7 @@ bool StopInductionOnError = false; // Use webif to configure: switch on/off even
 bool startOTA = false;
 bool startMDNS = false;
 bool startTEL = false;
+bool startTCP = false;
 char nameMDNS[16];
 
 unsigned long lastToggledSys = 0;  // Timestamp system event
@@ -210,6 +213,8 @@ unsigned long lastToggledSen = 0;  // Timestamp sensor event
 unsigned long lastToggledAct = 0;  // Timestamp actors event
 unsigned long lastToggledInd = 0;  // Timestamp induction event
 unsigned long lastToggledDisp = 0; // Timestamp display event
+unsigned long lastToggledEvent = 0;
+unsigned long lastToggledTCP = 0;  // Timestamp system event
 unsigned long lastSenAct = 0;      // Timestap actors on sensor error
 unsigned long lastSenInd = 0;      // Timestamp induction on sensor error
 
@@ -219,11 +224,8 @@ int inductionStatus = 0;
 /*######### EventManager ########*/
 
 /*########## TCP Server #########*/
-int tcpPort = 9501;                  // Server Port Tozzi Server
-char tcpHost[16] = "192.168.100.30"; // Default Value für Tozzi Server
-unsigned long lastToggledTCP = 0;  // Timestamp system event
-bool startTCP = false;
-int TCP_UPDATE = 60000;            // Update interval Tozzi server
+int tcpPort = 9501;                  // TCP server Port 
+char tcpHost[16] = "192.168.100.30"; // TCP server IP
 /*########## TCP Server #########*/
 
 /*########### DISPLAY ###########*/

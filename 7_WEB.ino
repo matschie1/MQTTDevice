@@ -74,13 +74,13 @@ void mqttcallback(char *topic, unsigned char *payload, unsigned int length)
 {
   DBG_PRINT("Web: Received MQTT");
   DBG_PRINT(" Topic: ");
-  DBG_PRINTLN(topic);
-  DBG_PRINT("Web: Payload: ");
-  for (int i = 0; i < length; i++)
-  {
-    DBG_PRINT((char)payload[i]);
-  }
-  DBG_PRINTLN(" ");
+  DBG_PRINT(topic);
+  //DBG_PRINT("Web: Payload: ");
+  // for (int i = 0; i < length; i++)
+  // {
+  //   DBG_PRINT((char)payload[i]);
+  // }
+  // DBG_PRINTLN(" ");
   char payload_msg[length];
   for (int i = 0; i < length; i++)
   {
@@ -91,26 +91,40 @@ void mqttcallback(char *topic, unsigned char *payload, unsigned int length)
   {
     if (inductionCooker.induction_state)
     {
-      DBG_PRINTLN("Web: passing mqtt to induction");
+      DBG_PRINTLN(" passing mqtt to induction");
       inductionCooker.handlemqtt(payload_msg);
     }
     else
-      DBG_PRINTLN("Web: bypass mqtt due to induction state");
+      DBG_PRINTLN(" bypass mqtt due to induction state");
   }
+
+  if (startTCP)
+  {
+    for (int i = 1; i < numberOfSensorsMax; i++)
+    {
+      if (tcpServer[i].tcpTopic == topic)
+      {
+        DBG_PRINT(" passing mqtt to TCP kettle id ");
+        DBG_PRINTLN(tcpServer[i].kettle_id);
+        tcpServer[i].handlemqtt(payload_msg);
+      }
+    }
+  }
+  
   for (int i = 0; i < numberOfActors; i++)
   {
     if (actors[i].argument_actor == topic)
     {
       if (actors[i].actor_state)
       {
-        DBG_PRINT("Web: passing mqtt to actor ");
+        DBG_PRINT(" passing mqtt to actor ");
         DBG_PRINTLN(actors[i].name_actor);
         actors[i].handlemqtt(payload_msg);
       }
       else
-        DBG_PRINTLN("Web: bypass mqtt due to actor state");
+        DBG_PRINTLN(" bypass mqtt due to actor state");
     }
-    yield();
+    //yield();
   }
 }
 
@@ -129,6 +143,9 @@ void handleRequestMiscSet()
   doc["delay_wlan"] = wait_on_error_wlan / 1000;
   doc["debug"] = setDEBUG;
   doc["telnet"] = startTEL;
+  doc["tcp"] = startTCP;
+  doc["tcphost"] = tcpHost;
+  doc["tcpport"] = tcpPort;
   String response;
   serializeJson(doc, response);
   server.send(200, "application/json", response);
@@ -297,6 +314,12 @@ void handleRequestMisc()
   if (request == "uptcp")
   {
     message = TCP_UPDATE / 1000;
+    goto SendMessage;
+  }
+  if (request == "firmware")
+  {
+    message = "MQTTDevice V";
+    message += Version;
     goto SendMessage;
   }
 

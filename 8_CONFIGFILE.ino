@@ -41,22 +41,26 @@ bool loadConfig()
     {
       JsonObject actorObj = actorsArray[i];
       //String pin = actorObj["PIN"];
-      const char *actorPin = actorObj["PIN"];
-      const char *actorScript = actorObj["SCRIPT"];
-      const char *actorName = actorObj["NAME"];
-      const char *actorInv = actorObj["INV"];
-      const char *actorSwitch = actorObj["SW"];
-      actors[i].change(actorPin, actorScript, actorName, actorInv, actorSwitch);
+      String actorPin = actorObj["PIN"];
+      String actorScript = actorObj["SCRIPT"];
+      String actorName = actorObj["NAME"];
+      String actorInv = actorObj["INV"];
+      String actorSwitch = actorObj["SW"];
+      String actorKettle_id = actorObj["kettle_id"];
+
+      actors[i].change(actorPin, actorScript, actorName, actorInv, actorSwitch, actorKettle_id);
       DBG_PRINT("Actor name: ");
-      DBG_PRINTLN(*actorName);
+      DBG_PRINTLN(actorName);
       DBG_PRINT("Actor MQTT topic: ");
-      DBG_PRINTLN(*actorScript);
+      DBG_PRINTLN(actorScript);
       DBG_PRINT("Actor PIN: ");
-      DBG_PRINTLN(*actorPin);
+      DBG_PRINTLN(actorPin);
       DBG_PRINT("Actor inverted: ");
-      DBG_PRINTLN(*actorInv);
+      DBG_PRINTLN(actorInv);
       DBG_PRINT("Actor switchable: ");
-      DBG_PRINTLN(*actorSwitch);
+      DBG_PRINTLN(actorSwitch);
+      DBG_PRINT("Actor kettle ID: ");
+      DBG_PRINTLN(actorKettle_id);
       DBG_PRINT("Actor no. ");
       DBG_PRINT(i + 1);
       DBG_PRINTLN(" loaded from config file");
@@ -83,31 +87,34 @@ bool loadConfig()
     if (i < numberOfSensors)
     {
       JsonObject sensorsObj = sensorsArray[i];
-      const char *sensorsAddress = sensorsObj["ADDRESS"];
-      const char *sensorsScript = sensorsObj["SCRIPT"];
-      const char *sensorsName = sensorsObj["NAME"];
+      String sensorsAddress = sensorsObj["ADDRESS"];
+      String sensorsScript = sensorsObj["SCRIPT"];
+      String sensorsName = sensorsObj["NAME"];
+      String sensorsKettle_id = sensorsObj["kettle_id"];
       float sensorsOffset = 0.0;
-      const char *sensorsSwitch = sensorsObj["SW"];
+      String sensorsSwitch = sensorsObj["SW"];
       if ((sensorsObj.containsKey("OFFSET")) && (sensorsObj["OFFSET"].is<float>())) // falls falsche Zeichen eingegeben werden
         sensorsOffset = sensorsObj["OFFSET"];
 
-      sensors[i].change(sensorsAddress, sensorsScript, sensorsName, sensorsOffset, sensorsSwitch);
+      sensors[i].change(sensorsAddress, sensorsScript, sensorsName, sensorsOffset, sensorsSwitch, sensorsKettle_id);
       DBG_PRINT("Sensor name: ");
-      DBG_PRINTLN(*sensorsName);
+      DBG_PRINTLN(sensorsName);
       DBG_PRINT("Sensor address: ");
-      DBG_PRINTLN(*sensorsAddress);
+      DBG_PRINTLN(sensorsAddress);
       DBG_PRINT("Sensor MQTT topic: ");
-      DBG_PRINTLN(*sensorsScript);
+      DBG_PRINTLN(sensorsScript);
       DBG_PRINT("Sensor offset: ");
       DBG_PRINTLN(sensorsOffset);
       DBG_PRINT("Sensor switchable: ");
       DBG_PRINTLN(sensorsSwitch);
+      DBG_PRINT("Sensor kettle ID: ");
+      DBG_PRINTLN(sensorsKettle_id);
       DBG_PRINT("Sensor no. ");
       DBG_PRINT(i + 1);
       DBG_PRINTLN(" loaded from config file");
     }
     else
-      sensors[i].change("", "", "", 0.0, false);
+      sensors[i].change("", "", "", 0.0, false, "0");
   }
 
   if (numberOfSensors > 0)
@@ -126,11 +133,12 @@ bool loadConfig()
   if (indObj.containsKey("ENABLED"))
   {
     inductionStatus = 1;
-    const char *indEnabled = indObj["ENABLED"];
-    const char *indPinWhite = indObj["PINWHITE"];
-    const char *indPinYellow = indObj["PINYELLOW"];
-    const char *indPinBlue = indObj["PINBLUE"];
-    const char *indScript = indObj["TOPIC"];
+    String indEnabled = indObj["ENABLED"];
+    String indPinWhite = indObj["PINWHITE"];
+    String indPinYellow = indObj["PINYELLOW"];
+    String indPinBlue = indObj["PINBLUE"];
+    String indScript = indObj["TOPIC"];
+    String indKettleid = indObj["kettle_id"];
     long indDelayOff = DEF_DELAY_IND; //default delay
     int indPowerLevel = 100;
     if ((indObj.containsKey("PL")) && (indObj["PL"].is<int>()))
@@ -139,22 +147,24 @@ bool loadConfig()
     if ((indObj.containsKey("DELAY")) && (indObj["DELAY"].is<long>()))
       indDelayOff = indObj["DELAY"];
 
-    inductionCooker.change(StringToPin(indPinWhite), StringToPin(indPinYellow), StringToPin(indPinBlue), indScript, indDelayOff, indEnabled, indPowerLevel);
+    inductionCooker.change(StringToPin(indPinWhite), StringToPin(indPinYellow), StringToPin(indPinBlue), indScript, indDelayOff, indEnabled, indPowerLevel, indKettleid);
 
     DBG_PRINTLN(inductionStatus);
     DBG_PRINT("Induction MQTT topic: ");
-    DBG_PRINTLN(*indScript);
+    DBG_PRINTLN(indScript);
     DBG_PRINT("Induction relais (WHITE): ");
-    DBG_PRINTLN(*indPinWhite);
+    DBG_PRINTLN(indPinWhite);
     DBG_PRINT("Induction command channel (YELLOW): ");
-    DBG_PRINTLN(*indPinYellow);
+    DBG_PRINTLN(indPinYellow);
     DBG_PRINT("Induction backchannel (BLUE): ");
-    DBG_PRINTLN(*indPinBlue);
+    DBG_PRINTLN(indPinBlue);
     DBG_PRINT("Induction delay after power off: ");
     DBG_PRINT(indDelayOff / 1000);
     DBG_PRINTLN("sec");
     DBG_PRINT("Induction power level on error: ");
     DBG_PRINTLN(indPowerLevel);
+    DBG_PRINT("Induction kettle ID: ");
+    DBG_PRINTLN(indKettleid);
   }
   else
   {
@@ -345,6 +355,9 @@ bool loadConfig()
 
   DBG_PRINTLN("------ loadConfig finished ------");
   configFile.close();
+
+  if (startTCP)
+    setTCPConfig();
   return true;
 }
 
@@ -376,6 +389,7 @@ bool saveConfig()
     actorsObj["SCRIPT"] = actors[i].argument_actor;
     actorsObj["INV"] = actors[i].getInverted();
     actorsObj["SW"] = actors[i].getSwitchable();
+    actorsObj["kettle_id"] = actors[i].kettle_id;
     DBG_PRINT("Actor name: ");
     DBG_PRINTLN(actors[i].name_actor);
     DBG_PRINT("Actor PIN: ");
@@ -386,6 +400,9 @@ bool saveConfig()
     DBG_PRINTLN(actors[i].getInverted());
     DBG_PRINT("Actor switchable: ");
     DBG_PRINTLN(actors[i].getSwitchable());
+    DBG_PRINT("Actor kettle ID: ");
+    DBG_PRINTLN(actors[i].kettle_id);
+    DBG_PRINT("Actor inverted: ");
     DBG_PRINT("Actor no. ");
     DBG_PRINT(i);
     DBG_PRINTLN(" saved to config file");
@@ -410,6 +427,7 @@ bool saveConfig()
     sensorsObj["OFFSET"] = sensors[i].sens_offset;
     sensorsObj["SCRIPT"] = sensors[i].sens_mqtttopic;
     sensorsObj["SW"] = sensors[i].sens_sw;
+    sensorsObj["kettle_id"] = sensors[i].kettle_id;
     DBG_PRINT("Sensor Name: ");
     DBG_PRINTLN(sensors[i].sens_name);
     DBG_PRINT("Sensor address: ");
@@ -420,6 +438,8 @@ bool saveConfig()
     DBG_PRINTLN(sensors[i].sens_offset);
     DBG_PRINT("Sensor switchable: ");
     DBG_PRINTLN(sensors[i].sens_sw);
+    DBG_PRINT("Sensor kettle ID: ");
+    DBG_PRINTLN(sensors[i].kettle_id);
     DBG_PRINT("Sensor no. ");
     DBG_PRINT(i + 1);
     DBG_PRINTLN(" saved to config file");
@@ -447,6 +467,7 @@ bool saveConfig()
     indObj["DELAY"] = inductionCooker.delayAfteroff;
     indObj["ENABLED"] = "1";
     indObj["PL"] = inductionCooker.powerLevelOnError;
+    indObj["kettle_id"] = inductionCooker.kettle_id;
 
     DBG_PRINTLN(inductionCooker.isEnabled);
     DBG_PRINT("Induction MQTT topic: ");
@@ -461,6 +482,8 @@ bool saveConfig()
     DBG_PRINTLN(inductionCooker.delayAfteroff / 1000);
     DBG_PRINT("Induction power level on error: ");
     DBG_PRINTLN(inductionCooker.powerLevelOnError);
+    DBG_PRINT("Induction kettle indDelayOff: ");
+    DBG_PRINTLN(inductionCooker.kettle_id);
   }
   else
     DBG_PRINTLN(inductionCooker.isEnabled);
@@ -576,7 +599,7 @@ bool saveConfig()
     DBG_PRINT(" ");
     DBG_PRINT(tcpPort);
     DBG_PRINT(" ");
-    DBG_PRINT(TCP_UPDATE/1000);
+    DBG_PRINT(TCP_UPDATE / 1000);
     DBG_PRINTLN("sec");
   }
   else
@@ -590,7 +613,7 @@ bool saveConfig()
   miscObj["upact"] = ACT_UPDATE;
   miscObj["upind"] = IND_UPDATE;
   miscObj["upsys"] = SYS_UPDATE;
-  
+
   DBG_PRINT("Sensor update interval ");
   DBG_PRINT(SEN_UPDATE / 1000);
   DBG_PRINTLN("sec");
@@ -623,5 +646,7 @@ bool saveConfig()
   DBG_PRINT("Configured WLAN SSID: ");
   DBG_PRINTLN(Network);
   DBG_PRINTLN("---------------------------------");
+  if (startTCP)
+    setTCPConfig();
   return true;
 }

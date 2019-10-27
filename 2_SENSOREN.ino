@@ -10,15 +10,16 @@ public:
   bool sens_sw = false;          // Switchable
   bool sens_state = true;        // Error state sensor
   int sens_err = 0;
+  String kettle_id = "0";
 
   String getSens_adress_string()
   {
     return SensorAddressToString(sens_address);
   }
 
-  TemperatureSensor(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw)
+  TemperatureSensor(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw, String new_kettle_id)
   {
-    change(new_address, new_mqtttopic, new_name, new_offset, new_sw);
+    change(new_address, new_mqtttopic, new_name, new_offset, new_sw, new_kettle_id);
   }
 
   void Update()
@@ -124,16 +125,16 @@ public:
 
     sens_err = sensorsStatus;
     publishmqtt();
-    if (startTCP)
-      publishTCP(); // TCP Server
-  }               // void Update
+  } // void Update
 
-  void change(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw)
+  void change(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw, String new_kettle_id)
   {
     new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
     sens_name = new_name;
     sens_offset = new_offset;
     sens_sw = new_sw;
+    kettle_id = new_kettle_id;
+    
     if (new_address.length() == 16)
     {
       char address_char[16];
@@ -183,46 +184,6 @@ public:
     }
   }
 
-  void publishTCP()
-  {
-    if (millis() > (lastToggledTCP + TCP_UPDATE))
-    {
-      if (tcpClient.connect(tcpHost, tcpPort))
-      {
-        DBG_PRINTLN("Sen: TCP server connected");
-        StaticJsonDocument<256> doc;
-        doc["name"] = sens_name;
-        doc["ID"] = SensorAddressToString(sens_address);
-        if (sensorsStatus == 0)
-          doc["temperature"] = (sens_value + sens_offset);
-        else
-          doc["temperature"] = 0;
-        
-        doc["temp_units"] = "C";
-        doc["RSSI"] = WiFi.RSSI();
-        doc["interval"] = TCP_UPDATE;
-        // Send additional but sensless data to act as an iSpindle device
-        // json from iSpindle:  
-        // Input Str is now:{"name":"iSpindle","ID":1234567,"angle":22.21945,"temperature":15.6875,
-        // "temp_units":"C","battery":4.207508,"gravity":1.019531,"interval":900,"RSSI":-59}
-        
-        doc["angle"] = 0;
-        doc["battery"] = 0;
-        doc["gravity"] = 0;
-        
-        char jsonMessage[256];
-        serializeJson(doc, jsonMessage);
-        tcpClient.write(jsonMessage);
-        DBG_PRINT("SEN: TCP message ");
-        DBG_PRINTLN(jsonMessage);
-        size_t len = measureJson(doc);
-        DBG_PRINT("SEN: TCP message size ");
-        DBG_PRINTLN(len);
-        lastToggledTCP = millis();
-      }
-    }
-  }
-
   char *getValueString()
   {
     char buf[5];
@@ -233,16 +194,16 @@ public:
 
 /* Initialisierung des Arrays */
 TemperatureSensor sensors[numberOfSensorsMax] = {
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false),
-    TemperatureSensor("", "", "", 0.0, false)};
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0"),
+    TemperatureSensor("", "", "", 0.0, false, "0")};
 
 /* Funktion für Loop */
 void handleSensors()
@@ -251,7 +212,13 @@ void handleSensors()
   for (int i = 0; i < numberOfSensors; i++)
   {
     sensors[i].Update();
-
+    
+    // TCP Server
+    if (startTCP)
+    {
+      if (sensors[i].kettle_id.toInt() > 0)
+        setTCPTemp(sensors[i].kettle_id, (sensors[i].sens_value + sensors[i].sens_offset));
+    }
     // get max sensorstatus
     if (sensors[i].sens_sw && max_status < sensors[i].sens_err)
       max_status = sensors[i].sens_err;
@@ -317,6 +284,7 @@ void handleSetSensor()
   String new_address = sensors[id].getSens_adress_string();
   float new_offset = sensors[id].sens_offset;
   bool new_sw = sensors[id].sens_sw;
+  String new_kettle_id = sensors[id].kettle_id;
 
   for (int i = 0; i < server.args(); i++)
   {
@@ -357,10 +325,17 @@ void handleSetSensor()
       DBG_PRINT("new_sw ");
       DBG_PRINTLN(new_sw);
     }
+    if (server.argName(i) == "kettle_id")
+    {
+      new_kettle_id = server.arg(i);
+      DBG_PRINT("Sen: ");
+      DBG_PRINT("kettle ID ");
+      DBG_PRINTLN(new_kettle_id);
+    }
     yield();
   }
 
-  sensors[id].change(new_address, new_mqtttopic, new_name, new_offset, new_sw);
+  sensors[id].change(new_address, new_mqtttopic, new_name, new_offset, new_sw, new_kettle_id);
   saveConfig();
   server.send(201, "text/plain", "created");
 }
@@ -372,7 +347,7 @@ void handleDelSensor()
   //  Alle einen nach vorne schieben
   for (int i = id; i < numberOfSensors; i++)
   {
-    sensors[i].change(sensors[i + 1].getSens_adress_string(), sensors[i + 1].sens_mqtttopic, sensors[i + 1].sens_name, sensors[i + 1].sens_offset, sensors[i + 1].sens_sw);
+    sensors[i].change(sensors[i + 1].getSens_adress_string(), sensors[i + 1].sens_mqtttopic, sensors[i + 1].sens_name, sensors[i + 1].sens_offset, sensors[i + 1].sens_sw, sensors[i + 1].kettle_id);
   }
 
   // den letzten löschen
@@ -414,6 +389,7 @@ void handleRequestSensors()
     sensorsObj["offset"] = sensors[i].sens_offset;
     sensorsObj["sw"] = sensors[i].sens_sw;
     sensorsObj["state"] = sensors[i].sens_state;
+    sensorsObj["kettle_id"] = sensors[i].kettle_id;
 
     if (sensors[i].sens_value != -127.0)
       sensorsObj["value"] = sensors[i].getValueString();
@@ -475,6 +451,11 @@ void handleRequestSensor()
     if (request == "script")
     {
       message = sensors[id].sens_mqtttopic;
+      goto SendMessage;
+    }
+    if (request == "kettle_id")
+    {
+      message = sensors[id].kettle_id;
       goto SendMessage;
     }
     message = "not found";

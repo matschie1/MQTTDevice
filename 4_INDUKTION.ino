@@ -34,6 +34,7 @@ class induction
     int powerLevelOnError = 100;   // 100% schaltet das Event handling für Induktion aus
     int powerLevelBeforeError = 0; // in error event save last power state
     bool induction_state = true;   // Error state induction
+    String kettle_id = "0";
 
     // MQTT Publish - not yet ready
     // char induction_mqtttopic[50];      // Für MQTT Kommunikation
@@ -43,7 +44,7 @@ class induction
       setupCommands();
     }
 
-    void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled, int powerLevel)
+    void change(unsigned char pinwhite, unsigned char pinyellow, unsigned char pinblue, String topic, long delayoff, bool is_enabled, int powerLevel, String new_kettle_id)
     {
       if (isEnabled)
       {
@@ -81,6 +82,7 @@ class induction
       delayAfteroff = delayoff;
       powerLevelOnError = powerLevel;
       induction_state = true;
+      kettle_id = new_kettle_id;
 
       // MQTT Publish - not yet ready
       //mqtttopic.toCharArray(induction_mqtttopic, mqtttopic.length() + 1);
@@ -171,7 +173,7 @@ class induction
     void handlemqtt(char *payload)
     {
       StaticJsonDocument<128> doc;
-      DeserializationError error = deserializeJson(doc, payload);
+      DeserializationError error = deserializeJson(doc, (const char*)payload);
       if (error)
       {
         DBG_PRINT("Ind: handlemqtt deserialize Json error ");
@@ -182,12 +184,16 @@ class induction
       if (state == "off")
       {
         newPower = 0;
+        if (kettle_id.toInt() > 0)
+          setTCPPowerInd(kettle_id, newPower);
         return;
       }
       else
       {
         newPower = doc["power"];
       }
+      if (kettle_id.toInt() > 0)
+          setTCPPowerInd(kettle_id, newPower);
     }
 
     void setupCommands()
@@ -429,6 +435,7 @@ void handleRequestInduction()
     doc["power"] = inductionCooker.power;
     doc["relayOn"] = inductionCooker.isRelayon;
     doc["state"] = inductionCooker.induction_state;
+    doc["kettle_id"] = inductionCooker.kettle_id;
     if (inductionCooker.isPower)
     {
       doc["powerLevel"] = inductionCooker.CMD_CUR;
@@ -473,6 +480,11 @@ void handleRequestIndu()
   if (request == "pl")
   {
     message = inductionCooker.powerLevelOnError;
+    goto SendMessage;
+  }
+  if (request == "kettle_id")
+  {
+    message = inductionCooker.kettle_id;
     goto SendMessage;
   }
   if (request == "pins")
@@ -524,6 +536,7 @@ void handleSetIndu()
   bool is_enabled = inductionCooker.isEnabled;
   String topic = inductionCooker.mqtttopic;
   int pl = inductionCooker.powerLevelOnError;
+  String new_kettle_id = inductionCooker.kettle_id;
 
   for (int i = 0; i < server.args(); i++)
   {
@@ -562,10 +575,15 @@ void handleSetIndu()
     {
       pl = server.arg(i).toInt();
     }
+    if (server.argName(i) == "kettle_id")
+    {
+      new_kettle_id = server.arg(i).toInt();
+    }
+
     yield();
   }
 
-  inductionCooker.change(pin_white, pin_yellow, pin_blue, topic, delayoff, is_enabled, pl);
+  inductionCooker.change(pin_white, pin_yellow, pin_blue, topic, delayoff, is_enabled, pl, new_kettle_id);
 
   saveConfig();
 }
