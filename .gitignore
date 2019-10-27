@@ -1,8 +1,5 @@
 .DS_Store
-.vscode/
-.vscode/c_cpp_properties.json
-.vscode/arduino.json
-.vscode/settings.json
+.vscode/launch.json
 data/config.json
 data/tozzi.jpg
 data/index2.html
