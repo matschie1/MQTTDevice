@@ -116,7 +116,7 @@ Example ESP8266 D1 mini 4MB flash size connected to COM3
 
     * flash SPIFFS after your device is connected to your WLAN using WebIf <ip-address>/update
 
-    * flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
+    * alternativ flash SPIFFS: esptool.exe -ca 0x100000 -cd nodemcu -cp COM3 -cb 921600 -cf MQTTDevice.spiffs.bin
 
 
 * Updates
