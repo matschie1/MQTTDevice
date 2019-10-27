@@ -3,9 +3,6 @@
 .gitignore
 .vscode/launch.json
 data/config.json
-data/tozzi.jpg
-data/index2.html
-data/ori.index.html
 build/core
 build/preproc
 build/sketch
