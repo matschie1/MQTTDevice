@@ -7,6 +7,32 @@ void millis2wait(int value)
     yield();
   }
 }
+bool isValidInt(String str)
+{
+  for (int i = 0; i < str.length(); i++)
+  {
+    if (isdigit(str.charAt(i)))
+      continue;
+    if (str.charAt(i) == '.')
+      return false;
+    return false;
+  }
+  return true;
+}
+
+bool isValidFloat(String str)
+{
+  for (int i = 0; i < str.length(); i++)
+  {
+    if (str.charAt(i) == '.')
+      continue;
+    if (isdigit(str.charAt(i)))
+      continue;
+    return false;
+  }
+  return true;
+}
+
 void DBG_PRINT(String value)
 {
   if (setDEBUG)

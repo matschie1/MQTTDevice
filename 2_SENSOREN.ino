@@ -291,46 +291,34 @@ void handleSetSensor()
     if (server.argName(i) == "name")
     {
       new_name = server.arg(i);
-      DBG_PRINT("Sen: ");
-      DBG_PRINT("new_name ");
-      DBG_PRINTLN(new_name);
     }
     if (server.argName(i) == "topic")
     {
       new_mqtttopic = server.arg(i);
-      DBG_PRINT("Sen: ");
-      DBG_PRINT("new_mqtttopic ");
-      DBG_PRINTLN(new_mqtttopic);
     }
     if (server.argName(i) == "address")
     {
       new_address = server.arg(i);
-      DBG_PRINT("Sen: ");
-      DBG_PRINT("new_address ");
-      DBG_PRINTLN(new_address);
     }
     if (server.argName(i) == "offset")
     {
-      new_offset = server.arg(i).toFloat();
-      DBG_PRINT("Sen: ");
-      DBG_PRINT("new_offset ");
-      DBG_PRINTLN(new_offset);
+      if (isValidFloat(server.arg(i)))
+        new_offset = server.arg(i).toFloat();
+      else
+        new_offset = 0.0;
     }
     if (server.argName(i) == "sw")
     {
       new_sw = false;
       if (server.arg(i) == "1")
         new_sw = true;
-
-      DBG_PRINT("new_sw ");
-      DBG_PRINTLN(new_sw);
     }
     if (server.argName(i) == "kettle_id")
     {
-      new_kettle_id = server.arg(i);
-      DBG_PRINT("Sen: ");
-      DBG_PRINT("kettle ID ");
-      DBG_PRINTLN(new_kettle_id);
+      if (isValidInt(server.arg(i)))
+        new_kettle_id = server.arg(i);
+      else
+        new_kettle_id = "0";
     }
     yield();
   }
@@ -405,6 +393,10 @@ void handleRequestSensors()
         sensorsObj["value"] = "ERR";
     }
     sensorsObj["mqtt"] = sensors[i].sens_mqtttopic;
+    if (startTCP)
+      sensorsObj["target_temp"] = getTCPTargetTemp(sensors[i].kettle_id);
+    else
+      sensorsObj["target_temp"] = "0";
     yield();
   }
 

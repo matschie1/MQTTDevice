@@ -95,37 +95,32 @@ public:
       ON = LOW;
       OFF = HIGH;
     }
-    if (aswitchable == "1")
-    {
-      switchable = true;
-    }
-    else
-    {
-      switchable = false;
-    }
+    aswitchable == "1" ? switchable = true : switchable = false;
     actor_state = true;
     isOnBeforeError = false;
     kettle_id = akettle_id;
   }
 
-  /*    //    Not yet ready
-            void publishmqtt() {
-              if (client.connected()) {
-                StaticJsonBuffer<256> jsonBuffer;
-                JsonObject& json = jsonBuffer.createObject();
-                if (isOn) {
-                  json["State"] = "on";
-                  json["power"] = String(power_actor);
-                }
-                else
-                  json["State"] = "off";
+  /* MQTT Publish Not yet ready
+  void publishmqtt() {
+    if (client.connected()) {
+      StaticJsonDocument<256> doc;
+      JsonObject actorObj = doc.createNestedObject("Actor");
+      if (isOn) {
+        doc["State"] = "on";
+        doc["power"] = String(power_actor);
+      }
+      else
+        doc["State"] = "off";
 
-                char jsonMessage[100];
-                json.printTo(jsonMessage);
-                client.publish(actor_mqtttopic, jsonMessage);
-              }
-            }
-    */
+      char jsonMessage[100];
+      serializeJson(doc, jsonMessage);
+      char new_argument_actor[50];
+      new_argument_actor.toCharArray(argument_actor, new_argument_actor.length() + 1);
+      client.publish(new_argument_actor, jsonMessage);
+    }
+  }
+  */
   void mqtt_subscribe()
   {
     if (client.connected())
@@ -155,7 +150,7 @@ public:
   void handlemqtt(char *payload)
   {
     StaticJsonDocument<128> doc;
-    DeserializationError error = deserializeJson(doc, (const char*)payload);
+    DeserializationError error = deserializeJson(doc, (const char *)payload);
     if (error)
     {
       DBG_PRINT("Act: handlemqtt deserialize Json error ");
@@ -181,28 +176,19 @@ public:
       return;
     }
   }
-
   String getInverted()
   {
     if (isInverted)
-    {
       return "1";
-    }
     else
-    {
       return "0";
-    }
-  };
+  }
   String getSwitchable()
   {
     if (switchable)
-    {
       return "1";
-    }
     else
-    {
       return "0";
-    }
   }
 };
 
@@ -323,6 +309,7 @@ void handleSetActor()
   String ac_isinverted = actors[id].getInverted();
   String ac_switchable = actors[id].getSwitchable();
   String ac_kettle_id = actors[id].kettle_id;
+  
   for (int i = 0; i < server.args(); i++)
   {
     if (server.argName(i) == "name")
@@ -339,15 +326,18 @@ void handleSetActor()
     }
     if (server.argName(i) == "inv")
     {
-      ac_isinverted = server.arg(i);
+       ac_isinverted = server.arg(i);
     }
     if (server.argName(i) == "sw")
     {
-      ac_switchable = server.arg(i);
+        ac_switchable = server.arg(i);
     }
     if (server.argName(i) == "kettle_id")
     {
-      ac_kettle_id = server.arg(i);
+      if (isValidInt(server.arg(i)))
+        ac_kettle_id = server.arg(i);
+      else
+        ac_kettle_id = "0";
     }
     yield();
   }

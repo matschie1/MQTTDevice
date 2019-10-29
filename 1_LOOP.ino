@@ -53,14 +53,14 @@ void loop()
   if (sim_mode != SIM_NONE)
     simCheck();
 
-  // Debug output event queue
+  //  Debug output event queue
   // if (millis() > (lastToggledEvent + 5000))
   // {
   //   DBG_PRINT("Event queue status: ");
   //   DBG_PRINTLN(gEM.getNumEventsInQueue());
   //   lastToggledEvent = millis();
   // }
-  //gEM.processAllEvents();
+  // gEM.processAllEvents();
   
   while (gEM.getNumEventsInQueue()) // Eventmanager process queued events
   {

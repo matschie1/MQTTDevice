@@ -28,6 +28,8 @@ bool loadConfig()
     return false;
   }
 
+  int tempInt = 0; // temp int var
+
   JsonArray actorsArray = doc["actors"];
   numberOfActors = actorsArray.size();
   if (numberOfActors > numberOfActorsMax)
@@ -40,30 +42,31 @@ bool loadConfig()
     if (i < numberOfActors)
     {
       JsonObject actorObj = actorsArray[i];
-      //String pin = actorObj["PIN"];
       String actorPin = actorObj["PIN"];
       String actorScript = actorObj["SCRIPT"];
       String actorName = actorObj["NAME"];
       String actorInv = actorObj["INV"];
       String actorSwitch = actorObj["SW"];
-      String actorKettle_id = actorObj["kettle_id"];
+      String actorKettle_id = "0";
+      if (actorObj.containsKey("kettle_id"))
+        actorKettle_id = actorObj["kettle_id"].as<String>();
 
       actors[i].change(actorPin, actorScript, actorName, actorInv, actorSwitch, actorKettle_id);
-      DBG_PRINT("Actor name: ");
-      DBG_PRINTLN(actorName);
-      DBG_PRINT("Actor MQTT topic: ");
-      DBG_PRINTLN(actorScript);
-      DBG_PRINT("Actor PIN: ");
-      DBG_PRINTLN(actorPin);
-      DBG_PRINT("Actor inverted: ");
-      DBG_PRINTLN(actorInv);
-      DBG_PRINT("Actor switchable: ");
-      DBG_PRINTLN(actorSwitch);
-      DBG_PRINT("Actor kettle ID: ");
-      DBG_PRINTLN(actorKettle_id);
       DBG_PRINT("Actor no. ");
       DBG_PRINT(i + 1);
-      DBG_PRINTLN(" loaded from config file");
+      DBG_PRINTLN(" read settings");
+      DBG_PRINT("Name: ");
+      DBG_PRINTLN(actorName);
+      DBG_PRINT("MQTT topic: ");
+      DBG_PRINTLN(actorScript);
+      DBG_PRINT("PIN: ");
+      DBG_PRINTLN(actorPin);
+      DBG_PRINT("Inverted: ");
+      DBG_PRINTLN(actorInv);
+      DBG_PRINT("Switchable: ");
+      DBG_PRINTLN(actorSwitch);
+      DBG_PRINT("Kettle ID: ");
+      DBG_PRINTLN(actorKettle_id);
     }
   }
   if (numberOfActors > 0)
@@ -90,28 +93,30 @@ bool loadConfig()
       String sensorsAddress = sensorsObj["ADDRESS"];
       String sensorsScript = sensorsObj["SCRIPT"];
       String sensorsName = sensorsObj["NAME"];
-      String sensorsKettle_id = sensorsObj["kettle_id"];
-      float sensorsOffset = 0.0;
       String sensorsSwitch = sensorsObj["SW"];
-      if ((sensorsObj.containsKey("OFFSET")) && (sensorsObj["OFFSET"].is<float>())) // falls falsche Zeichen eingegeben werden
+      String sensorsKettle_id = "0";
+      if (sensorsObj.containsKey("kettle_id"))
+        sensorsKettle_id = sensorsObj["kettle_id"].as<String>();
+      float sensorsOffset = 0.0;
+      if (sensorsObj.containsKey("OFFSET"))
         sensorsOffset = sensorsObj["OFFSET"];
 
       sensors[i].change(sensorsAddress, sensorsScript, sensorsName, sensorsOffset, sensorsSwitch, sensorsKettle_id);
-      DBG_PRINT("Sensor name: ");
-      DBG_PRINTLN(sensorsName);
-      DBG_PRINT("Sensor address: ");
-      DBG_PRINTLN(sensorsAddress);
-      DBG_PRINT("Sensor MQTT topic: ");
-      DBG_PRINTLN(sensorsScript);
-      DBG_PRINT("Sensor offset: ");
-      DBG_PRINTLN(sensorsOffset);
-      DBG_PRINT("Sensor switchable: ");
-      DBG_PRINTLN(sensorsSwitch);
-      DBG_PRINT("Sensor kettle ID: ");
-      DBG_PRINTLN(sensorsKettle_id);
       DBG_PRINT("Sensor no. ");
       DBG_PRINT(i + 1);
-      DBG_PRINTLN(" loaded from config file");
+      DBG_PRINTLN(" read settings");
+      DBG_PRINT("Name: ");
+      DBG_PRINTLN(sensorsName);
+      DBG_PRINT("Address: ");
+      DBG_PRINTLN(sensorsAddress);
+      DBG_PRINT("MQTT topic: ");
+      DBG_PRINTLN(sensorsScript);
+      DBG_PRINT("Offset: ");
+      DBG_PRINTLN(sensorsOffset);
+      DBG_PRINT("Switchable: ");
+      DBG_PRINTLN(sensorsSwitch);
+      DBG_PRINT("Kettle ID: ");
+      DBG_PRINTLN(sensorsKettle_id);
     }
     else
       sensors[i].change("", "", "", 0.0, false, "0");
@@ -138,32 +143,36 @@ bool loadConfig()
     String indPinYellow = indObj["PINYELLOW"];
     String indPinBlue = indObj["PINBLUE"];
     String indScript = indObj["TOPIC"];
-    String indKettleid = indObj["kettle_id"];
+    String indKettleid = "0";
+    if (indObj.containsKey("kettle_id"))
+      indKettleid = indObj["kettle_id"].as<String>();
+
     long indDelayOff = DEF_DELAY_IND; //default delay
     int indPowerLevel = 100;
-    if ((indObj.containsKey("PL")) && (indObj["PL"].is<int>()))
+    if (indObj.containsKey("PL"))
       indPowerLevel = indObj["PL"];
 
-    if ((indObj.containsKey("DELAY")) && (indObj["DELAY"].is<long>()))
+    if (indObj.containsKey("DELAY"))
       indDelayOff = indObj["DELAY"];
 
     inductionCooker.change(StringToPin(indPinWhite), StringToPin(indPinYellow), StringToPin(indPinBlue), indScript, indDelayOff, indEnabled, indPowerLevel, indKettleid);
 
     DBG_PRINTLN(inductionStatus);
-    DBG_PRINT("Induction MQTT topic: ");
+    DBG_PRINTLN("Read induction settings");
+    DBG_PRINT("MQTT topic: ");
     DBG_PRINTLN(indScript);
-    DBG_PRINT("Induction relais (WHITE): ");
+    DBG_PRINT("Relais (WHITE): ");
     DBG_PRINTLN(indPinWhite);
-    DBG_PRINT("Induction command channel (YELLOW): ");
+    DBG_PRINT("Command channel (YELLOW): ");
     DBG_PRINTLN(indPinYellow);
-    DBG_PRINT("Induction backchannel (BLUE): ");
+    DBG_PRINT("Backchannel (BLUE): ");
     DBG_PRINTLN(indPinBlue);
-    DBG_PRINT("Induction delay after power off: ");
+    DBG_PRINT("Delay after power off: ");
     DBG_PRINT(indDelayOff / 1000);
     DBG_PRINTLN("sec");
-    DBG_PRINT("Induction power level on error: ");
+    DBG_PRINT("Power level on error: ");
     DBG_PRINTLN(indPowerLevel);
-    DBG_PRINT("Induction kettle ID: ");
+    DBG_PRINT("Kettle ID: ");
     DBG_PRINTLN(indKettleid);
   }
   else
@@ -172,7 +181,7 @@ bool loadConfig()
     DBG_PRINTLN(inductionStatus);
   }
   DBG_PRINTLN("--------------------");
-
+  DBG_PRINT("OLED display status: ");
   JsonArray displayArray = doc["display"];
   JsonObject displayObj = displayArray[0];
   if (displayObj["ENABLED"] == "1")
@@ -187,16 +196,17 @@ bool loadConfig()
     char copy[4];
     dispAddress.toCharArray(copy, 4);
     int address = strtol(copy, 0, 16);
-    if ((displayObj.containsKey("updisp")) && (displayObj["updisp"].is<int>())) // else use default
+    if (displayObj.containsKey("updisp"))
       DISP_UPDATE = displayObj["updisp"];
 
     oledDisplay.dispEnabled = true;
     oledDisplay.change(address, oledDisplay.dispEnabled);
-    DBG_PRINT("OLED display status: ");
+    
     DBG_PRINTLN(oledDisplay.dispEnabled);
-    DBG_PRINT("Display address: ");
-    DBG_PRINTLN(dispAddress);
-    DBG_PRINT("Display update interval: ");
+    DBG_PRINTLN("Read display settings");
+    DBG_PRINT("Address: ");
+    DBG_PRINT(dispAddress);
+    DBG_PRINT(" Update interval: ");
     DBG_PRINT(DISP_UPDATE / 1000);
     DBG_PRINTLN("sec");
   }
@@ -210,16 +220,17 @@ bool loadConfig()
   DBG_PRINTLN("--------------------");
 
   // Misc Settings
+  DBG_PRINTLN("Misc read settings");
   JsonArray miscArray = doc["misc"];
   JsonObject miscObj = miscArray[0];
 
-  if ((miscObj.containsKey("del_sen_act")) && (miscObj["del_sen_act"].is<int>()))
+  if (miscObj.containsKey("del_sen_act"))
     wait_on_Sensor_error_actor = miscObj["del_sen_act"];
 
-  if ((miscObj.containsKey("del_sen_ind")) && (miscObj["del_sen_ind"].is<int>()))
+  if (miscObj.containsKey("del_sen_ind"))
     wait_on_Sensor_error_induction = miscObj["del_sen_ind"];
 
-  if ((miscObj.containsKey("delay_mqtt")) && (miscObj["delay_mqtt"].is<int>()))
+  if (miscObj.containsKey("delay_mqtt"))
     wait_on_error_mqtt = miscObj["delay_mqtt"];
 
   DBG_PRINT("Wait on sensor error actors: ");
@@ -241,7 +252,7 @@ bool loadConfig()
     DBG_PRINTLN("disabled");
   }
   DBG_PRINT("Switch off induction on error ");
-  if ((miscObj.containsKey("delay_wlan")) && (miscObj["delay_wlan"].is<int>()))
+  if (miscObj.containsKey("delay_wlan"))
     wait_on_error_wlan = miscObj["delay_wlan"];
 
   if (miscObj["enable_wlan"] == "1")
@@ -256,9 +267,7 @@ bool loadConfig()
     StopOnWLANError = false;
     DBG_PRINTLN("disabled");
   }
-
-  String nameMDNS_Str = miscObj["mdns_name"];
-  nameMDNS_Str.toCharArray(nameMDNS, 16);
+  strlcpy(nameMDNS, miscObj["mdns_name"], sizeof(nameMDNS));
   if (miscObj["mdns"] == "1")
   {
     startMDNS = true;
@@ -271,13 +280,13 @@ bool loadConfig()
     DBG_PRINTLN("mDNS disabled");
   }
 
-  if ((miscObj.containsKey("upsen")) && (miscObj["upsen"].is<int>()))
+  if (miscObj.containsKey("upsen"))
     SEN_UPDATE = miscObj["upsen"];
-  if ((miscObj.containsKey("upact")) && (miscObj["upact"].is<int>()))
+  if (miscObj.containsKey("upact"))
     ACT_UPDATE = miscObj["upact"];
-  if ((miscObj.containsKey("upind")) && (miscObj["upind"].is<int>()))
+  if (miscObj.containsKey("upind"))
     IND_UPDATE = miscObj["upind"];
-  if ((miscObj.containsKey("upsys")) && (miscObj["upsys"].is<int>()))
+  if (miscObj.containsKey("upsys"))
     SYS_UPDATE = miscObj["upsys"];
 
   DBG_PRINT("Sensors update intervall: ");
@@ -293,19 +302,17 @@ bool loadConfig()
     startTCP = true;
   else
     startTCP = false;
-  if ((miscObj.containsKey("uptcp")) && (miscObj["uptcp"].is<int>()))
+  if (miscObj.containsKey("uptcp"))
     TCP_UPDATE = miscObj["uptcp"];
 
   if (miscObj.containsKey("TCPHOST"))
   {
-    String tcpHost_Str = miscObj["TCPHOST"];
-    tcpHost_Str.toCharArray(tcpHost, 16);
+    strlcpy(tcpHost, miscObj["TCPHOST"], sizeof(tcpHost));
     DBG_PRINT("TCP server IP: ");
     DBG_PRINTLN(tcpHost);
   }
   else
   {
-
     if (startTCP)
       DBG_PRINTLN("TCP Server disabled (no host)");
     startTCP = false;
@@ -322,11 +329,9 @@ bool loadConfig()
       DBG_PRINTLN("TCP Server disabled (no port)");
     startTCP = false;
   }
-
   if (miscObj.containsKey("MQTTHOST"))
   {
-    String mqtthost_Str = miscObj["MQTTHOST"];
-    mqtthost_Str.toCharArray(mqtthost, 16);
+    strlcpy(mqtthost, miscObj["TCPHOST"], sizeof(mqtthost));
     DBG_PRINT("MQTT server IP: ");
     DBG_PRINTLN(mqtthost);
   }
@@ -390,22 +395,22 @@ bool saveConfig()
     actorsObj["INV"] = actors[i].getInverted();
     actorsObj["SW"] = actors[i].getSwitchable();
     actorsObj["kettle_id"] = actors[i].kettle_id;
-    DBG_PRINT("Actor name: ");
-    DBG_PRINTLN(actors[i].name_actor);
-    DBG_PRINT("Actor PIN: ");
-    DBG_PRINTLN(actors[i].pin_actor);
-    DBG_PRINT("Actor MQTT topic: ");
-    DBG_PRINTLN(actors[i].argument_actor);
-    DBG_PRINT("Actor inverted: ");
-    DBG_PRINTLN(actors[i].getInverted());
-    DBG_PRINT("Actor switchable: ");
-    DBG_PRINTLN(actors[i].getSwitchable());
-    DBG_PRINT("Actor kettle ID: ");
-    DBG_PRINTLN(actors[i].kettle_id);
-    DBG_PRINT("Actor inverted: ");
+    
     DBG_PRINT("Actor no. ");
-    DBG_PRINT(i);
-    DBG_PRINTLN(" saved to config file");
+    DBG_PRINT(i+1);
+    DBG_PRINTLN(" write settings");
+    DBG_PRINT("Name: ");
+    DBG_PRINTLN(actors[i].name_actor);
+    DBG_PRINT("PIN: ");
+    DBG_PRINTLN(actors[i].pin_actor);
+    DBG_PRINT("MQTT topic: ");
+    DBG_PRINTLN(actors[i].argument_actor);
+    DBG_PRINT("Inverted: ");
+    DBG_PRINTLN(actors[i].getInverted());
+    DBG_PRINT("Switchable: ");
+    DBG_PRINTLN(actors[i].getSwitchable());
+    DBG_PRINT("Kettle ID: ");
+    DBG_PRINTLN(actors[i].kettle_id);
   }
   if (numberOfActors > 0)
   {
@@ -428,21 +433,21 @@ bool saveConfig()
     sensorsObj["SCRIPT"] = sensors[i].sens_mqtttopic;
     sensorsObj["SW"] = sensors[i].sens_sw;
     sensorsObj["kettle_id"] = sensors[i].kettle_id;
-    DBG_PRINT("Sensor Name: ");
-    DBG_PRINTLN(sensors[i].sens_name);
-    DBG_PRINT("Sensor address: ");
-    DBG_PRINTLN(sensors[i].getSens_adress_string());
-    DBG_PRINT("Sensor MQTT topic: ");
-    DBG_PRINTLN(sensors[i].sens_mqtttopic);
-    DBG_PRINT("Sensor offset: ");
-    DBG_PRINTLN(sensors[i].sens_offset);
-    DBG_PRINT("Sensor switchable: ");
-    DBG_PRINTLN(sensors[i].sens_sw);
-    DBG_PRINT("Sensor kettle ID: ");
-    DBG_PRINTLN(sensors[i].kettle_id);
     DBG_PRINT("Sensor no. ");
     DBG_PRINT(i + 1);
-    DBG_PRINTLN(" saved to config file");
+    DBG_PRINTLN(" write settings");
+    DBG_PRINT("Name: ");
+    DBG_PRINTLN(sensors[i].sens_name);
+    DBG_PRINT("Address: ");
+    DBG_PRINTLN(sensors[i].getSens_adress_string());
+    DBG_PRINT("MQTT topic: ");
+    DBG_PRINTLN(sensors[i].sens_mqtttopic);
+    DBG_PRINT("Offset: ");
+    DBG_PRINTLN(sensors[i].sens_offset);
+    DBG_PRINT("Switchable: ");
+    DBG_PRINTLN(sensors[i].sens_sw);
+    DBG_PRINT("Kettle ID: ");
+    DBG_PRINTLN(sensors[i].kettle_id);
   }
   if (numberOfSensors > 0)
   {
@@ -456,7 +461,8 @@ bool saveConfig()
 
   // Write Induction
   JsonArray indArray = doc.createNestedArray("induction");
-  DBG_PRINT("Induction status: ");
+  DBG_PRINTLN("Induction write settings");
+  DBG_PRINT("Status: ");
   if (inductionCooker.isEnabled)
   {
     JsonObject indObj = indArray.createNestedObject();
@@ -470,19 +476,20 @@ bool saveConfig()
     indObj["kettle_id"] = inductionCooker.kettle_id;
 
     DBG_PRINTLN(inductionCooker.isEnabled);
-    DBG_PRINT("Induction MQTT topic: ");
+    
+    DBG_PRINT("MQTT topic: ");
     DBG_PRINTLN(inductionCooker.mqtttopic);
-    DBG_PRINT("Induction relais (WHITE): ");
+    DBG_PRINT("Relais (WHITE): ");
     DBG_PRINTLN(PinToString(inductionCooker.PIN_WHITE));
-    DBG_PRINT("Induction command channel (YELLOW): ");
+    DBG_PRINT("Command channel (YELLOW): ");
     DBG_PRINTLN(PinToString(inductionCooker.PIN_YELLOW));
-    DBG_PRINT("Induction backchannel (BLUE): ");
+    DBG_PRINT("Backchannel (BLUE): ");
     DBG_PRINTLN(PinToString(inductionCooker.PIN_INTERRUPT));
-    DBG_PRINT("Induction delay after power off: ");
+    DBG_PRINT("Delay after power off: ");
     DBG_PRINTLN(inductionCooker.delayAfteroff / 1000);
-    DBG_PRINT("Induction power level on error: ");
+    DBG_PRINT("Power level on error: ");
     DBG_PRINTLN(inductionCooker.powerLevelOnError);
-    DBG_PRINT("Induction kettle indDelayOff: ");
+    DBG_PRINT("Kettle ID: ");
     DBG_PRINTLN(inductionCooker.kettle_id);
   }
   else
@@ -493,7 +500,8 @@ bool saveConfig()
   // Write Display
   JsonArray displayArray = doc.createNestedArray("display");
 
-  DBG_PRINT("OLED display status: ");
+  DBG_PRINTLN("OLED display write settings");
+  DBG_PRINT("Status: ");
   DBG_PRINTLN(oledDisplay.dispEnabled);
   if (oledDisplay.dispEnabled)
   {
@@ -502,9 +510,9 @@ bool saveConfig()
     displayObj["ADDRESS"] = String(decToHex(oledDisplay.address, 2));
     displayObj["updisp"] = DISP_UPDATE;
 
-    DBG_PRINT("Display address ");
+    DBG_PRINT("Address ");
     DBG_PRINTLN(String(decToHex(oledDisplay.address, 2)));
-    DBG_PRINT("Display update interval ");
+    DBG_PRINT("Update interval ");
     DBG_PRINT(DISP_UPDATE / 1000);
     DBG_PRINTLN("sec");
     if (oledDisplay.address == 0x3C || oledDisplay.address == 0x3D)
@@ -525,6 +533,7 @@ bool saveConfig()
   DBG_PRINTLN("--------------------");
 
   // Write Misc Stuff
+  DBG_PRINTLN("Misc write settings");
   JsonArray miscArray = doc.createNestedArray("misc");
   JsonObject miscObj = miscArray.createNestedObject();
 
@@ -631,14 +640,12 @@ bool saveConfig()
 
   serializeJson(doc, configFile);
   configFile.close();
-
+  DBG_PRINTLN("------ saveConfig finished ------");
   size_t len = measureJson(doc);
   DBG_PRINT("JSON config length: ");
   DBG_PRINTLN(len);
   if (len > 1400)
     DBG_PRINTLN("Error: JSON config too big!");
-
-  DBG_PRINTLN("------ saveConfig finished ------");
   IPAddress ip = WiFi.localIP();
   String Network = WiFi.SSID();
   DBG_PRINT("ESP8266 device IP Address: ");

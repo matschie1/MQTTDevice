@@ -573,11 +573,18 @@ void handleSetIndu()
     }
     if (server.argName(i) == "pl")
     {
-      pl = server.arg(i).toInt();
+      if (isValidInt(server.arg(i)))
+        pl = server.arg(i).toInt();
+      else
+        pl = 100;
     }
     if (server.argName(i) == "kettle_id")
     {
-      new_kettle_id = server.arg(i).toInt();
+      if (isValidInt(server.arg(i)))
+        new_kettle_id = server.arg(i);
+      else
+        new_kettle_id = "0";
+      
     }
 
     yield();

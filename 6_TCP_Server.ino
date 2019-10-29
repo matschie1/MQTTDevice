@@ -156,6 +156,14 @@ void setTCPTemp(String id, float temp)
     tcpServer[id.toInt()].temperature = temp;
 }
 
+int getTCPTargetTemp(String id)
+{
+    if (id != "0")
+        return tcpServer[id.toInt()].target_temp;
+    else
+        return 0;
+}
+
 void setTCPTemp()
 {
     for (int i = 0; i < numberOfSensors; i++)
@@ -168,41 +176,8 @@ void setTCPTemp()
 void setTCPPowerAct(String id, int power)
 {
     tcpServer[id.toInt()].powerlevel = power;
-    // DBG_PRINT("TCP: set actor power for kettle ");
-    // DBG_PRINT(actors[i].kettle_id.toInt());
-    // DBG_PRINT(" Power ");
-    // DBG_PRINTLN(actors[i].power_actor);
-}
-void setTCPPowerAct()
-{
-    for (int i = 0; i < numberOfActors; i++)
-    {
-        if (actors[i].kettle_id.toInt() > 0)
-        {
-            tcpServer[actors[i].kettle_id.toInt()].powerlevel = actors[i].power_actor;
-            // DBG_PRINT("TCP: set actor power for kettle ");
-            // DBG_PRINT(actors[i].kettle_id.toInt());
-            // DBG_PRINT(" Power ");
-            // DBG_PRINTLN(actors[i].power_actor);
-        }
-    }
 }
 void setTCPPowerInd(String id, int power)
 {
     tcpServer[id.toInt()].powerlevel = power;
-    // DBG_PRINT("TCP: set induction power for kettle ");
-    // DBG_PRINT(inductionCooker.kettle_id.toInt());
-    // DBG_PRINT(" Power ");
-    // DBG_PRINTLN(inductionCooker.power);
-}
-void setTCPPowerInd()
-{
-    if (inductionCooker.kettle_id.toInt() > 0)
-    {
-        tcpServer[inductionCooker.kettle_id.toInt()].powerlevel = inductionCooker.power;
-        // DBG_PRINT("TCP: set induction power for kettle ");
-        // DBG_PRINT(inductionCooker.kettle_id.toInt());
-        // DBG_PRINT(" Power ");
-        // DBG_PRINTLN(inductionCooker.power);
-    }
 }

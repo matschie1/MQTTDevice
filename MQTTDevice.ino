@@ -44,7 +44,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[6] = "1.055";
+const char Version[6] = "1.056";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/

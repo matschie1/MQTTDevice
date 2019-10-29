@@ -177,7 +177,7 @@ function delLastChar($string = "")
     return ($t);
 }
 //Returns name of Recipe for current fermentation - Name can be set with reset.
-function getCurrentRecipeName($conn, $iSpindleID = 'MQTTDevice', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
+function getCurrentRecipeName($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
 {
     mysqli_set_charset($conn, "utf8mb4");
     $q_sql1 = mysqli_query($conn, "SELECT Data.Recipe, Data.Timestamp FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.Timestamp >= (SELECT max( Data.Timestamp )FROM Data WHERE Data.Name = '" . $iSpindleID . "' AND Data.ResetFlag = true) LIMIT 1") or die(mysqli_error($conn));
@@ -215,7 +215,7 @@ function getCurrentRecipeName($conn, $iSpindleID = 'MQTTDevice', $timeFrameHours
 // Get calaculate initial gravity from database after last reset. First two hours after last reset will be used. 
 // This can be used to calculate apparent attenuation in svg_ma.php
 
-function getInitialGravity($conn, $iSpindleID = 'MQTTDevice')
+function getInitialGravity($conn, $iSpindleID = 'iSpindel000')
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
     $valAngle = '';
@@ -780,7 +780,6 @@ function getChartValuesSVG_ma($conn, $iSpindleID = 'iSpindel000', $movingtime)
         );
     }
 }
-
 function getChartValuesMQTTDevice($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $movingtime, $reset = defaultReset)
 {
     $isCalibrated = 0; // is there a calbration record for this iSpindle?
@@ -848,8 +847,6 @@ function getChartValuesMQTTDevice($conn, $iSpindleID = 'iSpindel000', $timeFrame
             $dens = $const1 * pow($angle, 2) + $const2 * $angle + $const3; // complete polynome from database
 
             $valAngle .= '[' . $jsTime . ', ' . $angle . '],';
-            //$valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $dens . ", recipe: \"" . $r_row['recipe'] . "\"},";
-			//$valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $angle . ", recipe: \"" . $r_row['recipe'] . "\"},";
 			$valDens .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['angle'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
             $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
 			$valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['battery'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
@@ -863,50 +860,6 @@ function getChartValuesMQTTDevice($conn, $iSpindleID = 'iSpindel000', $timeFrame
             $valTemperature,
             $valAngle,
 			$valBattery
-        );
-    }
-}
-// Get values from database for selected spindle, between now and timeframe in hours ago  
-function getChartValuesMQTTDevice2($conn, $iSpindleID = 'iSpindel000', $timeFrameHours = defaultTimePeriod, $reset = defaultReset)
-{
-    if ($reset) {
-        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                                    
-                  AND Timestamp >= (Select max(Timestamp) FROM Data  WHERE ResetFlag = true AND Name = '" . $iSpindleID . "')";
-    } else {
-        $where = "WHERE Name = '" . $iSpindleID . "'                                                                                                                                                                                                    
-            AND Timestamp >= date_sub(NOW(), INTERVAL " . $timeFrameHours . " HOUR)                                                                                                                                                              
-            AND Timestamp <= NOW()";
-    }
-    mysqli_set_charset($conn, "utf8mb4");
-
-    $q_sql = mysqli_query($conn, "SELECT UNIX_TIMESTAMP(Timestamp) as unixtime, temperature, angle, recipe, battery, rssi                                                                                                                                    
-                         FROM Data " . $where . " ORDER BY Timestamp ASC") or die(mysqli_error($conn));
-    
-    // retrieve number of rows                                                                                                                                                                                                                  
-    $rows = mysqli_num_rows($q_sql);
-    if ($rows > 0) {
-        $valAngle = '';
-        $valTemperature = '';
-        $valBattery = '';
-        $valRSSI = '';
-        // retrieve and store the values as CSV lists for HighCharts                                                                                                                                                                              
-        while ($r_row = mysqli_fetch_array($q_sql)) {
-            $jsTime = $r_row['unixtime'] * 1000;
-            $valAngle .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['angle'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valTemperature .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['temperature'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            $valBattery .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['battery'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            if ($r_row['rssi']) {
-                $valRSSI .= '{ timestamp: ' . $jsTime . ', value: ' . $r_row['rssi'] . ", recipe: \"" . $r_row['recipe'] . "\"},";
-            }
-
-        }
-
-
-        return array(
-            $valAngle,
-            $valTemperature,
-            $valBattery,
-            $valRSSI
         );
     }
 }

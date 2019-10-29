@@ -461,6 +461,11 @@
           sensor += "<span class='badge badge-light'>";
           sensor += element.offset;
           sensor += "</span> "
+          if (element.target_temp != "0") {
+            sensor += "<span class='badge badge-light'>";
+            sensor += element.target_temp + "°C";
+            sensor += "</span> "
+          }
           sensor += " <span class='badge";
           if (element.sw == true) {
             if (element.state == true) {

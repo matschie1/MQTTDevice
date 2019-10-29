@@ -60,6 +60,7 @@ void listenerSystem(int event, int parm) // System event listener
     oledDisplay.mqttOK = false;
     if (sim_mode == SIM_NONE)
     {
+      DBG_PRINTLN("MQTT try to auto reconnect ..");
       if (client.connect(mqtt_clientid))
       {
         DBG_PRINTLN("MQTT auto reconnect successful. Subscribing..");
@@ -241,15 +242,14 @@ void listenerSystem(int event, int parm) // System event listener
       /*
         MQTT typischer Fehlerverlauf
         RC -3 Connection lost
-        mosquitto meldet zeitgleich: Socket error on client ESP8266-002CAAA9, disconnecting.
+        mosquitto meldet zeitgleich: Socket error on client ESP8266-xxxxxxx, disconnecting.
 
-        next loop
+        next loop MQTTDevice
         RC -2 Connect Failed
       */
 
       if (millis() > (mqttconnectlasttry + wait_on_error_mqtt))
       {
-
         /*
         // Debug output queued MQTT events
         unsigned long allSeconds=millis()/1000;
@@ -268,7 +268,7 @@ void listenerSystem(int event, int parm) // System event listener
         {
         case -4: // MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time
           DBG_PRINTLN(" MQTT_CONNECTION_TIMEOUT");
-          //cbpiEventSystem(EM_MQTTER);
+          cbpiEventSystem(EM_MQTTER);
           break;
         case -3: // MQTT_CONNECTION_LOST - the network connection was broken
           DBG_PRINTLN(" MQTT_CONNECTION_LOST");
