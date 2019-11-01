@@ -25,7 +25,7 @@ public:
     {
       showDispClear();
       showDispTime(t);
-      showDispIP(WiFi.localIP().toString());
+      showDispIP(aktIP.toString());
       showDispWlan();
       showDispMqtt();
       showDispLines();
@@ -72,7 +72,7 @@ public:
     // time_t local, utc;
     utc = epochTime;
     TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, 60}; //Central European Summer Time
-    TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 120};  //Central European Standard Time
+    TimeChangeRule CET = {"CET", Last, Sun, Oct, 3, 0};    //Central European Standard Time
     Timezone CE(CEST, CET);
     local = CE.toLocal(utc);
     setTime(local);
@@ -149,13 +149,11 @@ void handleRequestDisp()
 
     for (int i = 0; i < numberOfAddress; i++)
     {
-        message += F("<option>");
-        message += String(decToHex(address[i], 2));
-        message += F("</option>");
+      message += F("<option>");
+      message += String(decToHex(address[i], 2));
+      message += F("</option>");
     }
     goto SendMessage;
-  
-  
   }
   if (request == "updisp")
   {
@@ -249,13 +247,13 @@ void showDispDisplay() // Show
   display.display();
 }
 
-void showDispVal(String value) // Display a String value
+void showDispVal(const String &value) // Display a String value
 {
   display.print(value);
   display.display();
 }
 
-void showDispVal(int value) // Display a Int value
+void showDispVal(const int value) // Display a Int value
 {
   display.print(value);
   display.display();
@@ -320,7 +318,7 @@ void showDispOTA(unsigned int progress, unsigned int total) // Show OTA icon
   }
 }
 
-void showDispOTAEr(String value)
+void showDispOTAEr(const String &value)
 {
   display.clearDisplay();
   display.setTextSize(1);
@@ -402,7 +400,7 @@ void showDispInd() // Show InductionCooker status on the right
     display.print("Err");
 }
 
-void showDispTime(String value) // Show time value in the upper left with fontsize 2
+void showDispTime(const String &value) // Show time value in the upper left with fontsize 2
 {
   display.setCursor(5, 5);
   display.setTextSize(2);
@@ -410,7 +408,7 @@ void showDispTime(String value) // Show time value in the upper left with fontsi
   display.print(value);
 }
 
-void showDispIP(String value) // Show IP address under time value with fontsize 1
+void showDispIP(const String &value) // Show IP address under time value with fontsize 1
 {
   display.setCursor(5, 30);
   display.setTextSize(1);
@@ -418,7 +416,7 @@ void showDispIP(String value) // Show IP address under time value with fontsize 
   display.print(value);
 }
 
-void showDispSet(String value) // Show current station mode
+void showDispSet(const String &value) // Show current station mode
 {
   display.clearDisplay();
   display.setTextSize(1);

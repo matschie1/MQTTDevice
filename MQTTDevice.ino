@@ -44,7 +44,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[6] = "1.056";
+const char Version[7] = "1.057b";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -131,7 +131,9 @@ File fsUploadFile; // a File object to temporarily store the received file
 /*######### FileBrowser #########*/
 
 /*######### EventManager ########*/
-EventManager gEM;       //  Eventmanager
+EventManager gEM; //  Eventmanager
+IPAddress aktIP;  //  Workaround IP changed
+
 int SEN_UPDATE = 5000;  //  sensors update delay loop
 int ACT_UPDATE = 5000;  //  actors update delay loop
 int IND_UPDATE = 5000;  //  induction update delay loop
@@ -193,7 +195,7 @@ bool wlan_state = true;               // Error state WLAN
 
 #define maxRetriesWLAN 5        // Max retries before errer event
 #define maxRetriesMQTT 5        // Max retries before error event
-int wait_on_error_mqtt = 25000;  // How long should device wait between tries to reconnect WLAN      - approx in ms
+int wait_on_error_mqtt = 25000; // How long should device wait between tries to reconnect WLAN      - approx in ms
 int wait_on_error_wlan = 25000; // How long should device wait between tries to reconnect WLAN      - approx in ms
 // Sensor reconnect parameters
 int wait_on_Sensor_error_actor = 120000;     // How long should actors wait between tries to reconnect sensor    - approx in ms
@@ -214,9 +216,9 @@ unsigned long lastToggledAct = 0;  // Timestamp actors event
 unsigned long lastToggledInd = 0;  // Timestamp induction event
 unsigned long lastToggledDisp = 0; // Timestamp display event
 unsigned long lastToggledEvent = 0;
-unsigned long lastToggledTCP = 0;  // Timestamp system event
-unsigned long lastSenAct = 0;      // Timestap actors on sensor error
-unsigned long lastSenInd = 0;      // Timestamp induction on sensor error
+unsigned long lastToggledTCP = 0; // Timestamp system event
+unsigned long lastSenAct = 0;     // Timestap actors on sensor error
+unsigned long lastSenInd = 0;     // Timestamp induction on sensor error
 
 int sensorsStatus = 0;
 int actorsStatus = 0;
@@ -224,7 +226,7 @@ int inductionStatus = 0;
 /*######### EventManager ########*/
 
 /*########## TCP Server #########*/
-int tcpPort = 9501;                  // TCP server Port 
+int tcpPort = 9501;                  // TCP server Port
 char tcpHost[16] = "192.168.100.30"; // TCP server IP
 /*########## TCP Server #########*/
 

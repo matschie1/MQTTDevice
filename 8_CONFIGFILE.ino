@@ -201,7 +201,7 @@ bool loadConfig()
 
     oledDisplay.dispEnabled = true;
     oledDisplay.change(address, oledDisplay.dispEnabled);
-    
+
     DBG_PRINTLN(oledDisplay.dispEnabled);
     DBG_PRINTLN("Read display settings");
     DBG_PRINT("Address: ");
@@ -395,9 +395,9 @@ bool saveConfig()
     actorsObj["INV"] = actors[i].getInverted();
     actorsObj["SW"] = actors[i].getSwitchable();
     actorsObj["kettle_id"] = actors[i].kettle_id;
-    
+
     DBG_PRINT("Actor no. ");
-    DBG_PRINT(i+1);
+    DBG_PRINT(i + 1);
     DBG_PRINTLN(" write settings");
     DBG_PRINT("Name: ");
     DBG_PRINTLN(actors[i].name_actor);
@@ -476,7 +476,7 @@ bool saveConfig()
     indObj["kettle_id"] = inductionCooker.kettle_id;
 
     DBG_PRINTLN(inductionCooker.isEnabled);
-    
+
     DBG_PRINT("MQTT topic: ");
     DBG_PRINTLN(inductionCooker.mqtttopic);
     DBG_PRINT("Relais (WHITE): ");
@@ -646,10 +646,10 @@ bool saveConfig()
   DBG_PRINTLN(len);
   if (len > 1400)
     DBG_PRINTLN("Error: JSON config too big!");
-  IPAddress ip = WiFi.localIP();
+  aktIP = WiFi.localIP();
   String Network = WiFi.SSID();
   DBG_PRINT("ESP8266 device IP Address: ");
-  DBG_PRINTLN(ip.toString());
+  DBG_PRINTLN(aktIP.toString());
   DBG_PRINT("Configured WLAN SSID: ");
   DBG_PRINTLN(Network);
   DBG_PRINTLN("---------------------------------");

@@ -6,6 +6,12 @@
 
 ## Changelog
 
+Version 1.057
+- Fixed:    Winterzeit, falscher Wert für CET
+- Reworked: MQTT reconnect bei IP Wechsel (Fritz.box)
+- Improved: Speicherverbrauch
+
+
 Version 1.056
 - Added:    Überprüfung der Eingaben aus dem WebIf Sensor Offset und Kettle-IDs
             - Bei falscher Eingabe bspw. Offset  1,50 statt 1.50 wird der Wert durch 0 ersetzt

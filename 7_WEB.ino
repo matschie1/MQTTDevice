@@ -110,7 +110,7 @@ void mqttcallback(char *topic, unsigned char *payload, unsigned int length)
       }
     }
   }
-  
+
   for (int i = 0; i < numberOfActors; i++)
   {
     if (actors[i].argument_actor == topic)
@@ -450,7 +450,7 @@ void handleSetMisc()
     {
       int newsys = server.arg(i).toInt();
       if (newsys > 0)
-         SYS_UPDATE = newsys * 1000;
+        SYS_UPDATE = newsys * 1000;
     }
     if (server.argName(i) == "uptcp")
     {

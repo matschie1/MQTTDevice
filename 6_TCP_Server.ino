@@ -14,7 +14,7 @@ public:
         change(new_kettle_id);
     }
 
-    void change(String new_kettle_id)
+    void change(const String &new_kettle_id)
     {
         if (kettle_id != new_kettle_id)
         {
@@ -142,7 +142,7 @@ void setTCPConfig()
     }
 }
 
-void setTopic(String id)
+void setTopic(const String &id)
 {
     tcpServer[id.toInt()].tcpTopic = "MQTTDevice/kettle/" + id;
     DBG_PRINT("TCP: topic ");
@@ -151,12 +151,12 @@ void setTopic(String id)
     DBG_PRINTLN(tcpServer[id.toInt()].tcpTopic);
 }
 
-void setTCPTemp(String id, float temp)
+void setTCPTemp(const String &id, const float &temp)
 {
     tcpServer[id.toInt()].temperature = temp;
 }
 
-int getTCPTargetTemp(String id)
+int getTCPTargetTemp(const String &id)
 {
     if (id != "0")
         return tcpServer[id.toInt()].target_temp;
@@ -173,11 +173,11 @@ void setTCPTemp()
     }
 }
 
-void setTCPPowerAct(String id, int power)
+void setTCPPowerAct(const String &id, const int &power)
 {
     tcpServer[id.toInt()].powerlevel = power;
 }
-void setTCPPowerInd(String id, int power)
+void setTCPPowerInd(const String &id, const int &power)
 {
     tcpServer[id.toInt()].powerlevel = power;
 }

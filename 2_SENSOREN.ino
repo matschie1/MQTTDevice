@@ -127,14 +127,14 @@ public:
     publishmqtt();
   } // void Update
 
-  void change(String new_address, String new_mqtttopic, String new_name, float new_offset, bool new_sw, String new_kettle_id)
+  void change(const String &new_address, const String &new_mqtttopic, const String &new_name, float new_offset, bool new_sw, const String &new_kettle_id)
   {
     new_mqtttopic.toCharArray(sens_mqtttopic, new_mqtttopic.length() + 1);
     sens_name = new_name;
     sens_offset = new_offset;
     sens_sw = new_sw;
     kettle_id = new_kettle_id;
-    
+
     if (new_address.length() == 16)
     {
       char address_char[16];
@@ -212,7 +212,7 @@ void handleSensors()
   for (int i = 0; i < numberOfSensors; i++)
   {
     sensors[i].Update();
-    
+
     // TCP Server
     if (startTCP)
     {
@@ -396,7 +396,7 @@ void handleRequestSensors()
     if (startTCP)
       sensorsObj["target_temp"] = getTCPTargetTemp(sensors[i].kettle_id);
     else
-      sensorsObj["target_temp"] = "0";
+      sensorsObj["target_temp"] = "-1";
     yield();
   }
 

@@ -246,11 +246,36 @@ void listenerSystem(int event, int parm) // System event listener
 
         next loop MQTTDevice
         RC -2 Connect Failed
+
+        ESP8266 device IP Address: 192.168.100.203
+        ---------------------------------
+        EM: Device IP changed to (IP unset)
+        EM: MQTT error rc=-3 MQTT_CONNECTION_LOST
+        MQTT try to auto reconnect ..
+        EM MQTT: MQTT error. 1. try to reconnect
+        EM: Device IP changed to (IP unset)
+        EM: Device IP changed to (IP unset)
+        EM: Device IP changed to 192.168.100.34
+        ESP8266 device IP Address: 192.168.100.203
       */
+
+      // Workaround Fritz.box IP Wechsel
+
+      if (aktIP != WiFi.localIP())
+      {
+        DBG_PRINT("EM: Device IP changed to ");
+        DBG_PRINTLN(WiFi.localIP().toString());
+        aktIP = WiFi.localIP();
+        if (WiFi.localIP().toString() == "(IP unset)")
+          break;
+        else //(WiFi.localIP().toString() != "(IP unset)")
+          cbpiEventSystem(EM_MQTTER);
+        break;
+      }
 
       if (millis() > (mqttconnectlasttry + wait_on_error_mqtt))
       {
-        /*
+        /* Ignore
         // Debug output queued MQTT events
         unsigned long allSeconds=millis()/1000;
         int runHours= allSeconds/3600;

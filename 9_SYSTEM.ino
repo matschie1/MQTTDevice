@@ -1,4 +1,4 @@
-void millis2wait(int value)
+void millis2wait(const int &value)
 {
   unsigned long pause = millis();
   while (millis() < pause + value)
@@ -7,7 +7,7 @@ void millis2wait(int value)
     yield();
   }
 }
-bool isValidInt(String str)
+bool isValidInt(const String &str)
 {
   for (int i = 0; i < str.length(); i++)
   {
@@ -20,7 +20,7 @@ bool isValidInt(String str)
   return true;
 }
 
-bool isValidFloat(String str)
+bool isValidFloat(const String &str)
 {
   for (int i = 0; i < str.length(); i++)
   {
@@ -33,7 +33,7 @@ bool isValidFloat(String str)
   return true;
 }
 
-void DBG_PRINT(String value)
+void DBG_PRINT(const String &value)
 {
   if (setDEBUG)
   {
@@ -43,7 +43,7 @@ void DBG_PRINT(String value)
       Serial.print(value);
   }
 }
-void DBG_PRINT(int value)
+void DBG_PRINT(const int &value)
 {
   if (setDEBUG)
   {
@@ -53,7 +53,7 @@ void DBG_PRINT(int value)
       Serial.print(value);
   }
 }
-void DBG_PRINT(unsigned int value)
+void DBG_PRINT(const unsigned int &value)
 {
   if (setDEBUG)
   {
@@ -63,7 +63,7 @@ void DBG_PRINT(unsigned int value)
       Serial.print(value);
   }
 }
-void DBG_PRINT(long unsigned int value)
+void DBG_PRINT(const long unsigned int &value)
 {
   if (setDEBUG)
   {
@@ -73,7 +73,7 @@ void DBG_PRINT(long unsigned int value)
       Serial.print(value);
   }
 }
-void DBG_PRINT(long value)
+void DBG_PRINT(const long &value)
 {
   if (setDEBUG)
   {
@@ -83,7 +83,7 @@ void DBG_PRINT(long value)
       Serial.print(value);
   }
 }
-void DBG_PRINTLN(long value)
+void DBG_PRINTLN(const long &value)
 {
   if (setDEBUG)
   {
@@ -93,7 +93,7 @@ void DBG_PRINTLN(long value)
       Serial.println(value);
   }
 }
-void DBG_PRINT(float value)
+void DBG_PRINT(const float &value)
 {
   if (setDEBUG)
   {
@@ -103,7 +103,7 @@ void DBG_PRINT(float value)
       Serial.print(value);
   }
 }
-void DBG_PRINTHEX(int value)
+void DBG_PRINTHEX(const int &value)
 {
   if (setDEBUG)
   {
@@ -113,7 +113,7 @@ void DBG_PRINTHEX(int value)
       Serial.print(value, HEX);
   }
 }
-void DBG_PRINTLN(String value)
+void DBG_PRINTLN(const String &value)
 {
   if (setDEBUG)
   {
@@ -123,7 +123,7 @@ void DBG_PRINTLN(String value)
       Serial.println(value);
   }
 }
-void DBG_PRINTLN(int value)
+void DBG_PRINTLN(const int &value)
 {
   if (setDEBUG)
   {
@@ -133,7 +133,7 @@ void DBG_PRINTLN(int value)
       Serial.println(value);
   }
 }
-void DBG_PRINTLN(unsigned int value)
+void DBG_PRINTLN(const unsigned int &value)
 {
   if (setDEBUG)
   {
@@ -143,7 +143,7 @@ void DBG_PRINTLN(unsigned int value)
       Serial.println(value);
   }
 }
-void DBG_PRINTLN(long unsigned int value)
+void DBG_PRINTLN(const long unsigned int &value)
 {
   if (setDEBUG)
   {
@@ -153,7 +153,7 @@ void DBG_PRINTLN(long unsigned int value)
       Serial.println(value);
   }
 }
-void DBG_PRINTLN(float value)
+void DBG_PRINTLN(const float &value)
 {
   if (setDEBUG)
   {
@@ -163,7 +163,7 @@ void DBG_PRINTLN(float value)
       Serial.println(value);
   }
 }
-void DBG_PRINTLNHEX(int value)
+void DBG_PRINTLNHEX(const int &value)
 {
   if (setDEBUG)
   {

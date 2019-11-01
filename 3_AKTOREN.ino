@@ -51,7 +51,7 @@ public:
     }
   }
 
-  void change(String pin, String argument, String aname, String ainverted, String aswitchable, String akettle_id)
+  void change(const String &pin, const String &argument, const String &aname, const String &ainverted, const String &aswitchable, const String &akettle_id)
   {
     // Set PIN
     if (isPin(pin_actor))
@@ -82,7 +82,6 @@ public:
       // MQTT Publish - not yet ready
       // argument.toCharArray(actor_mqtttopic, argument.length() + 1);
     }
-
     if (ainverted == "1")
     {
       isInverted = true;
@@ -309,7 +308,7 @@ void handleSetActor()
   String ac_isinverted = actors[id].getInverted();
   String ac_switchable = actors[id].getSwitchable();
   String ac_kettle_id = actors[id].kettle_id;
-  
+
   for (int i = 0; i < server.args(); i++)
   {
     if (server.argName(i) == "name")
@@ -326,11 +325,11 @@ void handleSetActor()
     }
     if (server.argName(i) == "inv")
     {
-       ac_isinverted = server.arg(i);
+      ac_isinverted = server.arg(i);
     }
     if (server.argName(i) == "sw")
     {
-        ac_switchable = server.arg(i);
+      ac_switchable = server.arg(i);
     }
     if (server.argName(i) == "kettle_id")
     {
