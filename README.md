@@ -6,6 +6,9 @@
 
 ## Changelog
 
+Version 1.058
+- Fixed:    Sensoren EM
+
 Version 1.057
 - Fixed:    Winterzeit, falscher Wert für CET
 - Reworked: MQTT reconnect bei IP Wechsel (Fritz.box)
