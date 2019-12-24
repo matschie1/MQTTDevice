@@ -93,7 +93,7 @@ bool loadConfig()
       String sensorsAddress = sensorsObj["ADDRESS"];
       String sensorsScript = sensorsObj["SCRIPT"];
       String sensorsName = sensorsObj["NAME"];
-      String sensorsSwitch = sensorsObj["SW"];
+      bool sensorsSwitch = sensorsObj["SW"];
       String sensorsKettle_id = "0";
       if (sensorsObj.containsKey("kettle_id"))
         sensorsKettle_id = sensorsObj["kettle_id"].as<String>();

@@ -28,4 +28,5 @@
         "string": "cpp",
         "fstream": "cpp"
     },
+    "terminal.integrated.windowsEnableConpty": false,
 }
