@@ -6,6 +6,13 @@
 
 ## Changelog
 
+Version 1.059
+- Update:   Bibliotheken aktualisiert
+            ESP8266 2.6.3: die Lib im Ordner lib/ESP8266HTTPUpdateServer muss gelöscht werden!
+			-- Update Filesystem (SPIFFS) ist nun im Master branch ESP8266 enthalten
+			Update aller zusätzlichen Bibliotheken 
+- Fixed:    Typo index.html (sensorsw)
+
 Version 1.058
 - Fixed:    Sensoren EM
 
@@ -81,28 +88,25 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 
 * Arduino IDE 1.8.10
 * Optional Microsoft VSCode + Arduino + ESP8266FS
-* ESP8266 by ESP8266 Community version 2.5.2
-* Der Ordner lib/ESP8266HTTPUpdateServer aus dem Repository muss in den eigenen Sketch Order/libraries kopiert werden
-  * ESP8266HTTPUpdateServer (SPIFFS updates https://github.com/esp8266/Arduino/pull/3732/files )
-  
+* ESP8266 by ESP8266 Community version 2.6.3
 * Folgende Bibliotheken müssen über die Arduino IDE hinzugefügt werden:
-  * Standard Bibliotheken von der Arduino IDE
-    * ESP8266WiFi 1.0 
-    * ESP8266WebServer 1.0
-    * DNSServer 1.1.1
-    * ESP8266mDNS Version 1.2
-    * SPI 1.0
-    * Wire 1.0
+  * Standard Bibliotheken (buildin) von der Arduino IDE
+    * ESP8266WiFi
+    * ESP8266WebServer
+    * DNSServer
+    * ESP8266mDNS
+    * SPI
+    * Wire
   * Zusätzliche Bibliotheken
     * NTPClient by Fabrice Weinberg Version 3.2.0
-    * Adafruit GFX Library by Adafruit Version 1.5.7
-    * Adafruit SSD1306 by Adafruit Version 2.0.1
-    * ArduinoJSON by Benoit Blanchon Version 6.12.0 
+    * Adafruit GFX Library by Adafruit Version 1.7.3
+    * Adafruit SSD1306 by Adafruit Version 2.0.4
+    * ArduinoJSON by Benoit Blanchon Version 6.13.0 
     * DallasTemperature by Miles Burton Version 3.8.0
     * OneWire By Jim Studt Version 2.3.5
     * PubSubClient by Nick O'Leary Version 2.7.0
-    * Time by Michael Margolis Version 1.5.0
-    * Timezone by Jack Christensen Version 1.2.2
+    * Time by Michael Margolis Version 1.6.0
+    * Timezone by Jack Christensen Version 1.2.4
     * WiFiManager by tzapu Version 0.15.0
     * TimeZone lib: die Datei library.properties muss in einem Editor bearbeitet werden Zeile: architectures=avr into architectures=*
 
@@ -115,7 +119,7 @@ Installation: https://hobbybrauer.de/forum/viewtopic.php?f=58&t=19036&p=309196#p
 
 	-> Ab Firmware Version 1.050 ist ArduinoJson 6 erforderlich
 
-    -> Ab Firmware Version 1.048 ist die original EvenetManager Bibliothek erforderlich
+    -> Ab Firmware Version 1.048 ist die original EventManager Bibliothek erforderlich
 
 
 ### Wie kann die Firmware geflashed werden ohne den Quellcode zu komplilieren

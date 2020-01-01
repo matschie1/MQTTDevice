@@ -821,7 +821,7 @@
       if (modal.find('#modal_sensor_sw').prop("checked") == true) {
         var sensorsw = "1"
       } else {
-        var swnsorsw = "0"
+        var sensorsw = "0"
       }
       $.ajax({
         url: '/setSensor?id=' + sensorid + '&name=' + sensorname + '&topic=' + sensorscript + '&address=' + sensoraddress + '&offset=' + sensoroffset + '&sw=' + sensorsw + '&kettle_id=' + sensorkettleid,

@@ -5,8 +5,8 @@
             "includePath": [
                 "${workspaceFolder}\\**",
                 "C:\\Arduino\\libraries\\**",
-                "C:\\Users\\pn010.TEAM\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.5.2\\**",
-                "C:\\Users\\pn010.TEAM\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**"
+                "C:\\Users\\pn010.TEAM\\AppData\\Local\\Arduino15\\packages\\esp8266\\tools\\**",
+                "C:\\Users\\pn010.TEAM\\AppData\\Local\\Arduino15\\packages\\esp8266\\hardware\\esp8266\\2.6.3\\**"
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": false,
