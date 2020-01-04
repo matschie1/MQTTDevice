@@ -7,6 +7,16 @@ void millis2wait(const int &value)
     yield();
   }
 }
+
+float formatDOT(String str)
+{
+  str.replace(',', '.');
+  if (isValidFloat(str))
+    return str.toFloat();
+  else
+    return 0;
+}
+
 bool isValidInt(const String &str)
 {
   for (int i = 0; i < str.length(); i++)

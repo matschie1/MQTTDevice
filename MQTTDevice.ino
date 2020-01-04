@@ -1,4 +1,8 @@
 /*
+   Name:		MQTTDevice
+   Erstellt:	2020
+   Author:	    Innuendo
+
    Sketch für ESP8266
    Kommunikation via MQTT mit CraftBeerPi v3
 
@@ -44,7 +48,7 @@
 // Ordner lib Timezone_library.properties.txt
 
 /*############ Version ############*/
-const char Version[7] = "1.059";
+const char Version[7] = "1.060";
 /*############ Version ############*/
 
 /*############ DEBUG ############*/
@@ -209,6 +213,7 @@ bool startMDNS = false;
 bool startTEL = false;
 bool startTCP = false;
 char nameMDNS[16];
+bool shouldSaveConfig = false; // WiFiManager
 
 unsigned long lastToggledSys = 0;  // Timestamp system event
 unsigned long lastToggledSen = 0;  // Timestamp sensor event
@@ -256,3 +261,11 @@ const int address[numberOfAddress] = {0x3C, 0x3D};
 #define SIM_IND 20 // SIM event start induction
 int sim_mode = SIM_NONE;
 int sim_counter = 0;
+
+void configModeCallback(WiFiManager *myWiFiManager)
+{
+    Serial.print("*** SYSINFO: MQTTDevice in AP mode ");
+    Serial.println(WiFi.softAPIP());
+    Serial.print("*** SYSINFO: Start configuration portal ");
+    Serial.println(myWiFiManager->getConfigPortalSSID());
+}

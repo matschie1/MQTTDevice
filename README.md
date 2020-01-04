@@ -2,9 +2,17 @@
 
 # MQTTDevice
 
-[English Version](README_en.md)
-
 ## Changelog
+
+Version 1.060
+- Reverted: ESP8266 V2.5.2
+            Die Bibliothek ESP8266HTTPUpdateServer muss in den Ordner <arduino sketchfolder>\libraries kopiert werden
+- Add:      WiFiManager configModeCallback (AP Mode)
+- Fixed:    Ein lange bestehender Fehler im WLAN/mDNS wurde behoben
+            Der Fehler konnte zu WLAN Abbrüchen oder Zuweisungung neuer IP im laufenden Betrieb führen
+- Fixed:    WiFiManager saveconfig behoben (speichern MQTT broker IP)
+- Reworked: Überprüfung der Zahleneinngaben im WeIf
+- Reworked: Start MQTTDevice
 
 Version 1.059
 - Update:   Bibliotheken aktualisiert

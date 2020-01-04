@@ -390,20 +390,20 @@ void listenerSystem(int event, int parm) // System event listener
     //if (startMDNS && nameMDNS[0] != '\0' && WiFi.status() != WL_CONNECTED)
     if (startMDNS && nameMDNS[0] != '\0' && WiFi.status() == WL_CONNECTED)
     {
-      if (!mdns.begin(nameMDNS, WiFi.localIP()))
+      if (mdns.begin(nameMDNS))
       {
-        DBG_PRINT("EM MDNSSET: MDNS failed");
-        startMDNS = false;
-      }
-      else
-      {
-        mdns.begin(nameMDNS);
+        //mdns.begin(nameMDNS);
         DBG_PRINT("EM MDNS started: ");
         DBG_PRINT(nameMDNS);
-        DBG_PRINT(" to: ");
+        DBG_PRINT(" to ");
         IPAddress ip = WiFi.localIP();
         DBG_PRINTLN(ip.toString());
       }
+      else
+      {
+        DBG_PRINTLN("EM MDNS error service not started");
+      }
+      
     }
     break;
   case EM_TELSET: // Telnet setup

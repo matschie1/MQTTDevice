@@ -368,8 +368,9 @@ bool loadConfig()
 
 void saveConfigCallback()
 {
-  DBG_PRINTLN("Should save config");
-  // shouldSaveConfig = true;
+  Serial.println("*** SYSINFO: WiFiManager should save MQTT broker config");
+  shouldSaveConfig = true;
+  saveConfig();
 }
 
 bool saveConfig()

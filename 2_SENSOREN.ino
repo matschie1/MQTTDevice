@@ -302,10 +302,7 @@ void handleSetSensor()
     }
     if (server.argName(i) == "offset")
     {
-      if (isValidFloat(server.arg(i)))
-        new_offset = server.arg(i).toFloat();
-      else
-        new_offset = 0.0;
+      new_offset = formatDOT(server.arg(i));
     }
     if (server.argName(i) == "sw")
     {

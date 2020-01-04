@@ -5,49 +5,48 @@ void setup()
   {
     yield(); // wait for serial port to connect. Needed for native USB port only
   }
+  // Set device name
+  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
 
+  // Event Queues
   gEM.addListener(EventManager::kEventUser0, listenerSystem);
   gEM.addListener(EventManager::kEventUser1, listenerSensors);
   gEM.addListener(EventManager::kEventUser2, listenerActors);
   gEM.addListener(EventManager::kEventUser3, listenerInduction);
 
-  // Set device name
-  snprintf(mqtt_clientid, 25, "ESP8266-%08X", mqtt_chip_key);
-  WiFi.hostname(mqtt_clientid);
-
-  // Start sensors
-  DS18B20.begin();
-
+  Serial.println("");
+  Serial.println("*** SYSINFO: Start setup MQTTDevice");
   // Load filesystem
   ESP.wdtFeed();
   if (!SPIFFS.begin())
   {
-    DBG_PRINT("SPIFFS Mount failed");
+    Serial.println("SPIFFS Mount failed");
   }
-  else
+  else if (SPIFFS.exists("/config.json")) // Load configuration
   {
-    DBG_PRINTLN("");
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next())
-    {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      DBG_PRINT("FS File: ");
-      DBG_PRINT(fileName.c_str());
-      DBG_PRINT(" size: ");
-      DBG_PRINTLN(formatBytes(fileSize).c_str());
-    }
-  }
-
-  // Load configuration
-  if (SPIFFS.exists("/config.json"))
-  {
-    DBG_PRINT("Firmware version: ");
-    DBG_PRINTLN(Version);
     loadConfig();
   }
   else
-    DBG_PRINTLN("Config file not found. Use defaults ...");
+    Serial.println("*** SYSINFO: Config file not found. Use defaults ...");
+
+  // WiFi Manager
+  ESP.wdtFeed();
+  wifiManager.setDebugOutput(false);
+  wifiManager.setMinimumSignalQuality(10);
+  wifiManager.setConfigPortalTimeout(300);
+  wifiManager.setAPCallback(configModeCallback);
+  WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+  wifiManager.addParameter(&cstm_mqtthost);
+  wifiManager.autoConnect(mqtt_clientid);
+  strcpy(mqtthost, cstm_mqtthost.getValue());
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  WiFi.mode(WIFI_STA);
+  WiFi.setAutoConnect(true);
+  WiFi.setAutoReconnect(true);
+
+  // Start Webserver
+  setupServer();
 
   // set pins as used
   pins_used[ONE_WIRE_BUS] = true;
@@ -57,29 +56,12 @@ void setup()
     pins_used[SDL] = true;
   }
 
-  // WiFi Manager
-  ESP.wdtFeed();
-  WiFiManagerParameter cstm_mqtthost("host", "MQTT broker IP", mqtthost, 16);
-  wifiManager.setSaveConfigCallback(saveConfigCallback);
-  wifiManager.addParameter(&cstm_mqtthost);
-  wifiManager.autoConnect(mqtt_clientid);
-  strcpy(mqtthost, cstm_mqtthost.getValue());
+  // Start sensors
+  DS18B20.begin();
 
   // Telnet
   if (startTEL)
     cbpiEventSystem(EM_TELSET); // Telnet
-
-  // Save configuration
-  ESP.wdtFeed();
-  saveConfig();
-
-  // Start MQTT
-  ESP.wdtFeed();
-  cbpiEventSystem(EM_MQTTCON); // MQTT connect
-  cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
-
-  // Display Start Screen
-  dispStartScreen();
 
   // Load mDNS
   if (startMDNS)
@@ -89,8 +71,17 @@ void setup()
   if (startOTA)
     setupOTA();
 
-  // Start Webserver
-  setupServer();
+  // Display Start Screen
+  dispStartScreen();
+
+  // // Save configuration
+  // ESP.wdtFeed();
+  // saveConfig();
+
+  // Start MQTT
+  ESP.wdtFeed();
+  cbpiEventSystem(EM_MQTTCON); // MQTT connect
+  cbpiEventSystem(EM_MQTTSUB); // MQTT subscribe
 
   ESP.wdtFeed();
   cbpiEventSystem(EM_WLAN); // Check WLAN
@@ -129,7 +120,6 @@ void setupServer()
   server.on("/reqDisplay", handleRequestDisplay);
   server.on("/reqDisp", handleRequestDisp); // Infos Display für WebConfig
   server.on("/setDisp", handleSetDisp);     // Display ändern
-  //server.on("/displayOff", turnDisplayOff); // Display on / off
   server.on("/reqMiscSet", handleRequestMiscSet);
   server.on("/reqMisc", handleRequestMisc); // Misc Infos für WebConfig
   server.on("/setMisc", handleSetMisc);     // Misc ändern
@@ -147,7 +137,7 @@ void setupServer()
   server.on("/edit", HTTP_POST, []() {
     server.send(200, "text/plain", "");
   },
-  handleFileUpload);
+            handleFileUpload);
 
   server.onNotFound(handleWebRequests); // Sonstiges
 
